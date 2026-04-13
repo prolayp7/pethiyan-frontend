@@ -1,0 +1,562 @@
+@import "tailwindcss";
+
+/* Global cursor — pointer on all interactive elements */
+a, button, [role="button"], select, label[for],
+[role="menuitem"], [role="option"], [role="tab"],
+[role="link"], summary {
+  cursor: pointer;
+}
+
+/* =============================================
+   DESIGN TOKENS — Pethiyan Brand System
+   ============================================= */
+:root {
+  /* Pethiyan Brand Colors (derived from logo) */
+  --color-primary: #1f4f8a;
+  --color-primary-dark: #0f2f5f;
+  --color-primary-light: #d6e4f7;
+  --color-secondary: #0f2f5f;
+  --color-accent: #4caf50;
+  --color-accent-dark: #388e3c;
+  --brand-gradient: linear-gradient(135deg, #17396f 0%, #2f6f9f 52%, #49ad57 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #12315f 0%, #275f8e 52%, #3f9e4d 100%);
+
+  /* Neutrals */
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --color-muted: #f0f4f8;
+  --color-border: #e2e8f0;
+
+  /* Font */
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+/* =============================================
+   BASE STYLES
+   ============================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Portal root — above app-root (z:0) because portal-root is z:99999 in body stacking context */
+#portal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  pointer-events: none;
+}
+#portal-root > * {
+  pointer-events: auto;
+}
+
+/* App root — explicit isolated stacking context so nothing inside can exceed portal-root */
+#app-root {
+  isolation: isolate;
+  position: relative;
+  z-index: 0;
+}
+
+body {
+  background: #ffffff;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Shared brand CTA style for primary buttons */
+.btn-brand {
+  background: var(--brand-gradient);
+  color: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: 0 8px 22px rgba(23, 57, 111, 0.22);
+}
+
+.btn-brand:hover:not(:disabled),
+.btn-brand:focus-visible:not(:disabled) {
+  background: var(--brand-gradient-hover);
+  box-shadow: 0 10px 24px rgba(23, 57, 111, 0.28);
+}
+
+/* =============================================
+   FEATURED PRODUCT CARD — Animated gradient border
+   ============================================= */
+@keyframes fpc-rotate {
+  to { transform: rotate(360deg); }
+}
+
+.featured-card-border {
+  position: relative;
+  border-radius: 16px;
+  padding: 2px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(23, 57, 111, 0.14);
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+/* The spinning conic gradient that forms the border */
+.featured-card-border::before {
+  content: '';
+  position: absolute;
+  inset: -80%;
+  background: conic-gradient(
+    from 0deg,
+    #17396f 0deg,
+    #2f6f9f 80deg,
+    #7ec8e3 140deg,   /* glossy light-blue highlight */
+    #49ad57 200deg,   /* logo green */
+    #7ec8e3 240deg,   /* second highlight */
+    #2f6f9f 300deg,
+    #17396f 360deg
+  );
+  animation: fpc-rotate 4s linear infinite;
+  border-radius: 0;
+}
+
+/* Inner white card sits above the spinning pseudo */
+.featured-card-border > a {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.featured-card-border:hover {
+  box-shadow: 0 4px 24px rgba(23, 57, 111, 0.28);
+}
+
+/* Safe area for mobile bottom nav */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* =============================================
+   OFFER TICKER ANIMATION
+   ============================================= */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@utility animate-ticker {
+  animation: ticker-scroll 30s linear infinite;
+}
+
+/* =============================================
+   RADIX UI ANIMATION KEYFRAMES
+   ============================================= */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slide-in-from-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-out-to-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes slide-in-from-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-out-to-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes slide-in-from-top {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slide-out-to-top {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100%); }
+}
+
+@keyframes slide-in-from-bottom-2 {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes zoom-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes zoom-out {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.95); opacity: 0; }
+}
+
+/* =============================================
+   BLOG PROSE
+   ============================================= */
+.blog-prose {
+  color: #334155;
+}
+
+.blog-prose section + section {
+  margin-top: 2.5rem;
+}
+
+.blog-prose h2 {
+  color: #0f172a;
+  font-size: 1.65rem;
+  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+}
+
+.blog-prose p {
+  font-size: 1rem;
+  line-height: 1.9;
+  color: #475569;
+}
+
+.blog-prose p + p {
+  margin-top: 1.15rem;
+}
+
+@media (max-width: 640px) {
+  .blog-prose h2 {
+    font-size: 1.35rem;
+  }
+
+  .blog-prose p {
+    font-size: 0.975rem;
+    line-height: 1.85;
+  }
+}
+
+/* Tailwind v4 animation utilities */
+@utility animate-in {
+  animation-fill-mode: both;
+}
+
+@utility animate-out {
+  animation-fill-mode: both;
+}
+
+@utility fade-in-0 {
+  animation-name: fade-in;
+  animation-duration: 200ms;
+}
+
+@utility fade-out-0 {
+  animation-name: fade-out;
+  animation-duration: 150ms;
+}
+
+@utility slide-in-from-right {
+  animation-name: slide-in-from-right;
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@utility slide-out-to-right {
+  animation-name: slide-out-to-right;
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@utility slide-in-from-left {
+  animation-name: slide-in-from-left;
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@utility slide-out-to-left {
+  animation-name: slide-out-to-left;
+  animation-duration: 300ms;
+}
+
+@utility slide-in-from-top {
+  animation-name: slide-in-from-top;
+  animation-duration: 300ms;
+}
+
+@utility slide-out-to-top {
+  animation-name: slide-out-to-top;
+  animation-duration: 300ms;
+}
+
+@utility slide-in-from-top-2 {
+  animation-name: slide-in-from-bottom-2;
+  animation-duration: 200ms;
+}
+
+@utility zoom-in-95 {
+  animation-name: zoom-in;
+  animation-duration: 200ms;
+}
+
+@utility zoom-out-95 {
+  animation-name: zoom-out;
+  animation-duration: 150ms;
+}
+
+/* =============================================
+   HERO CAROUSEL — progress bar
+   ============================================= */
+@keyframes progress-bar {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* =============================================
+   WATERMARK HOVER GLOW — Footer brand band
+   .watermark-band:hover reveals logo-blue glow
+   ============================================= */
+.watermark-text {
+  color: rgba(255, 255, 255, 0.07);
+  transition:
+    color 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    text-shadow 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.watermark-band:hover .watermark-text {
+  color: rgba(31, 79, 138, 0.22) !important;
+  text-shadow:
+    0 0 40px  rgba(31, 79, 138, 0.35),
+    0 0 100px rgba(31, 79, 138, 0.2),
+    0 0 200px rgba(31, 79, 138, 0.1),
+    0 0 400px rgba(31, 79, 138, 0.05);
+}
+
+/* =============================================
+   CORE WEB VITALS — CLS prevention
+   ============================================= */
+
+/* Prevent layout shift for images without explicit dimensions */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Stable dimensions for avatar initials boxes */
+.avatar-initials {
+  contain: layout style;
+}
+
+/* =============================================
+   ACCESSIBILITY — Reduce motion
+   ============================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Keep essential spinners but very fast */
+  .animate-spin {
+    animation-duration: 1s !important;
+  }
+}
+
+/* =============================================
+   CATEGORY GRID — Glassmorphism Hover Reveal
+   ============================================= */
+
+/* ── Section ── */
+.cat-section { background: #ffffff; }
+
+/* ── Heading ── */
+.cat-eyebrow-text { color: #4caf50; }
+.cat-heading-gradient {
+  /* Solid fallback for any browser that doesn't support gradient-clip text */
+  color: #1a4f83;
+}
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .cat-heading-gradient {
+    background-image: linear-gradient(135deg, #1a4f83 0%, #2b6e92 48%, #2d8b6a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+.cat-subheading { color: #4f6281; }
+
+/* ── Card shell ── */
+/* border-radius + overflow-hidden clips the glass panel during slide animation */
+.cat-hv-card {
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05);
+  transition: box-shadow 400ms ease;
+}
+.cat-hv-card:hover {
+  box-shadow: 0 24px 56px rgba(0,0,0,0.17), 0 6px 16px rgba(0,0,0,0.09);
+}
+
+/* ── Card image/content area ── */
+.cat-hv-body {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+/* ── Icon fallback background ── */
+.cat-hv-icon-bg {
+  background: linear-gradient(155deg, #07203d 0%, #0d3560 48%, #0c4a44 100%);
+}
+
+/* ── Base gradient overlay (always present) ── */
+.cat-hv-overlay {
+  background: linear-gradient(
+    to bottom,
+    transparent 28%,
+    rgba(4, 14, 32, 0.50) 65%,
+    rgba(4, 14, 32, 0.82) 100%
+  );
+}
+
+/* ── Shine sweep (triggered by Framer Motion on hover start) ── */
+.cat-hv-shine {
+  background: linear-gradient(
+    105deg,
+    transparent 25%,
+    rgba(255,255,255,0.11) 50%,
+    transparent 75%
+  );
+  will-change: transform;
+}
+
+/* ── Glass reveal panel ── */
+/* Framer Motion animates translateY from 100% → 0 on hover */
+.cat-hv-glass {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  background: linear-gradient(135deg, rgba(26, 56, 112, 0.92) 0%, rgba(43, 110, 150, 0.90) 52%, rgba(39, 160, 122, 0.88) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.13);
+  padding: 20px 22px 24px;
+}
+
+/* ── Shop Now pill button inside glass panel — matches .btn-brand ── */
+.cat-hv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 22px;
+  background: linear-gradient(135deg, #17396f 0%, #2f6f9f 52%, #49ad57 100%);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 9999px;
+  /* 3-D effect: solid bottom edge + ambient glow */
+  box-shadow:
+    0 5px 0 0 #0c2248,
+    0 8px 22px rgba(23, 57, 111, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+  transition: box-shadow 220ms ease, transform 220ms ease;
+  pointer-events: none;
+}
+.cat-hv-card:hover .cat-hv-btn {
+  background: linear-gradient(135deg, #12315f 0%, #275f8e 52%, #3f9e4d 100%);
+  /* Pressed state: depth collapses, button moves down */
+  box-shadow:
+    0 2px 0 0 #0c2248,
+    0 4px 14px rgba(23, 57, 111, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transform: translateY(1px);
+}
+
+/* ── "View All" bottom CTA ── */
+.cat-cta-btn {
+  background: linear-gradient(135deg, #0f2f5f 0%, #1f4f8a 50%, #2563a8 100%);
+  box-shadow: 0 4px 20px rgba(31,79,138,0.40), inset 0 1px 0 rgba(255,255,255,0.12);
+  color: #ffffff;
+  transition: background 320ms ease, box-shadow 320ms ease;
+}
+.cat-cta-btn:hover {
+  background: linear-gradient(135deg, #15803d 0%, #22c55e 60%, #4ade80 100%);
+  box-shadow: 0 6px 28px rgba(34,197,94,0.36), 0 0 0 1px rgba(34,197,94,0.30), inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+/* =============================================
+   PERFORMANCE — Content visibility
+   ============================================= */
+
+/* Use on non-critical below-fold sections */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}
+
+/* =============================================
+   CUSTOM SCROLLBAR
+   ============================================= */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+/* =============================================
+   BLOG SLIDER — shared horizontal snap slider
+   Used in RecentBlogsSection + BlogHomeClient
+   ============================================= */
+
+/* Arrow vertical position — centres on card image */
+.blog-slider-arrow {
+  top: min(34vw, 8rem);
+}
+
+/* Hide Firefox scrollbar on the scroll track */
+.blog-slider-scroll {
+  scrollbar-width: none;
+}
