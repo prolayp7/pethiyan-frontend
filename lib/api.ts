@@ -1329,7 +1329,7 @@ export async function getSystemSettings(): Promise<ApiSystemSettings | null> {
   // Use fetch directly (not apiFetch) so Next.js ISR caching works server-side.
   const res = await fetch(`${API_BASE}/api/settings/system`, {
     headers: { Accept: "application/json" },
-    next: { revalidate: 3600, tags: ["site-settings"] },
+    cache: "no-store",
   } as RequestInit).then((r) => r.json()).catch(() => null) as {
     success?: boolean;
     data?: { value?: Record<string, unknown> } | Record<string, unknown>;
@@ -1358,7 +1358,7 @@ export async function getSystemSettings(): Promise<ApiSystemSettings | null> {
 export async function getWebSettings(): Promise<ApiWebSettings | null> {
   const res = await fetch(`${API_BASE}/api/settings/web`, {
     headers: { Accept: "application/json" },
-    next: { revalidate: 3600, tags: ["web-settings"] },
+    cache: "no-store",
   } as RequestInit).then((r) => r.json()).catch(() => null) as {
     success?: boolean;
     data?: { value?: Record<string, unknown> } | Record<string, unknown>;
@@ -1954,7 +1954,7 @@ export async function getHeaderMenu(): Promise<ApiHeaderMenu | null> {
   try {
     const res = await fetch(`${API_BASE}/api/menus/header_main`, {
       headers: { Accept: "application/json" },
-      next: { tags: ["header-menu"], revalidate: 3600 },
+      cache: "no-store",
     });
     if (!res.ok) return null;
     const json = await res.json();
