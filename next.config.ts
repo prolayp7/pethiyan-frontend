@@ -137,6 +137,16 @@ export default withPWA({
         },
       },
       {
+        urlPattern: /\/api\/hero-section/,
+        handler: "NetworkFirst" as const,
+        options: {
+          cacheName: "hero-api",
+          networkTimeoutSeconds: 5,
+          expiration: { maxEntries: 5, maxAgeSeconds: 300 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+      {
         urlPattern: /\/api\/products(\/|$|\?)/,
         handler: "NetworkFirst" as const,
         options: {
