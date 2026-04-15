@@ -544,7 +544,7 @@ export async function getProducts(params?: Record<string, string>): Promise<Real
   try {
     const res = await fetch(`${API_BASE}/api/products${query}`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 60, tags: ["products"] },
+      next: { revalidate: 60 },
     } as RequestInit);
     if (!res.ok) return [];
     const json = await res.json();
@@ -561,11 +561,9 @@ export async function getProducts(params?: Record<string, string>): Promise<Real
 
 export async function getFeaturedProducts(): Promise<RealApiProduct[]> {
   try {
-    // Use fetch directly so Next.js ISR cache + tags work on the server.
-    // In the browser the `next` option is ignored and data is fetched fresh.
     const res = await fetch(`${API_BASE}/api/products/featured`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 60, tags: ["featured-products"] },
+      next: { revalidate: 60 },
     } as RequestInit);
     if (!res.ok) return [];
     const json = await res.json();
@@ -582,7 +580,7 @@ export async function getNewArrivals(days = 30, limit = 40): Promise<RealApiProd
       `${API_BASE}/api/products/new-arrivals?days=${days}&limit=${limit}`,
       {
         headers: { Accept: "application/json" },
-        next: { revalidate: 60, tags: ["new-arrivals"] },
+        next: { revalidate: 60 },
       } as RequestInit
     );
     if (!res.ok) return [];
@@ -690,7 +688,7 @@ export async function getCategories(params?: Record<string, string>): Promise<Ap
   try {
     const res = await fetch(`${API_BASE}/api/categories${query}`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 300, tags: ["categories"] },
+      next: { revalidate: 30 },
     } as RequestInit);
     if (!res.ok) return [];
     return extractCatArray(await res.json());
@@ -703,7 +701,7 @@ export async function getSubCategories(): Promise<ApiCategory[]> {
   try {
     const res = await fetch(`${API_BASE}/api/categories/sub-categories`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 300, tags: ["categories"] },
+      next: { revalidate: 30 },
     } as RequestInit);
     if (!res.ok) return [];
     return extractCatArray(await res.json());
@@ -1397,7 +1395,7 @@ export interface ApiSeoAdvancedSettings {
 export async function getSeoAdvancedSettings(): Promise<ApiSeoAdvancedSettings | null> {
   const res = await fetch(`${API_BASE}/api/settings/seo-advanced`, {
     headers: { Accept: "application/json" },
-    next: { revalidate: 3600, tags: ["seo-advanced-settings"] },
+    next: { revalidate: 600 },
   } as RequestInit).then((r) => r.json()).catch(() => null) as {
     success?: boolean;
     data?: Record<string, unknown>;
@@ -1843,7 +1841,7 @@ export async function getHeroSection(): Promise<ApiHeroSection | null> {
   try {
     const res = await fetch(`${API_BASE}/api/hero-section`, {
       headers: { Accept: "application/json" },
-      next: { tags: ["hero-section"], revalidate: 3600 },
+      next: { revalidate: 300 },
     });
     if (!res.ok) return null;
     return res.json() as Promise<ApiHeroSection>;
@@ -1876,7 +1874,7 @@ export async function getVideoStorySection(): Promise<ApiVideoStorySection | nul
   try {
     const res = await fetch(`${API_BASE}/api/video-story-section`, {
       headers: { Accept: "application/json" },
-      next: { tags: ["video-story-section"], revalidate: 3600 },
+      next: { revalidate: 300 },
     });
     if (!res.ok) return null;
     return res.json() as Promise<ApiVideoStorySection>;
@@ -1979,7 +1977,7 @@ export async function getNewsletterSection(): Promise<ApiNewsletterSection | nul
   try {
     const res = await fetch(`${API_BASE}/api/newsletter-section`, {
       headers: { Accept: "application/json" },
-      next: { tags: ["newsletter-section"], revalidate: 3600 },
+      next: { revalidate: 300 },
     });
     if (!res.ok) return null;
     return res.json() as Promise<ApiNewsletterSection>;
@@ -1998,7 +1996,7 @@ export async function getProductsByCategory(categorySlug: string): Promise<RealA
       `${API_BASE}/api/products?categories=${encodeURIComponent(categorySlug)}&per_page=100&include_child_categories=1`,
       {
         headers: { Accept: "application/json" },
-        next: { revalidate: 300, tags: ["products", `category-${categorySlug}`] },
+        next: { revalidate: 60 },
       } as RequestInit
     );
     if (!res.ok) return [];
