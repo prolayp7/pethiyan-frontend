@@ -163,8 +163,13 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   const status        = STATUS_MAP[order.status] ?? { label: order.status, cls: "bg-gray-100 text-gray-600" };
   const trackingSteps = order.tracking?.length ? order.tracking : buildDefaultTracking(order.status, order.created_at);
-  const subtotal      = order.subtotal ?? order.total - (order.shipping_charge ?? 0) + (order.discount ?? 0);
-  const gst           = order.gst_amount ?? Math.round(order.total * 18 / 118);
+  const subtotal         = order.subtotal ?? order.total - (order.shipping_charge ?? 0) + (order.discount ?? 0);
+  const productAfterDiscount = subtotal - (order.discount ?? 0);
+  // order.gst_amount may be stored as 0 when not calculated at save-time — derive it from
+  // the product amount after discount (GST is not applicable to shipping or discount savings).
+  const gst = (order.gst_amount != null && order.gst_amount > 0)
+    ? order.gst_amount
+    : Math.round(productAfterDiscount * 18 / 118);
 
   return (
     <div className="space-y-5">
