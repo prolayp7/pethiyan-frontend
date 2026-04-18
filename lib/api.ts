@@ -1270,28 +1270,50 @@ export async function deleteAddress(id: number): Promise<boolean> {
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
 function normalizeOrder(raw: Record<string, unknown>): ApiOrder {
-  const items = ((raw.items ?? []) as Record<string, unknown>[]).map((item) => ({
-    ...(item as object),
-    price: parseFloat(String(item.price ?? item.unit_price ?? 0)),
-    subtotal: parseFloat(String(item.subtotal ?? item.total ?? 0)),
-    product_name:
-      (item.title as string) ??
-      ((item.product as Record<string, unknown>)?.name as string) ??
-      "Unknown",
-    product_slug:
-      ((item.product as Record<string, unknown>)?.slug as string) ?? "",
-    variant_label:
-      (item.variant_title as string) ??
-      ((item.variant as Record<string, unknown>)?.title as string) ??
-      undefined,
-    image:
-      normalizeMediaUrl(
-        (item.image as string) ??
-        ((item.variant as Record<string, unknown>)?.image as string) ??
-        ((item.product as Record<string, unknown>)?.image as string) ??
-        null
+  const pickFirstMediaField = (...values: unknown[]): string | null => {
+    for (const value of values) {
+      if (typeof value === "string" && value.trim()) {
+        return normalizeMediaUrl(value);
+      }
+    }
+    return null;
+  };
+
+  const items = ((raw.items ?? []) as Record<string, unknown>[]).map((item) => {
+    const product = (item.product as Record<string, unknown> | undefined) ?? {};
+    const variant = (item.variant as Record<string, unknown> | undefined) ?? {};
+
+    return {
+      ...(item as object),
+      price: parseFloat(String(item.price ?? item.unit_price ?? 0)),
+      subtotal: parseFloat(String(item.subtotal ?? item.total ?? 0)),
+      product_name:
+        (item.title as string) ??
+        (product.name as string) ??
+        "Unknown",
+      product_slug:
+        (product.slug as string) ?? "",
+      variant_label:
+        (item.variant_title as string) ??
+        (variant.title as string) ??
+        undefined,
+      image: pickFirstMediaField(
+        item.image,
+        item.image_url,
+        item.thumbnail,
+        item.thumbnail_url,
+        variant.image,
+        variant.image_url,
+        variant.thumbnail,
+        variant.thumbnail_url,
+        product.image,
+        product.image_url,
+        product.thumbnail,
+        product.thumbnail_url,
+        product.main_image
       ),
-  })) as ApiOrderItem[];
+    };
+  }) as ApiOrderItem[];
 
   return {
     ...(raw as object),
