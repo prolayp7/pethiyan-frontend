@@ -61,7 +61,6 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   const { isWishlisted, toggle } = useWishlist();
   const { isLoggedIn } = useAuth();
   const {
-    showVariantColorsInGrid,
     showGstInGrid,
     showCategoryNameInGrid,
     showMinQtyInGrid,
@@ -328,28 +327,6 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
             <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-[#2e7c8a] transition-colors">
               {product.title}
             </p>
-
-            {/* Color swatches + variant count */}
-            {showVariantColorsInGrid && (() => {
-              const colorMap = new Map<string, string>();
-              for (const v of product.variants ?? []) {
-                const c = v.attributes?.color;
-                if (c && !colorMap.has(c)) colorMap.set(c, COLOR_MAP[c] ?? "#aaa");
-              }
-              const colors = Array.from(colorMap.entries());
-              const variantCount = product.variants?.length ?? 0;
-              if (colors.length === 0 && variantCount <= 1) return null;
-              return (
-                <div className="flex items-center gap-1.5">
-                  {colors.slice(0, 5).map(([c, bg]) => (
-                    <span key={c} title={c} className="w-3 h-3 rounded-full border border-black/10 shrink-0" style={{ background: bg }} />
-                  ))}
-                  {variantCount > 1 && (
-                    <span className="text-[10px] text-gray-400 ml-0.5">{variantCount} variants</span>
-                  )}
-                </div>
-              );
-            })()}
 
             {/* Bottom row: price+meta left, cart right */}
             <div className="flex items-end justify-between gap-2 mt-auto pt-2 border-t border-gray-100">
