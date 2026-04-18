@@ -2185,6 +2185,26 @@ export interface ApiHeroSection {
   };
 }
 
+// ─── Announcement Bar ─────────────────────────────────────────────────────────
+
+export interface ApiAnnouncementBar {
+  topBar: { active: boolean; text: string };
+  ticker: { active: boolean; items: string[] };
+}
+
+export async function getAnnouncementBar(): Promise<ApiAnnouncementBar | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/announcement-bar`, {
+      headers: { Accept: "application/json" },
+      next: { tags: ["announcement-bar"], revalidate: 300 },
+    });
+    if (!res.ok) return null;
+    return res.json() as Promise<ApiAnnouncementBar>;
+  } catch {
+    return null;
+  }
+}
+
 /** Fetches hero section data with tag-based cache (invalidated on admin updates). */
 export async function getHeroSection(): Promise<ApiHeroSection | null> {
   try {
