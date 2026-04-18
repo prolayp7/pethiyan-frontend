@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  User, Phone, Mail, Save, Loader2, CheckCircle2, LogOut, AlertCircle,
+  User, Phone, Mail, Save, Loader2, CheckCircle2, LogOut, AlertCircle, Building2,
 } from "lucide-react";
+import BrowsingHistory from "@/components/product/BrowsingHistory";
 import { useAuth } from "@/context/AuthContext";
 import { updateProfile } from "@/lib/api";
 
@@ -14,21 +15,37 @@ export default function ProfilePage() {
 
   const [name,    setName]    = useState(user?.name ?? "");
   const [email,   setEmail]   = useState(user?.email ?? "");
+  const [companyName, setCompanyName] = useState(user?.company_name ?? "");
+  const [gstin,   setGstin]   = useState(user?.gstin ?? "");
   const [saving,  setSaving]  = useState(false);
   const [success, setSuccess] = useState(false);
   const [error,   setError]   = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const isDirty = name !== (user?.name ?? "") || email !== (user?.email ?? "");
+  const isDirty =
+    name !== (user?.name ?? "") ||
+    email !== (user?.email ?? "") ||
+    companyName !== (user?.company_name ?? "") ||
+    gstin !== (user?.gstin ?? "");
 
   async function handleSave() {
     if (!name.trim()) { setError("Name cannot be empty."); return; }
     setError("");
     setSaving(true);
-    const result = await updateProfile({ name: name.trim(), email: email.trim() || undefined });
+    const result = await updateProfile({
+      name: name.trim(),
+      email: email.trim() || undefined,
+      company_name: companyName.trim() || undefined,
+      gstin: gstin.trim() || undefined
+    });
     setSaving(false);
     if (result.success) {
-      updateUser({ name: name.trim(), email: email.trim() || null });
+      updateUser({
+        name: name.trim(),
+        email: email.trim() || null,
+        company_name: companyName.trim() || null,
+        gstin: gstin.trim() || null
+      });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } else {
@@ -52,15 +69,16 @@ export default function ProfilePage() {
     "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-(--color-primary) focus:bg-white transition-colors";
 
   return (
-    <div className="max-w-lg">
-      <div className="flex items-center gap-2 mb-6">
-        <User className="h-5 w-5 text-(--color-primary)" />
-        <h1 className="text-xl font-extrabold text-(--color-secondary)">Profile</h1>
-      </div>
+    <div className="space-y-8">
+      <div className="max-w-lg">
+        <div className="flex items-center gap-2 mb-6">
+          <User className="h-5 w-5 text-(--color-primary)" />
+          <h1 className="text-xl font-extrabold text-(--color-secondary)">Profile</h1>
+        </div>
 
-      {/* Form */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-        <h2 className="text-sm font-extrabold text-(--color-secondary)">Account Information</h2>
+        {/* Form */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+          <h2 className="text-sm font-extrabold text-(--color-secondary)">Account Information</h2>
 
         {/* Name */}
         <div>
@@ -90,6 +108,7 @@ export default function ProfilePage() {
               type="tel"
               value={`+91 ${user?.mobile ?? ""}`}
               readOnly
+              title="Mobile number"
               className={`${inputCls} pl-10 opacity-60 cursor-not-allowed`}
             />
           </div>
@@ -114,70 +133,110 @@ export default function ProfilePage() {
           <p className="text-[11px] text-gray-400 mt-1">Used for order confirmation emails and GST invoices.</p>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {error}
+        {/* Company name */}
+        <div>
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+            Company Name <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <div className="relative">
+            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={companyName}
+              onChange={(e) => { setCompanyName(e.target.value); setError(""); }}
+              placeholder="Company / Business name"
+              className={`${inputCls} pl-10`}
+            />
           </div>
-        )}
+          <p className="text-[11px] text-gray-400 mt-1">Used for business invoices and order records.</p>
+        </div>
 
-        {/* Success */}
-        {success && (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-100 text-sm text-green-700">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
-            Profile updated successfully!
+        {/* GSTIN */}
+        <div>
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+            GSTIN <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <div className="relative">
+            <CheckCircle2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={gstin}
+              onChange={(e) => { setGstin(e.target.value.toUpperCase()); setError(""); }}
+              placeholder="e.g. 07AAAAA0000A1Z5"
+              maxLength={15}
+              className={`${inputCls} pl-10`}
+            />
           </div>
-        )}
+          <p className="text-[11px] text-gray-400 mt-1">Add GSTIN to get GST-enabled invoices.</p>
+        </div>
 
-        {/* Save button */}
-        <button
-          onClick={handleSave}
-          disabled={saving || !isDirty}
-          className="btn-brand w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
-        >
-          {saving ? (
-            <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
-          ) : (
-            <><Save className="h-4 w-4" /> Save Changes</>
-          )}
-        </button>
-      </div>
-
-      {/* Danger zone */}
-      <div className="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h2 className="text-sm font-extrabold text-(--color-secondary) mb-4">Account Actions</h2>
-
-        {!showLogoutConfirm ? (
-          <button
-            onClick={() => setShowLogoutConfirm(true)}
-            className="flex items-center gap-2 w-full py-3 px-4 rounded-xl text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </button>
-        ) : (
-          <div className="p-4 rounded-xl bg-red-50 border border-red-100">
-            <p className="text-sm font-semibold text-red-700 mb-3">
-              Are you sure you want to sign out?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleLogout}
-                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-colors"
-              >
-                Yes, Sign Out
-              </button>
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-600 border border-gray-200 hover:bg-white transition-colors"
-              >
-                Cancel
-              </button>
+          {/* Error */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Success */}
+          {success && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-100 text-sm text-green-700">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Profile updated successfully!
+            </div>
+          )}
+
+          {/* Save button */}
+          <button
+            onClick={handleSave}
+            disabled={saving || !isDirty}
+            className="btn-brand w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
+          >
+            {saving ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+            ) : (
+              <><Save className="h-4 w-4" /> Save Changes</>
+            )}
+          </button>
+        </div>
+
+        {/* Danger zone */}
+        <div className="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h2 className="text-sm font-extrabold text-(--color-secondary) mb-4">Account Actions</h2>
+
+          {!showLogoutConfirm ? (
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="flex items-center gap-2 w-full py-3 px-4 rounded-xl text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </button>
+          ) : (
+            <div className="p-4 rounded-xl bg-red-50 border border-red-100">
+              <p className="text-sm font-semibold text-red-700 mb-3">
+                Are you sure you want to sign out?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-colors"
+                >
+                  Yes, Sign Out
+                </button>
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-600 border border-gray-200 hover:bg-white transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      <BrowsingHistory />
     </div>
   );
 }

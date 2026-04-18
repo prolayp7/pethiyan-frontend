@@ -17,6 +17,7 @@ export interface FallbackProduct {
   id: string;
   name: string;
   price: number;
+  cost?: number;
   originalPrice?: number;
   badge?: "Sale" | "New" | "Hot";
   image?: string;
@@ -91,6 +92,10 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
     ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
     : 0;
 
+  // Use cost field from API (price without GST)
+  const priceWithoutGst = p.cost ?? p.price;
+  const originalPriceWithoutGst = p.originalPrice;
+
   const numericProductId = Number(p.id);
   const isInWishlist = Number.isFinite(numericProductId)
     ? isWishlisted(numericProductId)
@@ -102,11 +107,14 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
     if (!p.inStock) return;
     addItem({
       id: p.id,
+      productId: Number.isFinite(numericProductId) ? numericProductId : undefined,
       name: p.name,
       price: p.price,
       image: p.image ?? null,
       slug: p.href.replace("/products/", ""),
       minQty: p.minQty,
+      variantId: p.defaultVariantId,
+      storeId: p.defaultStoreId,
     });
     openCart();
   };
@@ -421,11 +429,11 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
           <div className="flex flex-col items-end gap-1.5 shrink-0">
             <div className="flex items-baseline gap-1">
               <span className="text-sm font-extrabold text-gray-900">
-                ₹{p.price.toFixed(2)}
+                ₹{priceWithoutGst.toFixed(2)}
               </span>
-              {p.originalPrice && (
+              {originalPriceWithoutGst && (
                 <span className="text-[10px] text-gray-400 line-through">
-                  ₹{p.originalPrice.toFixed(2)}
+                  ₹{originalPriceWithoutGst.toFixed(2)}
                 </span>
               )}
             </div>

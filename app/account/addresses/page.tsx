@@ -24,7 +24,7 @@ const INDIAN_STATES = [
 ];
 
 const BLANK = {
-  name: "", phone: "", address_line1: "", address_line2: "",
+  name: "", phone: "", company_name: "", address_line1: "", address_line2: "",
   city: "", state: "", pincode: "",
 };
 
@@ -69,6 +69,11 @@ function AddressForm({
       </div>
 
       <div>
+        <label className="text-xs font-semibold text-gray-500 mb-1 block">Company Name</label>
+        <input className={cls} placeholder="Company / Business name (optional)" value={value.company_name} onChange={set("company_name")} />
+      </div>
+
+      <div>
         <label className="text-xs font-semibold text-gray-500 mb-1 block">Address Line 1 *</label>
         <input className={cls} placeholder="Flat / House No., Street" value={value.address_line1} onChange={set("address_line1")} />
       </div>
@@ -84,7 +89,7 @@ function AddressForm({
         </div>
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">State *</label>
-          <select className={cls} value={value.state} onChange={set("state")}>
+          <select className={cls} value={value.state} onChange={set("state")} title="State">
             <option value="">Select state</option>
             {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -143,6 +148,7 @@ function AddressCard({
               </span>
             )}
           </div>
+          {address.company_name && <p className="text-sm text-gray-600">{address.company_name}</p>}
           <p className="text-sm text-gray-600">{address.address_line1}</p>
           {address.address_line2 && <p className="text-sm text-gray-600">{address.address_line2}</p>}
           <p className="text-sm text-gray-600">{address.city}, {address.state} — {address.pincode}</p>
@@ -216,6 +222,7 @@ export default function AddressesPage() {
     setSaving(true);
     const saved = await createAddress({
       name: formData.name, phone: formData.phone,
+      company_name: formData.company_name,
       address_line1: formData.address_line1, address_line2: formData.address_line2,
       city: formData.city, state: formData.state, pincode: formData.pincode,
     });
@@ -237,6 +244,7 @@ export default function AddressesPage() {
     setSaving(true);
     const updated = await updateAddress(editId, {
       name: formData.name, phone: formData.phone,
+      company_name: formData.company_name,
       address_line1: formData.address_line1, address_line2: formData.address_line2,
       city: formData.city, state: formData.state, pincode: formData.pincode,
     });
@@ -286,6 +294,7 @@ export default function AddressesPage() {
     setShowAddForm(false);
     setFormData({
       name: addr.name, phone: addr.phone,
+      company_name: addr.company_name ?? "",
       address_line1: addr.address_line1, address_line2: addr.address_line2 ?? "",
       city: addr.city, state: addr.state, pincode: addr.pincode,
     });

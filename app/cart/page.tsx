@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -20,37 +20,18 @@ function shouldBypassOptimizer(src?: string | null): boolean {
   return /^https?:\/\//i.test(src);
 }
 
-// ─── Checkbox UI ─────────────────────────────────────────────────────────────
+function formatWeightDisplay(weight?: number, weightUnit?: string, quantity = 1): string | null {
+  if (weight == null || weight <= 0) return null;
 
-function CartCheckbox({
-  checked,
-  onChange,
-  ariaLabel,
-}: {
-  checked: boolean;
-  onChange: () => void;
-  ariaLabel: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={checked ? "true" : "false"}
-      aria-label={ariaLabel}
-      onClick={onChange}
-      className={`shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-primary)/40 ${
-        checked
-          ? "bg-(--color-primary) border-(--color-primary)"
-          : "bg-white border-gray-300 hover:border-(--color-primary)"
-      }`}
-    >
-      {checked && (
-        <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )}
-    </button>
-  );
+  const unit = (weightUnit ?? "g").toLowerCase();
+  const unitGrams = unit === "kg" ? weight * 1000 : weight;
+  const totalGrams = unitGrams * quantity;
+  const formatGrams = (grams: number) =>
+    grams >= 1000
+      ? `${(grams / 1000).toFixed(2).replace(/\.?0+$/, "")} kg`
+      : `${grams} g`;
+
+  return `Total weight: ${formatGrams(totalGrams)} (${formatGrams(unitGrams)} x ${quantity})`;
 }
 
 // ─── Empty Cart ───────────────────────────────────────────────────────────────
@@ -85,29 +66,7 @@ export default function CartPage() {
   const fmt = (n: number) =>
     `${currencySymbol}${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const FREE_SHIPPING_THRESHOLD = currencySymbol === "₹" ? 999 : 50;
-
-  // ── Selection state ────────────────────────────────────────────────────────
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(items.map((i) => i.id))
-  );
-
-  const isAllSelected  = items.length > 0 && selectedIds.size === items.length;
-  const selectedCount  = selectedIds.size;
-  const selectedItems  = useMemo(() => items.filter((i) => selectedIds.has(i.id)), [items, selectedIds]);
-  const selectedTotal  = useMemo(() => selectedItems.reduce((s, i) => s + i.price * i.quantity, 0), [selectedItems]);
-
-  const toggleAll = () => {
-    if (isAllSelected) setSelectedIds(new Set());
-    else setSelectedIds(new Set(items.map((i) => i.id)));
-  };
-
-  const toggleItem = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   // ── Coupon ─────────────────────────────────────────────────────────────────
   const [couponCode, setCouponCode]     = useState("");
@@ -119,7 +78,7 @@ export default function CartPage() {
     if (!couponCode.trim()) return;
     setCouponError("");
     setCouponLoading(true);
-    const result = await applyCoupon(couponCode.trim().toUpperCase(), selectedTotal);
+    const result = await applyCoupon(couponCode.trim().toUpperCase(), total);
     setCouponLoading(false);
     if (result.valid) {
       setCouponResult(result);
@@ -128,7 +87,22 @@ export default function CartPage() {
     } else {
       setCouponError(result.message ?? "Invalid coupon code.");
     }
-  }, [couponCode, selectedTotal]);
+  }, [couponCode, total]);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("applied_coupon");
+      if (!saved) return;
+
+      const parsed = JSON.parse(saved) as ApiCouponResult;
+      if (!parsed?.valid) return;
+
+      setCouponCode(parsed.code);
+      setCouponResult(parsed);
+    } catch {
+      sessionStorage.removeItem("applied_coupon");
+    }
+  }, []);
 
   const removeCoupon = () => {
     setCouponResult(null);
@@ -137,14 +111,15 @@ export default function CartPage() {
     sessionStorage.removeItem("applied_coupon");
   };
 
-  const discount    = couponResult?.discount_amount ?? 0;
-  const grandTotal  = selectedTotal - discount;
+  const discount = couponResult?.discount_amount ?? 0;
+  const grandTotal = Math.max(total - discount, 0);
+  const gst = Math.round((grandTotal * 18) / 118);
   const isFreeShipping = grandTotal >= FREE_SHIPPING_THRESHOLD;
   void isFreeShipping; // referenced elsewhere if needed
 
   if (items.length === 0) {
     return (
-      <div className="bg-(--background) min-h-screen">
+      <div className="bg-background min-h-screen">
         <Container>
           <EmptyCart />
         </Container>
@@ -153,7 +128,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="bg-(--background) min-h-screen">
+    <div className="bg-background min-h-screen">
       <Container className="py-8 lg:py-12">
 
         {/* ── Header ── */}
@@ -168,39 +143,9 @@ export default function CartPage() {
             <h1 className="text-2xl font-extrabold text-(--color-secondary)">
               Shopping Cart
             </h1>
-
-            {/* Select all row */}
-            <div className="mt-2 flex items-center gap-2.5">
-              <CartCheckbox
-                checked={isAllSelected}
-                onChange={toggleAll}
-                ariaLabel={isAllSelected ? "Deselect all items" : "Select all items"}
-              />
-              {selectedCount === 0 ? (
-                <span className="text-sm text-gray-500">
-                  No items selected.{" "}
-                  <button
-                    type="button"
-                    onClick={toggleAll}
-                    className="text-(--color-primary) font-semibold hover:underline"
-                  >
-                    Select all items
-                  </button>
-                </span>
-              ) : (
-                <span className="text-sm text-gray-500">
-                  <span className="font-semibold text-(--color-secondary)">{selectedCount}</span>
-                  {" "}{selectedCount === 1 ? "item" : "items"} selected.{" "}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedIds(new Set())}
-                    className="text-(--color-primary) font-semibold hover:underline"
-                  >
-                    Deselect all
-                  </button>
-                </span>
-              )}
-            </div>
+            <p className="mt-2 text-sm text-gray-500">
+              {itemCount} {itemCount === 1 ? "item" : "items"} in your cart.
+            </p>
           </div>
 
           <button
@@ -218,25 +163,12 @@ export default function CartPage() {
           {/* ── Items ── */}
           <div className="lg:col-span-7 space-y-3">
             {items.map((item) => {
-              const isSelected = selectedIds.has(item.id);
+              const weightDisplay = formatWeightDisplay(item.weight, item.weightUnit, item.quantity);
               return (
                 <div
                   key={item.id}
-                  className={`bg-white rounded-2xl border shadow-sm p-4 flex gap-3 transition-all duration-200 ${
-                    isSelected
-                      ? "border-(--color-primary)/30 shadow-(--color-primary)/5"
-                      : "border-gray-100 opacity-60"
-                  }`}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex gap-3 transition-all duration-200"
                 >
-                  {/* Checkbox */}
-                  <div className="flex items-start pt-0.5">
-                    <CartCheckbox
-                      checked={isSelected}
-                      onChange={() => toggleItem(item.id)}
-                      ariaLabel={`${isSelected ? "Deselect" : "Select"} ${item.name}`}
-                    />
-                  </div>
-
                   {/* Image */}
                   <Link
                     href={item.slug ? `/products/${item.slug}` : "#"}
@@ -274,7 +206,7 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
-                        className="shrink-0 p-1.5 rounded-full text-gray-300 border border-transparent hover:text-white hover:border-transparent hover:shadow-md hover:bg-[linear-gradient(135deg,_#17396f_0%,_#2f6f9f_52%,_#49ad57_100%)] transition-all"
+                        className="shrink-0 p-1.5 rounded-full text-gray-300 border border-transparent hover:text-white hover:border-transparent hover:shadow-md hover:bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] transition-all"
                         aria-label="Remove item"
                       >
                         <X className="h-4 w-4" />
@@ -293,7 +225,7 @@ export default function CartPage() {
                         >
                           <Minus className="h-3.5 w-3.5" />
                         </button>
-                        <span className="px-3 py-1.5 text-sm font-semibold text-(--color-secondary) tabular-nums min-w-[2rem] text-center">
+                        <span className="px-3 py-1.5 text-sm font-semibold text-(--color-secondary) tabular-nums min-w-8 text-center">
                           {item.quantity}
                         </span>
                         <button
@@ -314,6 +246,9 @@ export default function CartPage() {
                         {item.quantity > 1 && (
                           <p className="text-[11px] text-gray-400">{fmt(item.price)} each</p>
                         )}
+                        {weightDisplay && (
+                          <p className="text-[11px] text-gray-400 mt-1">{weightDisplay}</p>
+                        )}
                       </div>
                     </div>
 
@@ -324,22 +259,6 @@ export default function CartPage() {
                       </p>
                     )}
 
-                    {/* Total weight */}
-                    {item.weight != null && item.weight > 0 && (() => {
-                      const unit = (item.weightUnit ?? "g").toLowerCase();
-                      const unitGrams = unit === "kg" ? item.weight * 1000 : item.weight;
-                      const totalGrams = unitGrams * item.quantity;
-                      const fmtWeight = (g: number) =>
-                        g >= 1000
-                          ? `${(g / 1000).toFixed(2).replace(/\.?0+$/, "")} kg`
-                          : `${g} g`;
-                      return (
-                        <p className="text-[11px] text-gray-400 mt-1">
-                          Total weight: <strong className="text-gray-500">{fmtWeight(totalGrams)}</strong>
-                          <span className="ml-1">({fmtWeight(unitGrams)} × {item.quantity})</span>
-                        </p>
-                      );
-                    })()}
                   </div>
                 </div>
               );
@@ -363,19 +282,10 @@ export default function CartPage() {
                 <h2 className="text-base font-extrabold text-(--color-secondary)">
                   Order Summary
                 </h2>
-                {selectedCount > 0 && (
-                  <span className="text-[11px] font-semibold bg-(--color-primary)/10 text-(--color-primary) px-2.5 py-1 rounded-full">
-                    {selectedCount} of {items.length} selected
-                  </span>
-                )}
+                <span className="text-[11px] font-semibold bg-(--color-primary)/10 text-(--color-primary) px-2.5 py-1 rounded-full">
+                  {itemCount} {itemCount === 1 ? "item" : "items"}
+                </span>
               </div>
-
-              {/* No selection notice */}
-              {selectedCount === 0 && (
-                <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-100 text-xs text-amber-700 font-medium">
-                  Select at least one item to proceed to checkout.
-                </div>
-              )}
 
               {/* Coupon */}
               {couponResult ? (
@@ -385,7 +295,12 @@ export default function CartPage() {
                     <span className="text-xs font-semibold text-green-700">{couponResult.code}</span>
                     <span className="text-xs text-green-600">— {fmt(discount)} off</span>
                   </div>
-                  <button type="button" onClick={removeCoupon} className="text-green-500 hover:text-green-700">
+                  <button
+                    type="button"
+                    onClick={removeCoupon}
+                    className="text-green-500 hover:text-green-700"
+                    aria-label="Remove coupon"
+                  >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -421,10 +336,8 @@ export default function CartPage() {
               {/* Summary rows */}
               <div className="space-y-3 border-t border-gray-100 pt-4">
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>
-                    Subtotal ({selectedItems.reduce((s, i) => s + i.quantity, 0)} items)
-                  </span>
-                  <span className="font-semibold text-(--color-secondary)">{fmt(selectedTotal)}</span>
+                  <span>Subtotal ({itemCount} items)</span>
+                  <span className="font-semibold text-(--color-secondary)">{fmt(total)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-sm">
@@ -432,6 +345,10 @@ export default function CartPage() {
                     <span className="text-green-600 font-semibold">−{fmt(discount)}</span>
                   </div>
                 )}
+                <div className="flex justify-between text-xs text-gray-400 border-t border-dashed border-gray-100 pt-3">
+                  <span>GST (18% incl.)</span>
+                  <span>{fmt(gst)}</span>
+                </div>
               </div>
 
               {/* Grand total */}
@@ -441,24 +358,13 @@ export default function CartPage() {
               </div>
 
               {/* Checkout button */}
-              {selectedCount > 0 ? (
-                <Link
-                  href="/checkout"
-                  className="btn-brand mt-5 w-full flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  Proceed to Checkout
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  disabled
-                  className="mt-5 w-full flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-bold bg-gray-100 text-gray-400 cursor-not-allowed"
-                >
-                  Proceed to Checkout
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              )}
+              <Link
+                href="/checkout"
+                className="btn-brand mt-5 w-full flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 active:translate-y-0"
+              >
+                Proceed to Checkout
+                <ArrowRight className="h-4 w-4" />
+              </Link>
 
               {/* Trust badges */}
               <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-gray-400">

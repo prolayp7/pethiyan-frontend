@@ -13,7 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import LoginModal from "@/components/auth/LoginModal";
 import {
   getAddresses, getShippingRates, applyCoupon,
-  createAddressDetailed, updateAddress,
+  createAddressDetailed, updateAddressDetailed,
   createRazorpayOrder, verifyRazorpayPayment, createEasepayOrder, getPaymentSettings, syncCartToServer, createCheckout,
   type ApiAddress, type ApiShippingRate, type ApiCouponResult,
 } from "@/lib/api";
@@ -59,6 +59,16 @@ function fmtWeight(weightG: number): string {
     : `${weightG} g`;
 }
 
+function formatItemTotalWeight(weight?: number, weightUnit?: string, quantity = 1): string | null {
+  if (weight == null || weight <= 0) return null;
+
+  const unit = (weightUnit ?? "g").toLowerCase();
+  const unitG = unit === "kg" ? weight * 1000 : weight;
+  const totalG = unitG * quantity;
+
+  return `Total weight: ${fmtWeight(totalG)} (${fmtWeight(unitG)} x ${quantity})`;
+}
+
 function shouldBypassOptimizer(src?: string | null): boolean {
   if (!src) return false;
   return /^https?:\/\//i.test(src);
@@ -91,9 +101,40 @@ type Step = 1 | 2 | 3;
 type PaymentMethod = "razorpay" | "easepay" | "cod";
 
 const BLANK_ADDRESS = {
-  name: "", phone: "", address_line1: "", address_line2: "",
-  city: "", state: "", pincode: "",
+  name: "", phone: "", company_name: "", address_line1: "", address_line2: "",
+  city: "", state: "", pincode: "", gstin: "",
 };
+
+const COMPANY_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9\s.,&()'/-]*$/;
+const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+
+function normalizeCompanyName(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function normalizeGstin(value: string): string {
+  return value.replace(/[^0-9A-Za-z]/g, "").toUpperCase().slice(0, 15);
+}
+
+function validateBusinessFields(value: typeof BLANK_ADDRESS): Record<string, string[]> {
+  const errors: Record<string, string[]> = {};
+  const companyName = normalizeCompanyName(value.company_name);
+  const gstin = normalizeGstin(value.gstin);
+
+  if (companyName && !COMPANY_NAME_PATTERN.test(companyName)) {
+    errors.company_name = ["Company name contains invalid characters."];
+  }
+
+  if (gstin) {
+    if (gstin.length !== 15) {
+      errors.gstin = ["GSTIN must be exactly 15 characters long."];
+    } else if (!GSTIN_PATTERN.test(gstin)) {
+      errors.gstin = ["GSTIN format is invalid. Use a value like 07AAAAA0000A1Z5."];
+    }
+  }
+
+  return errors;
+}
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
@@ -165,6 +206,11 @@ function AddressForm({ value, onChange, onSave, onCancel, saving, errorMessage, 
 
   const inputCls =
     "w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-(--color-primary) focus:bg-white transition-colors";
+  const getInputCls = (field: keyof typeof BLANK_ADDRESS) => `${inputCls} ${fieldErrors?.[field]?.length ? "border-red-300 bg-red-50 focus:border-red-400" : ""}`;
+  const renderFieldError = (field: keyof typeof BLANK_ADDRESS) => {
+    const message = fieldErrors?.[field]?.[0];
+    return message ? <p className="mt-1 text-xs text-red-600">{message}</p> : null;
+  };
 
   return (
     <div className="space-y-3 mt-4 p-5 rounded-2xl border border-gray-200 bg-gray-50">
@@ -185,44 +231,70 @@ function AddressForm({ value, onChange, onSave, onCancel, saving, errorMessage, 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Full Name *</label>
-          <input className={inputCls} placeholder="e.g. Rahul Sharma" value={value.name} onChange={set("name")} />
+          <input className={getInputCls("name")} placeholder="e.g. Rahul Sharma" value={value.name} onChange={set("name")} />
+          {renderFieldError("name")}
         </div>
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Mobile Number *</label>
-          <input className={inputCls} placeholder="10-digit mobile" value={value.phone}
+          <input className={getInputCls("phone")} placeholder="10-digit mobile" value={value.phone}
             onChange={(e) => onChange({ ...value, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
             inputMode="numeric" />
+          {renderFieldError("phone")}
         </div>
       </div>
 
       <div>
+        <label className="text-xs font-semibold text-gray-500 mb-1 block">Company Name</label>
+        <input className={getInputCls("company_name")} placeholder="Company / Business name (optional)" value={value.company_name} onChange={set("company_name")} />
+        {renderFieldError("company_name")}
+      </div>
+
+      <div>
+        <label className="text-xs font-semibold text-gray-500 mb-1 block">GSTIN</label>
+        <input
+          className={getInputCls("gstin")}
+          placeholder="e.g. 07AAAAA0000A1Z5"
+          value={value.gstin}
+          onChange={(e) => onChange({ ...value, gstin: normalizeGstin(e.target.value) })}
+          maxLength={15}
+          autoCapitalize="characters"
+        />
+        {renderFieldError("gstin")}
+      </div>
+
+      <div>
         <label className="text-xs font-semibold text-gray-500 mb-1 block">Address Line 1 *</label>
-        <input className={inputCls} placeholder="Flat / House No., Building, Street" value={value.address_line1} onChange={set("address_line1")} />
+        <input className={getInputCls("address_line1")} placeholder="Flat / House No., Building, Street" value={value.address_line1} onChange={set("address_line1")} />
+        {renderFieldError("address_line1")}
       </div>
       <div>
         <label className="text-xs font-semibold text-gray-500 mb-1 block">Address Line 2</label>
-        <input className={inputCls} placeholder="Area, Colony, Locality (optional)" value={value.address_line2} onChange={set("address_line2")} />
+        <input className={getInputCls("address_line2")} placeholder="Area, Colony, Locality (optional)" value={value.address_line2} onChange={set("address_line2")} />
+        {renderFieldError("address_line2")}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">City *</label>
-          <input className={inputCls} placeholder="City" value={value.city} onChange={set("city")} />
+          <input className={getInputCls("city")} placeholder="City" value={value.city} onChange={set("city")} />
+          {renderFieldError("city")}
         </div>
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">State *</label>
-          <select className={inputCls} value={value.state} onChange={set("state")}>
+          <select className={getInputCls("state")} value={value.state} onChange={set("state")} title="State">
             <option value="">Select state</option>
             {INDIAN_STATES.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
+          {renderFieldError("state")}
         </div>
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Pincode *</label>
-          <input className={inputCls} placeholder="6-digit PIN" value={value.pincode}
+          <input className={getInputCls("pincode")} placeholder="6-digit PIN" value={value.pincode}
             onChange={(e) => onChange({ ...value, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })}
             inputMode="numeric" />
+          {renderFieldError("pincode")}
         </div>
       </div>
 
@@ -251,12 +323,14 @@ interface OrderSummaryProps {
   subtotal: number;
   discount: number;
   shippingCharge: number;
+  shippingLabel?: string | null;
+  shippingEta?: string | null;
   couponResult: ApiCouponResult | null;
   currencySymbol: string;
   items: { name: string; quantity: number; price: number; image?: string | null; weight?: number; weightUnit?: string }[];
 }
 
-function OrderSummary({ subtotal, discount, shippingCharge, couponResult, currencySymbol, items }: OrderSummaryProps) {
+function OrderSummary({ subtotal, discount, shippingCharge, shippingLabel, shippingEta, couponResult, currencySymbol, items }: OrderSummaryProps) {
   const fmt = makeFmt(currencySymbol);
   const taxable = subtotal - discount + shippingCharge;
   const gst = Math.round(taxable * 18 / 118);
@@ -268,7 +342,10 @@ function OrderSummary({ subtotal, discount, shippingCharge, couponResult, curren
 
       {/* Items preview */}
       <div className="space-y-2.5 mb-4 max-h-48 overflow-y-auto">
-        {items.map((item, i) => (
+        {items.map((item, i) => {
+          const weightSummary = formatItemTotalWeight(item.weight, item.weightUnit, item.quantity);
+
+          return (
           <div key={i} className="flex items-center gap-3">
             <div className="relative shrink-0 w-10 h-10 mt-1.5 mr-1.5">
               <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 relative">
@@ -286,28 +363,21 @@ function OrderSummary({ subtotal, discount, shippingCharge, couponResult, curren
                   </div>
                 )}
               </div>
-              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-(--color-primary) text-white text-[9px] flex items-center justify-center font-bold z-10">
+              <span className="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 rounded-full bg-(--color-primary) text-white text-[9px] flex items-center justify-center font-bold z-10">
                 {item.quantity > 99 ? "99+" : item.quantity}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-(--color-secondary) line-clamp-1">{item.name}</p>
-              {item.weight != null && item.weight > 0 && (() => {
-                const unit = (item.weightUnit ?? "g").toLowerCase();
-                const unitG = unit === "kg" ? item.weight * 1000 : item.weight;
-                const totalG = unitG * item.quantity;
-                return (
-                  <p className="text-[10px] text-gray-400 mt-0.5">
-                    {fmtWeight(unitG)} × {item.quantity} = <span className="font-medium text-gray-500">{fmtWeight(totalG)}</span>
-                  </p>
-                );
-              })()}
+              {weightSummary && (
+                <p className="text-[10px] text-gray-400 mt-0.5">{weightSummary}</p>
+              )}
             </div>
             <p className="text-xs font-bold text-(--color-secondary) shrink-0">
               {fmt(item.price * item.quantity)}
             </p>
           </div>
-        ))}
+        );})}
       </div>
 
       {/* Coupon badge */}
@@ -325,12 +395,27 @@ function OrderSummary({ subtotal, discount, shippingCharge, couponResult, curren
           <span>Subtotal</span>
           <span className="font-semibold text-(--color-secondary)">{fmt(subtotal)}</span>
         </div>
+        {shippingLabel && (
+          <div className="flex items-start justify-between gap-3 text-gray-600">
+            <div>
+              <p>Shipping</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">{shippingLabel}{shippingEta ? ` · ${shippingEta}` : ""}</p>
+            </div>
+            <span className="font-semibold text-(--color-secondary)">
+              {shippingCharge === 0 ? <span className="text-green-600">Free</span> : fmt(shippingCharge)}
+            </span>
+          </div>
+        )}
         {discount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Discount</span>
             <span className="font-semibold">−{fmt(discount)}</span>
           </div>
         )}
+        <div className="flex justify-between text-xs text-gray-400 border-t border-dashed border-gray-100 pt-3">
+          <span>GST (18% incl.)</span>
+          <span>{fmt(gst)}</span>
+        </div>
       </div>
 
       <div className="flex justify-between items-center border-t border-gray-200 pt-4 mt-4">
@@ -345,7 +430,7 @@ function OrderSummary({ subtotal, discount, shippingCharge, couponResult, curren
 
 export default function CheckoutClient() {
   const router = useRouter();
-  const { user, isLoading: authLoading, isLoggedIn } = useAuth();
+  const { user, updateUser, isLoading: authLoading, isLoggedIn } = useAuth();
   const { items, total, clearCart, removeItem } = useCart();
   const currencySymbol = items[0]?.currencySymbol ?? "₹";
   const fmt = makeFmt(currencySymbol);
@@ -389,7 +474,7 @@ export default function CheckoutClient() {
 
   useEffect(() => {
     setLastPincode(readLastPincodeFromCookie());
-  }, []);
+  }, [user?.company_name, user?.gstin]);
 
   // Restore coupon applied on the cart page
   useEffect(() => {
@@ -403,7 +488,7 @@ export default function CheckoutClient() {
         }
       }
     } catch {}
-  }, []);
+  }, [user?.company_name, user?.gstin]);
 
   // Fire begin_checkout once when the page mounts with a non-empty cart
   useEffect(() => {
@@ -438,12 +523,16 @@ export default function CheckoutClient() {
 
   useEffect(() => {
     if (!showAddressForm) return;
-    if (!lastPincode) return;
 
     setNewAddress((current) => (
-      current.pincode ? current : { ...current, pincode: lastPincode }
+      {
+        ...current,
+        pincode: current.pincode || lastPincode,
+        company_name: current.company_name || user?.company_name || "",
+        gstin: current.gstin || user?.gstin || "",
+      }
     ));
-  }, [showAddressForm, lastPincode]);
+  }, [showAddressForm, lastPincode, user?.company_name, user?.gstin]);
 
   useEffect(() => {
     getPaymentSettings()
@@ -476,44 +565,65 @@ export default function CheckoutClient() {
     setNewAddress({
       name: addr.name,
       phone: addr.phone,
+      company_name: addr.company_name ?? user?.company_name ?? "",
       address_line1: addr.address_line1,
       address_line2: addr.address_line2 ?? "",
       city: addr.city,
       state: addr.state,
       pincode: addr.pincode,
+      gstin: user?.gstin ?? "",
     });
     setAddressSaveError("");
     setAddressFieldErrors({});
     setShowAddressForm(true);
-  }, []);
+  }, [user?.company_name, user?.gstin]);
 
   const handleSaveAddress = useCallback(async () => {
     setAddressSaveError("");
+    const businessFieldErrors = validateBusinessFields(newAddress);
+    if (Object.keys(businessFieldErrors).length > 0) {
+      setAddressFieldErrors(businessFieldErrors);
+      setAddressSaveError("Please fix the highlighted fields.");
+      return;
+    }
+
     setAddressFieldErrors({});
     setSavingAddress(true);
 
+    const normalizedCompanyName = normalizeCompanyName(newAddress.company_name);
+    const normalizedGstin = normalizeGstin(newAddress.gstin);
+
     if (editingAddressId !== null) {
       // ── Update existing address ──
-      const updated = await updateAddress(editingAddressId, {
+      const result = await updateAddressDetailed(editingAddressId, {
         name: newAddress.name,
         phone: newAddress.phone,
+        company_name: normalizedCompanyName,
         address_line1: newAddress.address_line1,
         address_line2: newAddress.address_line2,
         city: newAddress.city,
         state: newAddress.state,
         pincode: newAddress.pincode,
+        gstin: normalizedGstin,
       });
       setSavingAddress(false);
-      if (updated) {
-        setAddresses((prev) => prev.map((a) => (a.id === editingAddressId ? updated : a)));
-        writeLastPincodeCookie(updated.pincode);
-        setLastPincode(updated.pincode);
-        setSelectedAddressId(updated.id);
+      if (result.success && result.address) {
+        setAddresses((prev) => prev.map((a) => (a.id === editingAddressId ? result.address! : a)));
+        writeLastPincodeCookie(result.address.pincode);
+        setLastPincode(result.address.pincode);
+        setSelectedAddressId(result.address.id);
+        updateUser({
+          company_name: normalizedCompanyName || null,
+          gstin: normalizedGstin || null,
+        });
         setShowAddressForm(false);
         setEditingAddressId(null);
         setNewAddress(BLANK_ADDRESS);
+        setAddressSaveError("");
+        setAddressFieldErrors({});
       } else {
-        setAddressSaveError("Failed to update address. Please try again.");
+        setAddressSaveError(result.message ?? "Failed to update address. Please try again.");
+        setAddressFieldErrors(result.errors ?? {});
       }
       return;
     }
@@ -522,16 +632,22 @@ export default function CheckoutClient() {
     const result = await createAddressDetailed({
       name: newAddress.name,
       phone: newAddress.phone,
+      company_name: normalizedCompanyName,
       address_line1: newAddress.address_line1,
       address_line2: newAddress.address_line2,
       city: newAddress.city,
       state: newAddress.state,
       pincode: newAddress.pincode,
+      gstin: normalizedGstin,
     });
     setSavingAddress(false);
     if (result.success && result.address) {
       setAddresses((prev) => [...prev, result.address as ApiAddress]);
       setSelectedAddressId(result.address.id);
+      updateUser({
+        company_name: normalizedCompanyName || null,
+        gstin: normalizedGstin || null,
+      });
       writeLastPincodeCookie(result.address.pincode);
       setLastPincode(result.address.pincode);
       setShowAddressForm(false);
@@ -542,7 +658,7 @@ export default function CheckoutClient() {
       setAddressSaveError(result.message ?? "Failed to save address.");
       setAddressFieldErrors(result.errors ?? {});
     }
-  }, [newAddress, editingAddressId]);
+  }, [newAddress, editingAddressId, updateUser]);
 
   const handleContinueToShipping = useCallback(async () => {
     if (!selectedAddress) return;
@@ -885,6 +1001,9 @@ export default function CheckoutClient() {
                                   </span>
                                 )}
                               </div>
+                              {addr.company_name && (
+                                <p className="text-sm text-gray-500 mt-0.5">{addr.company_name}</p>
+                              )}
                               <p className="text-sm text-gray-500 mt-0.5">
                                 {addr.address_line1}
                                 {addr.address_line2 ? `, ${addr.address_line2}` : ""}
@@ -963,6 +1082,7 @@ export default function CheckoutClient() {
                 {selectedAddress && (
                   <div className="mb-4 p-3 rounded-xl bg-gray-50 border border-gray-100 text-xs text-gray-600">
                     <span className="font-semibold text-(--color-secondary)">{selectedAddress.name}</span>
+                    {selectedAddress.company_name ? <><span>{" · "}</span>{selectedAddress.company_name}</> : null}
                     {" · "}{selectedAddress.address_line1}, {selectedAddress.city}, {selectedAddress.pincode}
                   </div>
                 )}
@@ -1056,6 +1176,25 @@ export default function CheckoutClient() {
                   </button>
                 </div>
 
+                {selectedRate && (
+                  <div className="mb-6 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Selected Shipping</p>
+                        <p className="text-sm font-semibold text-(--color-secondary) mt-1">{selectedRate.label}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">Estimated delivery: {selectedRate.estimated_days}</p>
+                      </div>
+                      <p className="text-sm font-bold text-(--color-secondary)">
+                        {selectedRate.is_free || selectedRate.charge === 0 ? (
+                          <span className="text-green-600">Free</span>
+                        ) : (
+                          fmt(selectedRate.charge)
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Coupon in payment step */}
                 <div className="mb-6 p-4 rounded-xl bg-gray-50 border border-gray-100">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
@@ -1069,7 +1208,7 @@ export default function CheckoutClient() {
                         <span className="text-sm font-semibold text-green-700">{couponResult.code}</span>
                         <span className="text-sm text-green-600">— {fmt(discount)} off</span>
                       </div>
-                      <button onClick={() => { setCouponResult(null); sessionStorage.removeItem("applied_coupon"); }} className="text-green-400 hover:text-green-600">
+                      <button onClick={() => { setCouponResult(null); sessionStorage.removeItem("applied_coupon"); }} className="text-green-400 hover:text-green-600" aria-label="Remove coupon" title="Remove coupon">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
@@ -1200,6 +1339,8 @@ export default function CheckoutClient() {
               subtotal={total}
               discount={discount}
               shippingCharge={shippingCharge}
+              shippingLabel={selectedRate?.label ?? null}
+              shippingEta={selectedRate?.estimated_days ?? null}
               couponResult={couponResult}
               currencySymbol={currencySymbol}
               items={items}

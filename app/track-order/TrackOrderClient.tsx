@@ -15,7 +15,7 @@ import { trackOrder, type ApiOrder, type ApiTrackingStep } from "@/lib/api";
 
 function fmt(n: number) {
   return new Intl.NumberFormat("en-IN", {
-    style: "currency", currency: "INR", maximumFractionDigits: 0,
+    style: "currency", currency: "INR", minimumFractionDigits: 2, maximumFractionDigits: 2,
   }).format(n);
 }
 
@@ -196,7 +196,7 @@ function OrderResult({ order }: { order: ApiOrder }) {
                     <p className="text-[11px] text-gray-400">Qty: {item.quantity}</p>
                   </div>
                   <p className="text-xs font-bold text-gray-700 shrink-0">
-                    {fmt(item.price * item.quantity)}
+                    Total: {fmt(item.subtotal ?? item.price * item.quantity)}
                   </p>
                 </div>
               ))}

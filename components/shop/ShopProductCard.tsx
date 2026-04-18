@@ -87,6 +87,10 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     defaultVariant?.image || product.images?.main_image
   );
   const isInWishlist = isWishlisted(product.id);
+  
+  // Use cost field from API (price without GST)
+  const priceWithoutGst = defaultPricing?.cost ? parseFloat(String(defaultPricing.cost)) : price;
+  const compareWithoutGst = compare;
 
   // ── Quick view derived values ─────────────────────────────────────────────
   const quickViewVariants = useMemo(() => quickViewProduct?.variants ?? [], [quickViewProduct]);
@@ -156,6 +160,8 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
       minQty,
       storeId: defaultPricing.store_id,
       currencySymbol: product.currency?.symbol || "₹",
+      weight: defaultVariant.weight ?? undefined,
+      weightUnit: defaultVariant.weight_unit ?? undefined,
     });
     openCart();
   };
@@ -351,11 +357,11 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
               <div className="flex flex-col gap-0.5 min-w-0">
                 <div className="flex items-baseline gap-1">
                   <span className="text-sm font-extrabold text-gray-900">
-                    {product.currency?.symbol || "₹"}{price.toFixed(2)}
+                    {product.currency?.symbol || "₹"}{priceWithoutGst.toFixed(2)}
                   </span>
                   {showCompare && (
                     <span className="text-[10px] text-gray-400 line-through">
-                      {product.currency?.symbol || "₹"}{compare.toFixed(2)}
+                      {product.currency?.symbol || "₹"}{compareWithoutGst.toFixed(2)}
                     </span>
                   )}
                 </div>

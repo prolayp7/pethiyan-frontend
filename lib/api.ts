@@ -5,22 +5,28 @@ export const API_BASE =
 const LS_TOKEN_KEY = "auth_token";
 const AUTH_SESSION_MARKER = "__http_only_session__";
 
-function getApiErrorMessage(payload: {
-  message?: string;
-  data?: {
-    error?: string;
-    errors?: Record<string, string[]>;
-  };
-} | null | undefined): string | undefined {
+function getApiErrorMessage(payload: unknown): string | undefined {
   if (!payload) return undefined;
 
-  if (payload.data?.error) return payload.data.error;
+  const record = typeof payload === "object" ? (payload as Record<string, unknown>) : null;
+  if (!record) return undefined;
 
-  const firstValidationError = payload.data?.errors
-    ? Object.values(payload.data.errors).flat().find(Boolean)
-    : undefined;
+  // 1. Check for explicit error string
+  const data = typeof record.data === "object" && record.data !== null
+    ? (record.data as Record<string, unknown>)
+    : null;
 
-  if (firstValidationError) return firstValidationError;
+  if (data?.error) return String(data.error);
+  if (record.error) return String(record.error);
+
+  // 2. Check for validation errors (Laravel default or custom)
+  const errors = record.errors ?? data?.errors;
+  if (errors && typeof errors === "object") {
+    const firstError = Object.values(errors).flat().find(Boolean);
+    if (firstError) return String(firstError);
+  }
+
+  // 3. Fallback to message
   return payload.message;
 }
 
@@ -28,6 +34,7 @@ function getApiErrorMessage(payload: {
 
 export interface ApiCategory {
   id: number;
+  sort_order?: number;
   name: string;   // mapped from title for backwards compat
   title: string;
   slug: string;
@@ -136,6 +143,7 @@ export interface ApiAddress {
   id: number;
   name: string;
   phone: string;
+  company_name?: string;
   address_line1: string;
   address_line2?: string;
   city: string;
@@ -150,6 +158,10 @@ export interface ApiAddressMutationResult {
   message?: string;
   errors?: Record<string, string[]>;
 }
+
+type ApiAddressInput = Omit<ApiAddress, "id" | "is_default"> & {
+  gstin?: string;
+};
 
 export interface ApiOrder {
   id: number;
@@ -302,8 +314,73 @@ export interface ApiWebSettings {
   metaKeywords: string;
   googleSiteVerification: string;
   bingSiteVerification: string;
-  footerSeoEnabled: boolean;
-  footerSeoHomepageOnly: boolean;
+}
+
+export interface ApiFooterLink {
+  id?: number;
+  label: string;
+  href: string;
+  target?: string;
+}
+
+export interface ApiFooterMenu {
+  id: number;
+  name: string;
+  slug: string;
+  title: string;
+  links: ApiFooterLink[];
+}
+
+export interface ApiFooterSocialLink {
+  platform: string;
+  label: string;
+  url: string;
+}
+
+export interface ApiFooterHighlightTickerItem {
+  highlight: string;
+  text: string;
+}
+
+export interface ApiFeaturedProductsSection {
+  enabled: boolean;
+  eyebrow: string;
+  heading: string;
+  subheading: string;
+  productCount: number;
+  viewAllLink: string;
+  categories: Array<{
+    id: number;
+    title: string;
+    slug: string;
+  }>;
+  products: RealApiProduct[];
+}
+
+export interface ApiFooterData {
+  brand: {
+    appName: string;
+    logo: string | null;
+    footerLogo: string | null;
+    copyrightText: string;
+    address: string;
+    supportEmail: string;
+    supportNumber: string;
+    socialLinks: ApiFooterSocialLink[];
+  };
+  menus: {
+    navigation: ApiFooterMenu[];
+    legal: ApiFooterMenu | null;
+  };
+  footerSeo: {
+    enabled: boolean;
+    homepageOnly: boolean;
+    introHtml: string;
+  };
+  highlightTicker: {
+    homepageOnly: boolean;
+    items: ApiFooterHighlightTickerItem[];
+  };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -377,7 +454,7 @@ async function apiAuth<T>(
       credentials: "include",
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
-    if (!res.ok) return null;
+    // Always parse JSON — error responses (4xx/5xx) carry a message body we need to show
     return res.json() as Promise<T>;
   } catch {
     return null;
@@ -574,6 +651,45 @@ export async function getFeaturedProducts(): Promise<RealApiProduct[]> {
   }
 }
 
+export async function getFeaturedProductsSection(): Promise<ApiFeaturedProductsSection | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/settings/featured-products-section`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 60, tags: ["featured-products"] },
+    } as RequestInit);
+
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    const data = (json?.data ?? null) as Record<string, unknown> | null;
+    if (!data) return null;
+
+    return {
+      enabled: typeof data.enabled === "boolean" ? data.enabled : Boolean(data.enabled),
+      eyebrow: typeof data.eyebrow === "string" ? data.eyebrow.trim() : "",
+      heading: typeof data.heading === "string" ? data.heading.trim() : "",
+      subheading: typeof data.subheading === "string" ? data.subheading.trim() : "",
+      productCount: typeof data.productCount === "number" ? data.productCount : Number(data.productCount ?? 0),
+      viewAllLink: typeof data.viewAllLink === "string" ? data.viewAllLink.trim() : "/shop",
+      categories: Array.isArray(data.categories)
+        ? data.categories
+            .map((entry) => {
+              const item = entry as Record<string, unknown>;
+              const id = Number(item.id ?? 0);
+              const title = typeof item.title === "string" ? item.title.trim() : "";
+              const slug = typeof item.slug === "string" ? item.slug.trim() : "";
+              if (!id || !title || !slug) return null;
+              return { id, title, slug };
+            })
+            .filter((item): item is { id: number; title: string; slug: string } => Boolean(item))
+        : [],
+      products: Array.isArray(data.products) ? (data.products as RealApiProduct[]) : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getNewArrivals(days = 30, limit = 40): Promise<RealApiProduct[]> {
   try {
     const res = await fetch(
@@ -667,7 +783,14 @@ function normaliseCats(raw: unknown[]): ApiCategory[] {
   return raw.map((c: unknown) => {
     const cat = c as Record<string, unknown>;
     const title = (cat.title ?? cat.name ?? "") as string;
-    return { ...cat, title, name: title } as ApiCategory;
+    const sortOrder = Number(cat.sort_order);
+
+    return {
+      ...cat,
+      title,
+      name: title,
+      sort_order: Number.isFinite(sortOrder) ? sortOrder : undefined,
+    } as ApiCategory;
   });
 }
 
@@ -783,19 +906,37 @@ export async function registerUser(data: {
   password: string;
   password_confirmation: string;
   country_code?: string;
-}): Promise<{ success: boolean; token?: string; user?: import("@/context/AuthContext").AuthUser; message?: string }> {
+}): Promise<{
+  success: boolean;
+  token?: string;
+  user?: import("@/context/AuthContext").AuthUser;
+  message?: string;
+  smsOtpSent?: boolean;
+  emailOtpSent?: boolean;
+}> {
   const res = await apiFetch<{
     success: boolean;
     message?: string;
     access_token?: string;
-    data?: { user: import("@/context/AuthContext").AuthUser };
+    data?: {
+      user: import("@/context/AuthContext").AuthUser;
+      sms_otp_sent?: boolean;
+      email_otp_sent?: boolean;
+    };
   }>("/api/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ country_code: "+91", ...data }),
   });
   if (!res) return { success: false, message: "Request failed" };
-  return { success: res.success, message: res.message, token: res.success && res.data?.user ? AUTH_SESSION_MARKER : undefined, user: res.data?.user };
+  return {
+    success: res.success,
+    message: res.message,
+    token: res.success && res.data?.user ? AUTH_SESSION_MARKER : undefined,
+    user: res.data?.user,
+    smsOtpSent: res.data?.sms_otp_sent,
+    emailOtpSent: res.data?.email_otp_sent,
+  };
 }
 
 export async function verifyMobile(
@@ -897,14 +1038,18 @@ export async function getProfile(): Promise<import("@/context/AuthContext").Auth
 }
 
 export async function updateProfile(
-  data: Partial<{ name: string; email: string }>
+  data: Partial<{ name: string; email: string; company_name: string; gstin: string }>
 ): Promise<{ success: boolean; message?: string }> {
   const res = await apiAuth<{ success: boolean; message?: string }>(
     "/api/user/profile",
     "POST",
     data
   );
-  return res ?? { success: false };
+  if (!res) return { success: false, message: "Request failed" };
+  return {
+    success: res.success ?? false,
+    message: getApiErrorMessage(res) ?? res.message,
+  };
 }
 
 export async function logoutUserSession(): Promise<void> {
@@ -923,6 +1068,7 @@ export async function getAddresses(): Promise<ApiAddress[]> {
     id: Number(addr.id),
     name: String(addr.name ?? ""),
     phone: String(addr.phone ?? addr.mobile ?? ""),
+    company_name: String(addr.company_name ?? ""),
     address_line1: String(addr.address_line1 ?? ""),
     address_line2: (addr.address_line2 as string | undefined) ?? "",
     city: String(addr.city ?? ""),
@@ -957,26 +1103,28 @@ export async function getAddresses(): Promise<ApiAddress[]> {
 }
 
 export async function createAddress(
-  data: Omit<ApiAddress, "id" | "is_default">
+  data: ApiAddressInput
 ): Promise<ApiAddress | null> {
   const result = await createAddressDetailed(data);
   return result.success ? result.address ?? null : null;
 }
 
 export async function createAddressDetailed(
-  data: Omit<ApiAddress, "id" | "is_default">
+  data: ApiAddressInput
 ): Promise<ApiAddressMutationResult> {
   const token = getToken();
 
   // Backend expects mobile/zipcode/country/country_code.
   const payload = {
     name: data.name,
+    company_name: data.company_name,
     address_line1: data.address_line1,
     address_line2: data.address_line2,
     city: data.city,
     state: data.state,
     zipcode: data.pincode,
     mobile: data.phone,
+    gstin: data.gstin,
     country: "India",
     country_code: "IN",
     address_type: "home",
@@ -1007,6 +1155,7 @@ export async function createAddressDetailed(
           id: Number(raw.id),
           name: String(raw.name ?? ""),
           phone: String(raw.phone ?? raw.mobile ?? ""),
+          company_name: String(raw.company_name ?? ""),
           address_line1: String(raw.address_line1 ?? ""),
           address_line2: (raw.address_line2 as string | undefined) ?? "",
           city: String(raw.city ?? ""),
@@ -1035,34 +1184,78 @@ export async function updateAddress(
   id: number,
   data: Partial<Omit<ApiAddress, "id">>
 ): Promise<ApiAddress | null> {
+  const result = await updateAddressDetailed(id, data);
+  return result.success ? result.address ?? null : null;
+}
+
+export async function updateAddressDetailed(
+  id: number,
+  data: Partial<ApiAddressInput>
+): Promise<ApiAddressMutationResult> {
   const payload = {
     ...(data.name !== undefined ? { name: data.name } : {}),
+    ...(data.company_name !== undefined ? { company_name: data.company_name } : {}),
     ...(data.address_line1 !== undefined ? { address_line1: data.address_line1 } : {}),
     ...(data.address_line2 !== undefined ? { address_line2: data.address_line2 } : {}),
     ...(data.city !== undefined ? { city: data.city } : {}),
     ...(data.state !== undefined ? { state: data.state } : {}),
     ...(data.pincode !== undefined ? { zipcode: data.pincode } : {}),
     ...(data.phone !== undefined ? { mobile: data.phone } : {}),
+    ...(data.gstin !== undefined ? { gstin: data.gstin } : {}),
     ...(data.is_default !== undefined ? { is_default: data.is_default } : {}),
+    address_type: "home",
     country: "India",
     country_code: "IN",
   };
-  const res = await apiAuth<ApiResponse<Record<string, unknown>>>(`/api/addresses/${id}`, "PUT", payload);
-  if (res && "data" in res && res.data) {
-    const raw = res.data;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/addresses/${id}`, {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...getAuthHeaders(getToken()),
+      },
+      cache: "no-store",
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    const json = (await res.json().catch(() => null)) as
+      | { success?: boolean; message?: string; data?: Record<string, unknown> | Record<string, string[]> }
+      | null;
+
+    if (res.ok && json?.data && !Array.isArray(json.data)) {
+      const raw = json.data as Record<string, unknown>;
+      return {
+        success: true,
+        address: {
+          id: Number(raw.id),
+          name: String(raw.name ?? ""),
+          phone: String(raw.phone ?? raw.mobile ?? ""),
+          company_name: String(raw.company_name ?? ""),
+          address_line1: String(raw.address_line1 ?? ""),
+          address_line2: (raw.address_line2 as string | undefined) ?? "",
+          city: String(raw.city ?? ""),
+          state: String(raw.state ?? ""),
+          pincode: String(raw.pincode ?? raw.zipcode ?? ""),
+          is_default: Boolean(raw.is_default),
+        },
+        message: json.message,
+      };
+    }
+
     return {
-      id: Number(raw.id),
-      name: String(raw.name ?? ""),
-      phone: String(raw.phone ?? raw.mobile ?? ""),
-      address_line1: String(raw.address_line1 ?? ""),
-      address_line2: (raw.address_line2 as string | undefined) ?? "",
-      city: String(raw.city ?? ""),
-      state: String(raw.state ?? ""),
-      pincode: String(raw.pincode ?? raw.zipcode ?? ""),
-      is_default: Boolean(raw.is_default),
+      success: false,
+      message: json?.message ?? "Failed to update address.",
+      errors:
+        json?.data && !Array.isArray(json.data)
+          ? (json.data as Record<string, string[]>)
+          : undefined,
     };
+  } catch {
+    return { success: false, message: "Request failed. Please try again." };
   }
-  return null;
 }
 
 export async function deleteAddress(id: number): Promise<boolean> {
@@ -1075,6 +1268,8 @@ export async function deleteAddress(id: number): Promise<boolean> {
 function normalizeOrder(raw: Record<string, unknown>): ApiOrder {
   const items = ((raw.items ?? []) as Record<string, unknown>[]).map((item) => ({
     ...(item as object),
+    price: parseFloat(String(item.price ?? item.unit_price ?? 0)),
+    subtotal: parseFloat(String(item.subtotal ?? item.total ?? 0)),
     product_name:
       (item.title as string) ??
       ((item.product as Record<string, unknown>)?.name as string) ??
@@ -1098,7 +1293,14 @@ function normalizeOrder(raw: Record<string, unknown>): ApiOrder {
     ...(raw as object),
     order_number: (raw.slug as string) ?? String(raw.id),
     total: parseFloat(String(raw.final_total ?? raw.total_payable ?? 0)),
-    shipping_charge: parseFloat(String(raw.delivery_charge ?? 0)),
+    final_total: parseFloat(String(raw.final_total ?? raw.total_payable ?? 0)),
+    subtotal: parseFloat(String(raw.subtotal ?? 0)),
+    shipping_charge: parseFloat(String(raw.shipping_charge ?? raw.delivery_charge ?? 0)),
+    delivery_charge: parseFloat(String(raw.delivery_charge ?? raw.shipping_charge ?? 0)),
+    discount: parseFloat(String(raw.discount ?? raw.promo_discount ?? 0)),
+    gst_amount: parseFloat(String(raw.gst_amount ?? raw.total_gst ?? 0)),
+    promo_discount: parseFloat(String(raw.promo_discount ?? 0)),
+    gift_card_discount: parseFloat(String(raw.gift_card_discount ?? 0)),
     items,
   } as ApiOrder;
 }
@@ -1368,7 +1570,6 @@ export async function getWebSettings(): Promise<ApiWebSettings | null> {
   if (!s) return null;
 
   const str = (key: string) => (typeof s[key] === "string" ? (s[key] as string).trim() : "");
-  const bool = (key: string, fallback: boolean) => (key in s ? Boolean(s[key]) : fallback);
 
   return {
     googleAnalyticsId:   str("googleAnalyticsId"),
@@ -1379,8 +1580,130 @@ export async function getWebSettings(): Promise<ApiWebSettings | null> {
     metaKeywords:        str("metaKeywords"),
     googleSiteVerification: str("googleSiteVerification"),
     bingSiteVerification:   str("bingSiteVerification"),
-    footerSeoEnabled:       bool("footerSeoEnabled", true),
-    footerSeoHomepageOnly:  bool("footerSeoHomepageOnly", false),
+  };
+}
+
+export async function getFooterData(): Promise<ApiFooterData | null> {
+  const res = await fetch(`${API_BASE}/api/settings/footer`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  } as RequestInit).then((r) => r.json()).catch(() => null) as {
+    success?: boolean;
+    data?: Record<string, unknown>;
+  } | null;
+
+  if (!res?.success || !res.data) return null;
+
+  const data = res.data as Record<string, unknown>;
+  const brand = (data.brand ?? {}) as Record<string, unknown>;
+  const menus = (data.menus ?? {}) as Record<string, unknown>;
+  const footerSeo = (data.footerSeo ?? {}) as Record<string, unknown>;
+  const highlightTicker = (data.highlightTicker ?? {}) as Record<string, unknown>;
+
+  const boolValue = (value: unknown, fallback: boolean) => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return value !== 0;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["1", "true", "yes", "on"].includes(normalized)) return true;
+      if (["0", "false", "no", "off", ""].includes(normalized)) return false;
+    }
+    return value == null ? fallback : Boolean(value);
+  };
+
+  const mapLinks = (value: unknown): ApiFooterLink[] =>
+    Array.isArray(value)
+      ? value
+          .map((entry) => {
+            const item = entry as Record<string, unknown>;
+            const label = typeof item.label === "string" ? item.label.trim() : "";
+            const href = typeof item.href === "string" ? item.href.trim() : "";
+
+            if (!label || !href) return null;
+
+            return {
+              id: typeof item.id === "number" ? item.id : undefined,
+              label,
+              href,
+              target: typeof item.target === "string" ? item.target : undefined,
+            } satisfies ApiFooterLink;
+          })
+          .filter((item): item is ApiFooterLink => Boolean(item))
+      : [];
+
+  const mapMenu = (value: unknown): ApiFooterMenu | null => {
+    if (!value || typeof value !== "object") return null;
+
+    const item = value as Record<string, unknown>;
+    const title = typeof item.title === "string" ? item.title.trim() : "";
+    const name = typeof item.name === "string" ? item.name.trim() : title;
+    const slug = typeof item.slug === "string" ? item.slug.trim() : "";
+
+    if (!name || !slug) return null;
+
+    return {
+      id: typeof item.id === "number" ? item.id : 0,
+      name,
+      slug,
+      title: title || name,
+      links: mapLinks(item.links),
+    };
+  };
+
+  return {
+    brand: {
+      appName: typeof brand.appName === "string" && brand.appName.trim() ? brand.appName.trim() : "Pethiyan",
+      logo: normalizeMediaUrl(typeof brand.logo === "string" ? brand.logo : null),
+      footerLogo: normalizeMediaUrl(typeof brand.footerLogo === "string" ? brand.footerLogo : null),
+      copyrightText: typeof brand.copyrightText === "string" ? brand.copyrightText.trim() : "",
+      address: typeof brand.address === "string" ? brand.address.trim() : "",
+      supportEmail: typeof brand.supportEmail === "string" ? brand.supportEmail.trim() : "",
+      supportNumber: typeof brand.supportNumber === "string" ? brand.supportNumber.trim() : "",
+      socialLinks: Array.isArray(brand.socialLinks)
+        ? brand.socialLinks
+            .map((entry) => {
+              const item = entry as Record<string, unknown>;
+              const url = typeof item.url === "string" ? item.url.trim() : "";
+              if (!url) return null;
+
+              return {
+                platform: typeof item.platform === "string" ? item.platform : "",
+                label: typeof item.label === "string" && item.label.trim() ? item.label.trim() : "Social",
+                url,
+              } satisfies ApiFooterSocialLink;
+            })
+            .filter((item): item is ApiFooterSocialLink => Boolean(item))
+        : [],
+    },
+    menus: {
+      navigation: Array.isArray(menus.navigation)
+        ? menus.navigation
+            .map((entry) => mapMenu(entry))
+            .filter((item): item is ApiFooterMenu => Boolean(item))
+        : [],
+      legal: mapMenu(menus.legal),
+    },
+    footerSeo: {
+      enabled: boolValue(footerSeo.enabled, true),
+      homepageOnly: boolValue(footerSeo.homepageOnly, false),
+      introHtml: typeof footerSeo.introHtml === "string" ? footerSeo.introHtml.trim() : "",
+    },
+    highlightTicker: {
+      homepageOnly: boolValue(highlightTicker.homepageOnly, true),
+      items: Array.isArray(highlightTicker.items)
+        ? highlightTicker.items
+            .map((entry) => {
+              const item = entry as Record<string, unknown>;
+              const highlight = typeof item.highlight === "string" ? item.highlight.trim() : "";
+              const text = typeof item.text === "string" ? item.text.trim() : "";
+
+              if (!highlight && !text) return null;
+
+              return { highlight, text } satisfies ApiFooterHighlightTickerItem;
+            })
+            .filter((item): item is ApiFooterHighlightTickerItem => Boolean(item))
+        : [],
+    },
   };
 }
 
@@ -1863,6 +2186,7 @@ export interface ApiVideoStorySection {
     eyebrow: string;
     heading: string;
     subheading: string;
+    placement: HomeSectionPlacement;
     autoplayEnabled: boolean;
     autoplayDelay: number;
     transitionDuration: number;
@@ -1877,7 +2201,37 @@ export async function getVideoStorySection(): Promise<ApiVideoStorySection | nul
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;
-    return res.json() as Promise<ApiVideoStorySection>;
+    const json = (await res.json()) as Record<string, unknown>;
+    const settings = (json.settings ?? null) as Record<string, unknown> | null;
+
+    return {
+      videos: Array.isArray(json.videos)
+        ? json.videos
+            .map((entry) => {
+              const item = entry as Record<string, unknown>;
+              const id = Number(item.id ?? 0);
+              const title = typeof item.title === "string" ? item.title.trim() : "";
+              const videoUrl = typeof item.videoUrl === "string" ? item.videoUrl.trim() : "";
+
+              if (!id || !title || !videoUrl) return null;
+
+              return { id, title, videoUrl } satisfies ApiVideoStoryItem;
+            })
+            .filter((item): item is ApiVideoStoryItem => Boolean(item))
+        : [],
+      settings: {
+        isActive: typeof settings?.isActive === "boolean" ? settings.isActive : Boolean(settings?.isActive),
+        eyebrow: typeof settings?.eyebrow === "string" ? settings.eyebrow.trim() : "",
+        heading: typeof settings?.heading === "string" ? settings.heading.trim() : "",
+        subheading: typeof settings?.subheading === "string" ? settings.subheading.trim() : "",
+        placement: normalizeHomeSectionPlacement(settings?.placement, "after_recently_viewed"),
+        autoplayEnabled: typeof settings?.autoplayEnabled === "boolean" ? settings.autoplayEnabled : Boolean(settings?.autoplayEnabled),
+        autoplayDelay: Math.max(1500, Number(settings?.autoplayDelay ?? 4500) || 4500),
+        transitionDuration: Math.max(0, Number(settings?.transitionDuration ?? 420) || 420),
+        animationStyle:
+          settings?.animationStyle === "fade" || settings?.animationStyle === "none" ? settings.animationStyle : "slide",
+      },
+    };
   } catch {
     return null;
   }
@@ -1971,16 +2325,196 @@ export interface ApiNewsletterSection {
   perks: string[];
   form_title: string;
   form_subtitle: string;
+  placement: HomeSectionPlacement;
+}
+
+export const HOME_SECTION_PLACEMENTS = [
+  "after_hero",
+  "after_categories",
+  "after_featured_products",
+  "after_your_items",
+  "after_recently_viewed",
+  "after_video_stories",
+  "after_why_choose_us",
+  "after_promo_banner",
+  "after_social_proof",
+  "after_newsletter",
+] as const;
+
+export type HomeSectionPlacement = (typeof HOME_SECTION_PLACEMENTS)[number];
+
+function normalizeHomeSectionPlacement(value: unknown, fallback: HomeSectionPlacement): HomeSectionPlacement {
+  return typeof value === "string" && HOME_SECTION_PLACEMENTS.includes(value as HomeSectionPlacement)
+    ? (value as HomeSectionPlacement)
+    : fallback;
+}
+
+export interface ApiWhyChooseUsSection {
+  enabled: boolean;
+  eyebrow: string;
+  heading: string;
+  subheading: string;
+  placement: HomeSectionPlacement;
+  features: string[];
+}
+
+export interface ApiPromoBannerSection {
+  enabled: boolean;
+  badgeText: string;
+  heading: string;
+  subheading: string;
+  placement: HomeSectionPlacement;
+  offerPrimary: string;
+  offerSecondary: string;
+  buttonLabel: string;
+  buttonLink: string;
+}
+
+export interface ApiSocialProofTestimonial {
+  id: number;
+  name: string;
+  title: string;
+  quote: string;
+  stars: number;
+  imageUrl: string | null;
+}
+
+export interface ApiSocialProofSection {
+  enabled: boolean;
+  eyebrow: string;
+  heading: string;
+  subheading: string;
+  placement: HomeSectionPlacement;
+  testimonials: ApiSocialProofTestimonial[];
 }
 
 export async function getNewsletterSection(): Promise<ApiNewsletterSection | null> {
   try {
     const res = await fetch(`${API_BASE}/api/newsletter-section`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 300 },
+      next: { revalidate: 300, tags: ["newsletter-section"] },
     });
     if (!res.ok) return null;
-    return res.json() as Promise<ApiNewsletterSection>;
+    const json = (await res.json()) as Record<string, unknown>;
+
+    return {
+      is_active: typeof json.is_active === "boolean" ? json.is_active : Boolean(json.is_active),
+      badge_text: typeof json.badge_text === "string" ? json.badge_text.trim() : "",
+      heading: typeof json.heading === "string" ? json.heading.trim() : "",
+      heading_highlight: typeof json.heading_highlight === "string" ? json.heading_highlight.trim() : "",
+      subheading: typeof json.subheading === "string" ? json.subheading.trim() : "",
+      perks: Array.isArray(json.perks)
+        ? json.perks.map((item) => (typeof item === "string" ? item.trim() : "")).filter((item) => item.length > 0)
+        : [],
+      form_title: typeof json.form_title === "string" ? json.form_title.trim() : "",
+      form_subtitle: typeof json.form_subtitle === "string" ? json.form_subtitle.trim() : "",
+      placement: normalizeHomeSectionPlacement(json.placement, "after_social_proof"),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getWhyChooseUsSection(): Promise<ApiWhyChooseUsSection | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/settings/why-choose-us-section`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 300, tags: ["why-choose-us"] },
+    } as RequestInit);
+
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    const data = (json?.data ?? null) as Record<string, unknown> | null;
+    if (!data) return null;
+
+    return {
+      enabled: typeof data.enabled === "boolean" ? data.enabled : Boolean(data.enabled),
+      eyebrow: typeof data.eyebrow === "string" ? data.eyebrow.trim() : "",
+      heading: typeof data.heading === "string" ? data.heading.trim() : "",
+      subheading: typeof data.subheading === "string" ? data.subheading.trim() : "",
+      placement: normalizeHomeSectionPlacement(data.placement, "after_video_stories"),
+      features: Array.isArray(data.features)
+        ? data.features
+            .map((item) => (typeof item === "string" ? item.trim() : ""))
+            .filter((item) => item.length > 0)
+        : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getPromoBannerSection(): Promise<ApiPromoBannerSection | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/settings/promo-banner-section`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 300, tags: ["promo-banner"] },
+    } as RequestInit);
+
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    const data = (json?.data ?? null) as Record<string, unknown> | null;
+    if (!data) return null;
+
+    return {
+      enabled: typeof data.enabled === "boolean" ? data.enabled : Boolean(data.enabled),
+      badgeText: typeof data.badgeText === "string" ? data.badgeText.trim() : "",
+      heading: typeof data.heading === "string" ? data.heading.trim() : "",
+      subheading: typeof data.subheading === "string" ? data.subheading.trim() : "",
+      placement: normalizeHomeSectionPlacement(data.placement, "after_why_choose_us"),
+      offerPrimary: typeof data.offerPrimary === "string" ? data.offerPrimary.trim() : "",
+      offerSecondary: typeof data.offerSecondary === "string" ? data.offerSecondary.trim() : "",
+      buttonLabel: typeof data.buttonLabel === "string" ? data.buttonLabel.trim() : "",
+      buttonLink: typeof data.buttonLink === "string" ? data.buttonLink.trim() : "/shop",
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getSocialProofSection(): Promise<ApiSocialProofSection | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/settings/social-proof-section`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 300, tags: ["social-proof"] },
+    } as RequestInit);
+
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    const data = (json?.data ?? null) as Record<string, unknown> | null;
+    if (!data) return null;
+
+    return {
+      enabled: typeof data.enabled === "boolean" ? data.enabled : Boolean(data.enabled),
+      eyebrow: typeof data.eyebrow === "string" ? data.eyebrow.trim() : "",
+      heading: typeof data.heading === "string" ? data.heading.trim() : "",
+      subheading: typeof data.subheading === "string" ? data.subheading.trim() : "",
+      placement: normalizeHomeSectionPlacement(data.placement, "after_promo_banner"),
+      testimonials: Array.isArray(data.testimonials)
+        ? data.testimonials
+            .map((entry) => {
+              const item = entry as Record<string, unknown>;
+              const id = Number(item.id ?? 0);
+              const name = typeof item.name === "string" ? item.name.trim() : "";
+              const quote = typeof item.quote === "string" ? item.quote.trim() : "";
+
+              if (!id || !name || !quote) return null;
+
+              return {
+                id,
+                name,
+                title: typeof item.title === "string" ? item.title.trim() : "",
+                quote,
+                stars: Math.max(1, Math.min(5, Number(item.stars ?? 5) || 5)),
+                imageUrl: normalizeMediaUrl(typeof item.imageUrl === "string" ? item.imageUrl : null),
+              } satisfies ApiSocialProofTestimonial;
+            })
+            .filter((item): item is ApiSocialProofTestimonial => Boolean(item))
+        : [],
+    };
   } catch {
     return null;
   }

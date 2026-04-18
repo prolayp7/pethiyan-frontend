@@ -12,7 +12,7 @@ import { getOrders, type ApiOrder } from "@/lib/api";
 
 function fmt(n: number) {
   return new Intl.NumberFormat("en-IN", {
-    style: "currency", currency: "INR", maximumFractionDigits: 0,
+    style: "currency", currency: "INR", minimumFractionDigits: 2, maximumFractionDigits: 2,
   }).format(n);
 }
 
@@ -58,6 +58,9 @@ function OrderCard({ order }: { order: ApiOrder }) {
   const status = STATUS_MAP[order.status] ?? { label: order.status, cls: "bg-gray-100 text-gray-600" };
   const previewItems = order.items.slice(0, 2);
   const moreCount   = order.items.length - previewItems.length;
+  const shippingCharge = order.shipping_charge ?? order.delivery_charge ?? 0;
+  const subtotal = order.subtotal ?? Math.max(order.total - shippingCharge + (order.discount ?? 0), 0);
+  const discount = order.discount ?? 0;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -99,7 +102,9 @@ function OrderCard({ order }: { order: ApiOrder }) {
                 {item.variant_label && (
                   <p className="text-xs text-gray-400">{item.variant_label}</p>
                 )}
-                <p className="text-xs text-gray-500">Qty: {item.quantity} · {fmt(item.price)}</p>
+                <p className="text-xs text-gray-500">
+                  Qty: {item.quantity} · Total: {fmt(item.subtotal ?? item.price * item.quantity)}
+                </p>
               </div>
             </div>
           ))}
@@ -114,11 +119,29 @@ function OrderCard({ order }: { order: ApiOrder }) {
       {/* Footer */}
       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
         <div>
-          <span className="text-xs text-gray-500">Total: </span>
-          <span className="text-sm font-extrabold text-(--color-secondary)">{fmt(order.total)}</span>
-          <span className="text-xs text-gray-400 ml-1">
-            ({order.items.length} {order.items.length === 1 ? "item" : "items"})
-          </span>
+          <div className="space-y-0.5 text-xs text-gray-500">
+            <div>
+              <span>Sub Total: </span>
+              <span className="font-semibold text-(--color-secondary)">{fmt(subtotal)}</span>
+            </div>
+            <div>
+              <span>Shipping: </span>
+              <span className="font-semibold text-(--color-secondary)">{shippingCharge === 0 ? "Free" : fmt(shippingCharge)}</span>
+            </div>
+            {discount > 0 && (
+              <div>
+                <span>Discount: </span>
+                <span className="font-semibold text-green-600">−{fmt(discount)}</span>
+              </div>
+            )}
+            <div>
+              <span>Total: </span>
+              <span className="text-sm font-extrabold text-(--color-secondary)">{fmt(order.total)}</span>
+              <span className="text-xs text-gray-400 ml-1">
+                ({order.items.length} {order.items.length === 1 ? "item" : "items"})
+              </span>
+            </div>
+          </div>
         </div>
         <Link
           href={`/account/orders/${order.slug}`}
