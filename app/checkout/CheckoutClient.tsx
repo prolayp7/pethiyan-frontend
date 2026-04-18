@@ -332,9 +332,10 @@ interface OrderSummaryProps {
 
 function OrderSummary({ subtotal, discount, shippingCharge, shippingLabel, shippingEta, couponResult, currencySymbol, items }: OrderSummaryProps) {
   const fmt = makeFmt(currencySymbol);
-  const taxable = subtotal - discount + shippingCharge;
-  const gst = Math.round(taxable * 18 / 118);
-  const grand = taxable;
+  const baseSubtotal = (subtotal * 100) / 118;
+  // GST applies only to products, not to shipping charge
+  const productGst = Math.round((subtotal - discount) * 18 / 118);
+  const grand = (subtotal - discount) * 100 / 118 + productGst + shippingCharge;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-28">
@@ -374,7 +375,7 @@ function OrderSummary({ subtotal, discount, shippingCharge, shippingLabel, shipp
               )}
             </div>
             <p className="text-xs font-bold text-(--color-secondary) shrink-0">
-              {fmt(item.price * item.quantity)}
+              {fmt((item.price * item.quantity * 100) / 118)}
             </p>
           </div>
         );})}
@@ -393,7 +394,7 @@ function OrderSummary({ subtotal, discount, shippingCharge, shippingLabel, shipp
       <div className="space-y-2 border-t border-gray-100 pt-4 text-sm">
         <div className="flex justify-between text-gray-600">
           <span>Subtotal</span>
-          <span className="font-semibold text-(--color-secondary)">{fmt(subtotal)}</span>
+          <span className="font-semibold text-(--color-secondary)">{fmt(baseSubtotal)}</span>
         </div>
         {shippingLabel && (
           <div className="flex items-start justify-between gap-3 text-gray-600">
@@ -414,7 +415,7 @@ function OrderSummary({ subtotal, discount, shippingCharge, shippingLabel, shipp
         )}
         <div className="flex justify-between text-xs text-gray-400 border-t border-dashed border-gray-100 pt-3">
           <span>GST (18% incl.)</span>
-          <span>{fmt(gst)}</span>
+          <span>{fmt(productGst)}</span>
         </div>
       </div>
 
@@ -555,7 +556,8 @@ export default function CheckoutClient() {
   const discount = couponResult?.discount_amount ?? 0;
   const selectedRate = shippingRates.find((r) => r.id === selectedRateId);
   const shippingCharge = selectedRate?.charge ?? 0;
-  const grandTotal = total - discount + shippingCharge;
+  // GST applies to products only (not shipping); grandTotal matches the displayed Order Summary total
+  const grandTotal = (total - discount) * 100 / 118 + Math.round((total - discount) * 18 / 118) + shippingCharge;
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
   // ── Handlers ──

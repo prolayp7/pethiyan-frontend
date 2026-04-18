@@ -241,10 +241,10 @@ export default function CartPage() {
                       {/* Price */}
                       <div className="text-right">
                         <p className="text-sm font-bold text-(--color-secondary)">
-                          {fmt(item.price * item.quantity)}
+                          {fmt((item.price * item.quantity * 100) / 118)}
                         </p>
                         {item.quantity > 1 && (
-                          <p className="text-[11px] text-gray-400">{fmt(item.price)} each</p>
+                          <p className="text-[11px] text-gray-400">{fmt((item.price * 100) / 118)} each</p>
                         )}
                         {weightDisplay && (
                           <p className="text-[11px] text-gray-400 mt-1">{weightDisplay}</p>
@@ -337,7 +337,7 @@ export default function CartPage() {
               <div className="space-y-3 border-t border-gray-100 pt-4">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal ({itemCount} items)</span>
-                  <span className="font-semibold text-(--color-secondary)">{fmt(total)}</span>
+                  <span className="font-semibold text-(--color-secondary)">{fmt((total * 100) / 118)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-sm">
@@ -354,7 +354,7 @@ export default function CartPage() {
               {/* Grand total */}
               <div className="flex justify-between items-center border-t border-gray-200 pt-4 mt-4">
                 <span className="text-base font-extrabold text-(--color-secondary)">Total</span>
-                <span className="text-xl font-extrabold text-(--color-secondary)">{fmt(grandTotal)}</span>
+                <span className="text-xl font-extrabold text-(--color-secondary)">{fmt((grandTotal * 100) / 118 + gst)}</span>
               </div>
 
               {/* Checkout button */}

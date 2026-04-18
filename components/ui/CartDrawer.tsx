@@ -93,7 +93,7 @@ export default function CartDrawer() {
                       {item.name}
                     </p>
                     <p className="text-sm text-(--color-primary) font-semibold mt-0.5">
-                      {fmt(item.price * item.quantity)}
+                      {fmt((item.price * item.quantity * 100) / 118)}
                     </p>
 
                     {/* Quantity Controls */}
@@ -139,7 +139,7 @@ export default function CartDrawer() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Subtotal</span>
-                <span>{fmt(total)}</span>
+                <span>{fmt((total * 100) / 118)}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-500">
                 <span>GST</span>
@@ -147,7 +147,7 @@ export default function CartDrawer() {
               </div>
               <div className="flex justify-between font-semibold text-gray-900 pt-2 border-t border-gray-100">
                 <span>Total</span>
-                <span>{fmt(total)}</span>
+                <span>{fmt((total * 100) / 118 + gstAmount)}</span>
               </div>
             </div>
 
