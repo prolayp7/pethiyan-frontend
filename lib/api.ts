@@ -27,7 +27,10 @@ function getApiErrorMessage(payload: unknown): string | undefined {
   }
 
   // 3. Fallback to message
-  return payload.message;
+  if (typeof payload === "object" && payload !== null && "message" in payload) {
+    return String(payload.message);
+  }
+  return undefined;
 }
 
 // ─── API Types ────────────────────────────────────────────────────────────────
@@ -161,6 +164,7 @@ export interface ApiAddressMutationResult {
 
 type ApiAddressInput = Omit<ApiAddress, "id" | "is_default"> & {
   gstin?: string;
+  is_default?: boolean;
 };
 
 export interface ApiOrder {
@@ -1628,7 +1632,7 @@ export async function getFooterData(): Promise<ApiFooterData | null> {
               target: typeof item.target === "string" ? item.target : undefined,
             } satisfies ApiFooterLink;
           })
-          .filter((item): item is ApiFooterLink => Boolean(item))
+          .filter((item): item is NonNullable<typeof item> => item !== null)
       : [];
 
   const mapMenu = (value: unknown): ApiFooterMenu | null => {

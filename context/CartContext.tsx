@@ -132,7 +132,7 @@ export function CartProvider({
 
       const updates = new Map(
         resolved
-          .filter((entry): entry is { id: string; weight: number; weightUnit?: string } => Boolean(entry))
+          .filter((entry): entry is { id: string; weight: number; weightUnit: string } => entry !== null && typeof entry.weightUnit === "string")
           .map((entry) => [entry.id, entry])
       );
 
