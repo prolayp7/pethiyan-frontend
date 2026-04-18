@@ -552,7 +552,7 @@ export default function NavigationMenu6({
                 </div>
 
                 {/* ── RIGHT: 3-Column Sub-links ── */}
-                <div className="flex-1 py-6 pl-7">
+                <div className="flex-1 min-w-0 py-6 pl-7">
                   <div className="flex items-center justify-between mb-5">
                     <p
                       className="text-[9px] font-black tracking-[0.25em] uppercase"
@@ -647,7 +647,7 @@ export default function NavigationMenu6({
                       <div
                         ref={bestSellersRef}
                         className="flex items-start gap-3 overflow-x-auto scroll-smooth pb-1"
-                        style={{ scrollbarWidth: "none" }}
+                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                       >
                         {megaFeaturedProducts.map((p, idx) => (
                           <Link
