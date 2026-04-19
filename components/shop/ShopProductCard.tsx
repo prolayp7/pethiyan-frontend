@@ -359,6 +359,15 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
               }
               const defaultColor = defaultAttrs.color ?? defaultAttrs.col ?? null;
 
+              // Check if ANY variant in this product has a color attribute
+              const productHasColorVariants = product.variants.some((v) => {
+                const a = (v as any).attributes || {};
+                return Object.entries(a).some(([k]) => {
+                  const key = String(k).toLowerCase();
+                  return key === "color" || key === "col";
+                });
+              });
+
               for (const v of product.variants) {
                 const raw = (v as any).attributes || {};
                 // normalize attribute keys to lowercase for robust lookup
@@ -371,8 +380,12 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                 const wt = attrs.weight ?? attrs.weight_kg ?? attrs.weight_g ?? attrs.wt ?? null;
                 // Always collect colors from all variants
                 if (col && !seenColor.has(String(col))) { seenColor.add(String(col)); colors.push({ color: String(col), variantId: v.id }); }
-                // Only collect sizes/weights for variants matching the default variant's color
-                const colorMatches = !defaultColor || !col || String(col) === String(defaultColor);
+                // If product uses color as a variant dimension, only include sizes from variants
+                // that explicitly match the default color — exclude no-color variants entirely.
+                // If product has no color variants at all, include all sizes.
+                const colorMatches = !productHasColorVariants
+                  ? true
+                  : (col != null && String(col) === String(defaultColor));
                 if (!colorMatches) continue;
                 let finalSize = sz;
                 // fallback: try parsing size-like patterns from title or sku or option values
