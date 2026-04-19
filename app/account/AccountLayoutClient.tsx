@@ -159,13 +159,14 @@ export default function AccountLayoutClient({ children }: { children: React.Reac
           </main>
         </div>
 
-        {/* Full-width browsing history — profile page only */}
-        {pathname === "/account/profile" && (
-          <div className="mt-8">
-            <BrowsingHistory />
-          </div>
-        )}
       </div>
+
+      {/* Full-width browsing history — profile page only */}
+      {pathname === "/account/profile" && (
+        <div className="mt-2 pb-12">
+          <BrowsingHistory />
+        </div>
+      )}
     </div>
   );
 }
