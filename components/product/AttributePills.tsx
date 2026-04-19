@@ -101,14 +101,21 @@ export default function AttributePills({ attributes, colors, showColorSwatches =
     return 0;
   });
 
+  // If color swatches are shown separately, do not render color as a text pill to avoid duplication
+  let filteredEntries = entries;
+  if (showColorSwatches) {
+    filteredEntries = entries.filter(([k]) => String(k).toLowerCase() !== "color");
+  }
+
   
 
   return (
     <div className={`flex items-center gap-2 mt-1 flex-wrap ${className}`}>
-      {entries.map(([k, v]) => {
+      {filteredEntries.map(([k, v]) => {
         const key = String(k).toLowerCase();
         const value = String(v);
-        if (showColorSwatches && key === "color") {
+        // color is omitted when swatches are enabled; otherwise show as pill
+        if (!showColorSwatches && key === "color") {
           const bg = COLOR_MAP[value] ?? value ?? "#aaa";
           return <span key={k} title={value} className="w-3 h-3 rounded-full border border-black/10 shrink-0" style={{ background: bg }} />;
         }
