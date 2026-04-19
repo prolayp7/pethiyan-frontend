@@ -10,6 +10,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
+import AttributePills from "@/components/product/AttributePills";
 import { API_BASE, addToWishlist, getProduct, getWishlistItems, removeWishlistItem, type RealApiProduct, type RealApiVariant } from "@/lib/api";
 import toast from "react-hot-toast";
 
@@ -399,9 +400,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
         {/* Color swatches + variant count */}
         {showVariantColorsInGrid && (p.colors.length > 0 || p.variantCount > 1) && (
           <div className="flex min-h-[0.875rem] items-center gap-1.5 overflow-hidden">
-            {p.colors.slice(0, 5).map((c) => (
-              <span key={c} title={c} className="w-3 h-3 rounded-full border border-black/10 shrink-0" style={{ background: COLOR_MAP[c] ?? "#aaa" }} />
-            ))}
+            <AttributePills colors={p.colors} />
             {p.variantCount > 1 && (
               <span className="ml-0.5 truncate text-[10px] text-gray-400">{p.variantCount} variants</span>
             )}

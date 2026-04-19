@@ -18,6 +18,7 @@ import {
   type RealApiProduct, type RealApiVariant,
 } from "@/lib/api";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
+import AttributePills from "@/components/product/AttributePills";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -329,6 +330,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
             <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-[#2e7c8a] transition-colors">
               {product.title}
             </p>
+            <AttributePills attributes={defaultVariant?.attributes ?? null} />
 
             {/* Bottom row: price+meta left, cart right */}
             <div className="flex items-end justify-between gap-2 mt-auto pt-2 border-t border-gray-100">
