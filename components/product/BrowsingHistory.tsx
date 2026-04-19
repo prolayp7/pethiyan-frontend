@@ -7,6 +7,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import Container from "@/components/layout/Container";
 import { getBrowsingHistorySlugs, clearBrowsingHistory } from "@/lib/browsingHistory";
 import { API_BASE, type RealApiProduct } from "@/lib/api";
+import { normalizeImageUrl } from "@/lib/image";
 import AttributePills from "@/components/product/AttributePills";
 
 const COLOR_MAP: Record<string, string> = {
@@ -20,27 +21,7 @@ const COLOR_MAP: Record<string, string> = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function normalizeImg(src?: string | null): string | null {
-  if (!src) return null;
-  const t = String(src).trim();
-  if (!t) return null;
-  if (/^https?:\/\//i.test(t)) {
-    try {
-      const u = new URL(t);
-      const apiOrigin = new URL(API_BASE).origin;
-      if (u.hostname === "127.0.0.1" || u.hostname === "localhost") {
-        return apiOrigin + u.pathname + u.search + u.hash;
-      }
-    } catch (e) {
-      // ignore
-    }
-    return t;
-  }
-  const base = API_BASE.replace(/\/+$/, "");
-  if (t.startsWith("/")) return `${base}${t}`;
-  if (t.startsWith("storage/") || t.startsWith("uploads/")) return `${base}/${t}`;
-  return `${base}/storage/${t}`;
-}
+// use shared normalizeImageUrl from '@/lib/image'
 
 function getPrice(product: RealApiProduct): { price: number; special: number | null; variantTitle: string | null } {
   const variant = product.variants?.find((v) => v.is_default) ?? product.variants?.[0];
@@ -75,11 +56,11 @@ async function fetchBySlug(slugs: string[]): Promise<RealApiProduct[]> {
 function HistoryCard({ product }: { product: RealApiProduct }) {
   const [hoveredVariantId, setHoveredVariantId] = useState<number | null>(null);
   const variant = product.variants.find((v) => v.is_default) ?? product.variants[0];
-  const baseImg = normalizeImg(product.images?.main_image);
+  const baseImg = normalizeImageUrl(product.images?.main_image);
 
   const hoveredVariant = product.variants.find((v) => v.id === hoveredVariantId) ?? null;
 
-  const img = normalizeImg(hoveredVariant?.image ?? variant?.image ?? product.images?.main_image);
+  const img = normalizeImageUrl(hoveredVariant?.image ?? variant?.image ?? product.images?.main_image);
 
   const pricingSource = (v: typeof hoveredVariant | null) => {
     const chosen = v ?? variant;
@@ -144,17 +125,19 @@ function HistoryCard({ product }: { product: RealApiProduct }) {
             const attrs = (variant && (variant as any).attributes) || null;
             return <AttributePills attributes={attrs} />;
           }
+          const hasVariantImages = (product.images?.variant_images?.length ?? 0) > 0;
           return (
             <div onMouseLeave={() => setHoveredVariantId(null)} className="flex items-center gap-2 mt-1 flex-wrap">
               <div className="flex items-center gap-2">
                 {colors.map((c) => {
                   const bg = (COLOR_MAP as any)[c.color] ?? c.color ?? '#aaa';
                   const isActive = hoveredVariantId === c.variantId;
+                  const variantHasImage = Boolean(product.variants.find((v) => v.id === c.variantId)?.image);
                   return (
                     <button
                       key={c.variantId}
-                      onMouseEnter={() => setHoveredVariantId(c.variantId)}
-                      onFocus={() => setHoveredVariantId(c.variantId)}
+                      onMouseEnter={() => { if (hasVariantImages && variantHasImage) setHoveredVariantId(c.variantId); }}
+                      onFocus={() => { if (hasVariantImages && variantHasImage) setHoveredVariantId(c.variantId); }}
                       className={`w-3 h-3 rounded-full border ${isActive ? 'ring-2 ring-offset-1 ring-[#17396f]' : ''}`}
                       title={c.color}
                       style={{ background: bg }}

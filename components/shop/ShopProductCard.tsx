@@ -17,6 +17,7 @@ import {
   API_BASE, getProduct, addToWishlist, getWishlistItems, removeWishlistItem,
   type RealApiProduct, type RealApiVariant,
 } from "@/lib/api";
+import { normalizeImageUrl } from "@/lib/image";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import AttributePills from "@/components/product/AttributePills";
 
@@ -33,27 +34,7 @@ const COLOR_MAP: Record<string, string> = {
   Pink: "#ec4899", Beige: "#e8dcc8", Navy: "#1e3a5f", Maroon: "#800000",
 };
 
-function normalizeImageUrl(src?: string | null): string | null {
-  if (!src) return null;
-  const trimmed = String(src).trim();
-  if (!trimmed) return null;
-  if (/^https?:\/\//i.test(trimmed)) {
-    try {
-      const u = new URL(trimmed);
-      const apiOrigin = new URL(API_BASE).origin;
-      if (u.hostname === "127.0.0.1" || u.hostname === "localhost") {
-        return apiOrigin + u.pathname + u.search + u.hash;
-      }
-    } catch (e) {
-      // fallthrough to return trimmed
-    }
-    return trimmed;
-  }
-  const base = API_BASE.replace(/\/+$/, "");
-  if (trimmed.startsWith("/")) return `${base}${trimmed}`;
-  if (trimmed.startsWith("storage/") || trimmed.startsWith("uploads/")) return `${base}/${trimmed}`;
-  return `${base}/storage/${trimmed}`;
-}
+
 
 /** Extract the best available pricing from a product's variants. */
 function getDefaultPricing(product: RealApiProduct) {
@@ -120,6 +101,8 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   }
 
   const hoveredPricingInfo = getPricingForVariant(hoveredVariant as any);
+    import { normalizeImageUrl } from "@/lib/image";
+
   const defaultPricingInfo = getPricingForVariant(defaultVariant as any) ?? { display: displayPrice, compare };
 
   const priceWithoutGst = hoveredPricingInfo?.display ?? defaultPricingInfo.display ?? 0;
@@ -372,6 +355,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                   colors.push({ color: String(col), variantId: v.id });
                 }
               }
+              const hasVariantImages = (product.images?.variant_images?.length ?? 0) > 0;
               if (colors.length === 0) return <AttributePills attributes={defaultVariant?.attributes ?? null} />;
               return (
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -379,11 +363,12 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                     {colors.map((c) => {
                       const bg = COLOR_MAP[c.color] ?? c.color ?? "#aaa";
                       const isActive = hoveredVariantId === c.variantId;
+                      const variantHasImage = Boolean(product.variants?.find((v) => v.id === c.variantId)?.image);
                       return (
                         <button
                           key={c.variantId}
-                          onMouseEnter={() => setHoveredVariantId(c.variantId)}
-                          onFocus={() => setHoveredVariantId(c.variantId)}
+                          onMouseEnter={() => { if (hasVariantImages && variantHasImage) setHoveredVariantId(c.variantId); }}
+                          onFocus={() => { if (hasVariantImages && variantHasImage) setHoveredVariantId(c.variantId); }}
                           className={`w-4 h-4 rounded-full border ${isActive ? "ring-2 ring-offset-1 ring-[#17396f]" : ""}`}
                           title={c.color}
                           style={{ background: bg }}
