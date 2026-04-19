@@ -351,11 +351,16 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
               const sizes: { size: string; variantId: number }[] = [];
               const weights: { weight: string; variantId: number }[] = [];
               for (const v of product.variants) {
-                const attrs = (v as any).attributes || {};
-                const col = attrs.color;
-                const sz = attrs.size ?? attrs.size_label ?? attrs.size_in ?? null;
-                const wt = attrs.weight ?? attrs.weight_kg ?? attrs.weight_g ?? null;
-                if (col && !seenColor.has(col)) { seenColor.add(col); colors.push({ color: String(col), variantId: v.id }); }
+                const raw = (v as any).attributes || {};
+                // normalize attribute keys to lowercase for robust lookup
+                const attrs: Record<string, any> = {};
+                for (const [k, val] of Object.entries(raw)) {
+                  attrs[String(k).toLowerCase()] = val;
+                }
+                const col = attrs.color ?? attrs.col ?? null;
+                const sz = attrs.size ?? attrs.size_label ?? attrs.size_in ?? attrs.size_cm ?? attrs.dimensions ?? null;
+                const wt = attrs.weight ?? attrs.weight_kg ?? attrs.weight_g ?? attrs.wt ?? null;
+                if (col && !seenColor.has(String(col))) { seenColor.add(String(col)); colors.push({ color: String(col), variantId: v.id }); }
                 if (sz && !seenSize.has(String(sz))) { seenSize.add(String(sz)); sizes.push({ size: String(sz), variantId: v.id }); }
                 if (wt && !seenWeight.has(String(wt))) { seenWeight.add(String(wt)); weights.push({ weight: String(wt), variantId: v.id }); }
               }
