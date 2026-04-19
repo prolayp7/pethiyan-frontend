@@ -78,8 +78,10 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   const { variant: defaultVariant, pricing: defaultPricing } = getDefaultPricing(product);
   const price     = defaultPricing?.special_price || defaultPricing?.price || 0;
   const compare   = defaultPricing?.price || 0;
-  const showCompare = compare > 0 && compare > price;
-  const discount  = showCompare ? Math.round(((compare - price) / compare) * 100) : null;
+  // Display price: prefer special_price when available, otherwise use cost (price without GST) or price
+  const displayPrice = defaultPricing?.special_price ?? (defaultPricing?.cost ? parseFloat(String(defaultPricing.cost)) : defaultPricing?.price ?? 0);
+  const showCompare = compare > 0 && compare > displayPrice;
+  const discount  = showCompare ? Math.round(((compare - displayPrice) / compare) * 100) : null;
   const inStock   = (defaultPricing?.stock ?? 0) > 0;
   const minQty    = product.policies?.minimum_order_quantity ?? 1;
   const imgSrc    = normalizeImageUrl(
@@ -87,8 +89,8 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   );
   const isInWishlist = isWishlisted(product.id);
   
-  // Use cost field from API (price without GST)
-  const priceWithoutGst = defaultPricing?.cost ? parseFloat(String(defaultPricing.cost)) : price;
+  // Price to show in grid (prefer discounted special_price when present)
+  const priceWithoutGst = displayPrice;
   const compareWithoutGst = compare;
 
   // ── Quick view derived values ─────────────────────────────────────────────
