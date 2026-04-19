@@ -62,8 +62,24 @@ async function fetchBySlug(slugs: string[]): Promise<RealApiProduct[]> {
 // ─── Mini product card (designed for horizontal scroll) ───────────────────────
 
 function HistoryCard({ product }: { product: RealApiProduct }) {
-  const img = normalizeImg(product.images?.main_image);
-  const { price, special, variantTitle } = getPrice(product);
+  const [hoveredVariantId, setHoveredVariantId] = useState<number | null>(null);
+  const variant = product.variants.find((v) => v.is_default) ?? product.variants[0];
+  const baseImg = normalizeImg(product.images?.main_image);
+
+  const hoveredVariant = product.variants.find((v) => v.id === hoveredVariantId) ?? null;
+
+  const img = normalizeImg(hoveredVariant?.image ?? variant?.image ?? product.images?.main_image);
+
+  const pricingSource = (v: typeof hoveredVariant | null) => {
+    const chosen = v ?? variant;
+    const pricing = chosen?.store_pricing?.[0];
+    if (!pricing) return { price: 0, special: null, variantTitle: chosen?.title && chosen.title !== product.title ? chosen.title : null };
+    return { price: Number(pricing.price) || 0, special: pricing.special_price ? Number(pricing.special_price) : null, variantTitle: chosen?.title && chosen.title !== product.title ? chosen.title : null };
+  };
+
+  const { price, special } = pricingSource(hoveredVariant);
+  const defaultVariant = product.variants.find((v) => v.is_default) ?? product.variants[0];
+  const displayTitle = hoveredVariant?.title ?? (product.type === "variant" ? (defaultVariant?.title ?? product.title) : product.title);
   const symbol = "₹";
   const hasDiscount = special !== null && special < price;
   const fmt = (n: number) => n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -99,16 +115,46 @@ function HistoryCard({ product }: { product: RealApiProduct }) {
       {/* Info */}
       <div className="p-3 flex flex-col gap-1">
         <p className="text-xs font-semibold text-(--color-secondary) line-clamp-2 leading-tight group-hover:text-(--color-primary) transition-colors">
-          {product.title}
+          {displayTitle}
         </p>
-        {variantTitle && (
-          <p className="text-[10px] text-gray-400 truncate">{variantTitle}</p>
-        )}
-        {/* Attributes: color swatches and other attribute pills */}
+        {/* Attributes: color swatches and other attribute pills (interactive) */}
         {product.variants && (() => {
-          const variant = product.variants.find((v) => v.is_default) ?? product.variants[0];
-          const attrs = (variant && (variant as any).attributes) || null;
-          return <AttributePills attributes={attrs} />;
+          const seen = new Set<string>();
+          const colors: { color: string; variantId: number }[] = [];
+          for (const v of product.variants) {
+            const col = (v as any).attributes?.color;
+            if (col && !seen.has(col)) {
+              seen.add(col);
+              colors.push({ color: String(col), variantId: v.id });
+            }
+          }
+          if (colors.length === 0) {
+            const variant = product.variants.find((v) => v.is_default) ?? product.variants[0];
+            const attrs = (variant && (variant as any).attributes) || null;
+            return <AttributePills attributes={attrs} />;
+          }
+          return (
+            <div onMouseLeave={() => setHoveredVariantId(null)} className="flex items-center gap-2 mt-1 flex-wrap">
+              <div className="flex items-center gap-2">
+                {colors.map((c) => {
+                  const bg = (COLOR_MAP as any)[c.color] ?? c.color ?? '#aaa';
+                  const isActive = hoveredVariantId === c.variantId;
+                  return (
+                    <button
+                      key={c.variantId}
+                      onMouseEnter={() => setHoveredVariantId(c.variantId)}
+                      onFocus={() => setHoveredVariantId(c.variantId)}
+                      className={`w-3 h-3 rounded-full border ${isActive ? 'ring-2 ring-offset-1 ring-[#17396f]' : ''}`}
+                      title={c.color}
+                      style={{ background: bg }}
+                      aria-label={c.color}
+                    />
+                  );
+                })}
+              </div>
+              <AttributePills attributes={(hoveredVariant ?? variant)?.attributes ?? null} showColorSwatches={false} />
+            </div>
+          );
         })()}
         {price > 0 && (
           <div className="flex items-baseline gap-1.5 mt-0.5">

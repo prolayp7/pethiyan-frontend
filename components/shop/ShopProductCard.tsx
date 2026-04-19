@@ -77,6 +77,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
 
   // ── Derived card values ──────────────────────────────────────────────────
   const { variant: defaultVariant, pricing: defaultPricing } = getDefaultPricing(product);
+  const [hoveredVariantId, setHoveredVariantId] = useState<number | null>(null);
   const price     = defaultPricing?.special_price || defaultPricing?.price || 0;
   const compare   = defaultPricing?.price || 0;
   // Display price: prefer special_price when available, otherwise use cost (price without GST) or price
@@ -86,13 +87,32 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   const inStock   = (defaultPricing?.stock ?? 0) > 0;
   const minQty    = product.policies?.minimum_order_quantity ?? 1;
   const imgSrc    = normalizeImageUrl(
-    defaultVariant?.image || product.images?.main_image
+    // prefer hovered variant image when hovering a swatch
+    (product.variants?.find((v) => v.id === hoveredVariantId)?.image) ?? defaultVariant?.image ?? product.images?.main_image
   );
   const isInWishlist = isWishlisted(product.id);
   
   // Price to show in grid (prefer discounted special_price when present)
-  const priceWithoutGst = displayPrice;
-  const compareWithoutGst = compare;
+  // If hovering a variant, try to use that variant's pricing
+  const hoveredVariant = product.variants?.find((v) => v.id === hoveredVariantId) ?? null;
+  const defaultDisplayTitle = hoveredVariant?.title ?? (product.type === "variant" ? (defaultVariant?.title ?? product.title) : product.title);
+  function getPricingForVariant(v: typeof defaultVariant | null) {
+    if (!v) return null;
+    // Prefer a store pricing that matches defaultPricing store_id if available
+    const matchStoreId = defaultPricing?.store_id ?? null;
+    const pricing = (v.store_pricing?.find((s) => (matchStoreId ? s.store_id === matchStoreId : s.stock_status === "in_stock")) ?? v.store_pricing?.[0]) ?? null;
+    return pricing ? {
+      display: pricing.special_price ?? (pricing.cost ? parseFloat(String(pricing.cost)) : pricing.price ?? 0),
+      compare: pricing.price ?? 0,
+      raw: pricing,
+    } : null;
+  }
+
+  const hoveredPricingInfo = getPricingForVariant(hoveredVariant as any);
+  const defaultPricingInfo = getPricingForVariant(defaultVariant as any) ?? { display: displayPrice, compare };
+
+  const priceWithoutGst = hoveredPricingInfo?.display ?? defaultPricingInfo.display ?? 0;
+  const compareWithoutGst = hoveredPricingInfo?.compare ?? defaultPricingInfo.compare ?? 0;
 
   // ── Quick view derived values ─────────────────────────────────────────────
   const quickViewVariants = useMemo(() => quickViewProduct?.variants ?? [], [quickViewProduct]);
@@ -257,7 +277,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="featured-card-border transition-all duration-300 hover:-translate-y-1">
+      <div onMouseLeave={() => setHoveredVariantId(null)} className="featured-card-border transition-all duration-300 hover:-translate-y-1">
         <Link href={`/products/${product.slug}`} className="group">
 
           {/* Image */}
@@ -328,9 +348,44 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
               </p>
             )}
             <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-[#2e7c8a] transition-colors">
-              {product.title}
+              {defaultDisplayTitle}
             </p>
-            <AttributePills attributes={defaultVariant?.attributes ?? null} />
+            {/* Color swatches (interactive) */}
+            {product.variants && (() => {
+              const seen = new Set<string>();
+              const colors: { color: string; variantId: number }[] = [];
+              for (const v of product.variants) {
+                const col = (v as any).attributes?.color;
+                if (col && !seen.has(col)) {
+                  seen.add(col);
+                  colors.push({ color: String(col), variantId: v.id });
+                }
+              }
+              if (colors.length === 0) return <AttributePills attributes={defaultVariant?.attributes ?? null} />;
+              return (
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    {colors.map((c) => {
+                      const bg = COLOR_MAP[c.color] ?? c.color ?? "#aaa";
+                      const isActive = hoveredVariantId === c.variantId;
+                      return (
+                        <button
+                          key={c.variantId}
+                          onMouseEnter={() => setHoveredVariantId(c.variantId)}
+                          onFocus={() => setHoveredVariantId(c.variantId)}
+                          className={`w-4 h-4 rounded-full border ${isActive ? "ring-2 ring-offset-1 ring-[#17396f]" : ""}`}
+                          title={c.color}
+                          style={{ background: bg }}
+                          aria-label={c.color}
+                        />
+                      );
+                    })}
+                  </div>
+                  {/* other attribute pills (hide color since we render swatches above) */}
+                  <AttributePills attributes={defaultVariant?.attributes ?? null} showColorSwatches={false} />
+                </div>
+              );
+            })()}
 
             {/* Bottom row: price+meta left, cart right */}
             <div className="flex items-end justify-between gap-2 mt-auto pt-2 border-t border-gray-100">
