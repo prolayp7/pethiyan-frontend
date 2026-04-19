@@ -9,7 +9,7 @@ interface VariantTag {
 
 interface Props {
   attributes?: Record<string, any> | null;
-  colors?: string[] | null;
+  colors?: Array<string | { color: string; variantId: number }> | null;
   sizes?: VariantTag[] | null;
   weights?: VariantTag[] | null;
   hoveredVariantId?: number | null;
@@ -78,9 +78,18 @@ export default function AttributePills({ attributes, colors, showColorSwatches =
     const visible = colors.slice(0, maxColors);
     return (
       <div className={`flex items-center gap-2 mt-1 flex-wrap ${className}`}>
-        {visible.map((c) => (
-          <span key={c} title={c} className="w-3 h-3 rounded-full border border-black/10 shrink-0" style={{ background: COLOR_MAP[c] ?? c ?? "#aaa" }} />
-        ))}
+        {visible.map((c: any, idx: number) => {
+          // Support both string[] and { color, variantId }[] for backwards compatibility
+          const colorValue = typeof c === "string" ? c : (c?.color ?? "#aaa");
+          return (
+            <span
+              key={`${idx}-${colorValue}`}
+              title={String(colorValue)}
+              className="w-3 h-3 rounded-full border border-black/10 shrink-0"
+              style={{ background: COLOR_MAP[String(colorValue)] ?? String(colorValue) ?? "#aaa" }}
+            />
+          );
+        })}
         {colors.length > maxColors && (
           <span className="text-[10px] text-gray-400">+{colors.length - maxColors}</span>
         )}
@@ -146,7 +155,7 @@ export function AttributePillsWithVariants({
   maxColors = 5,
   className = "",
 }: {
-  colors?: string[] | null;
+  colors?: Array<string | { color: string; variantId: number }> | null;
   sizes?: VariantTag[] | null;
   weights?: VariantTag[] | null;
   hoveredVariantId?: number | null;
@@ -171,22 +180,25 @@ export function AttributePillsWithVariants({
       {Array.isArray(colors) && colors.length > 0 && (() => {
         const visible = colors.slice(0, maxColors);
         return (
-          <>
-            <div className="flex items-center gap-2">
-              {visible.map((c, idx) => (
+          <div className="flex items-center gap-2">
+            {visible.map((c: any, idx: number) => {
+              // support legacy string color or object { color, variantId }
+              const colorValue = typeof c === "string" ? c : (c?.color ?? "");
+              const variantId = typeof c === "string" ? (sizes?.[idx]?.variantId ?? null) : (c?.variantId ?? null);
+              return (
                 <button
-                  key={`c-${idx}-${c}`}
-                  onMouseEnter={() => renderHover(sizes?.[idx]?.variantId ?? null)}
-                  onFocus={() => renderHover(sizes?.[idx]?.variantId ?? null)}
+                  key={`c-${idx}-${String(colorValue)}`}
+                  onMouseEnter={() => renderHover(variantId)}
+                  onFocus={() => renderHover(variantId)}
                   onMouseLeave={() => renderHover(null)}
-                  title={c}
-                  aria-label={c}
+                  title={String(colorValue)}
+                  aria-label={String(colorValue)}
                   className="w-4 h-4 rounded-full border border-black/10 shrink-0"
-                  style={{ background: COLOR_MAP[c] ?? c ?? "#aaa" }}
+                  style={{ background: COLOR_MAP[String(colorValue)] ?? String(colorValue) ?? "#aaa" }}
                 />
-              ))}
-            </div>
-          </>
+              );
+            })}
+          </div>
         );
       })()}
 

@@ -135,7 +135,7 @@ function HistoryCard({ product }: { product: RealApiProduct }) {
           const variantImageSet = new Set<number>(product.variants?.filter((v) => Boolean(v.image)).map((v) => v.id) ?? []);
           return (
             <AttributePillsWithVariants
-              colors={colors.map((c) => c.color)}
+              colors={colors}
               sizes={sizes.map((s) => ({ value: s.size, variantId: s.variantId }))}
               weights={weights.map((w) => ({ value: w.weight, variantId: w.variantId }))}
               hoveredVariantId={hoveredVariantId}
