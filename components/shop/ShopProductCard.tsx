@@ -416,7 +416,6 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
               return (
                 <AttributePillsWithVariants
                   colors={colors}
-                  sizes={sizes.map((s) => ({ value: s.size, variantId: s.variantId }))}
                   weights={weights.map((w) => ({ value: w.weight, variantId: w.variantId }))}
                   hoveredVariantId={hoveredVariantId}
                   onHoverVariant={(id) => {
