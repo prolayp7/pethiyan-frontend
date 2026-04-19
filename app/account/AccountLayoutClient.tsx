@@ -162,7 +162,7 @@ export default function AccountLayoutClient({ children }: { children: React.Reac
       </div>
 
       {/* Full-width browsing history — profile page only */}
-      {pathname === "/account/profile" && (
+      {["/account/profile", "/account/orders", "/account/addresses", "/account/wishlist"].includes(pathname) && (
         <div className="mt-2 pb-12">
           <BrowsingHistory />
         </div>
