@@ -101,8 +101,6 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   }
 
   const hoveredPricingInfo = getPricingForVariant(hoveredVariant as any);
-    import { normalizeImageUrl } from "@/lib/image";
-
   const defaultPricingInfo = getPricingForVariant(defaultVariant as any) ?? { display: displayPrice, compare };
 
   const priceWithoutGst = hoveredPricingInfo?.display ?? defaultPricingInfo.display ?? 0;
