@@ -152,6 +152,8 @@ export function AttributePillsWithVariants({
   hoverEnabled = false,
   showColorSwatches = true,
   maxColors = 5,
+  maxSizes = 4,
+  maxWeights = 4,
   className = "",
 }: {
   colors?: Array<string | { color: string; variantId: number }> | null;
@@ -163,6 +165,8 @@ export function AttributePillsWithVariants({
   hoverEnabled?: boolean;
   showColorSwatches?: boolean;
   maxColors?: number;
+  maxSizes?: number;
+  maxWeights?: number;
   className?: string;
 }) {
   const renderHover = (variantId: number | null) => {
@@ -202,42 +206,58 @@ export function AttributePillsWithVariants({
       })()}
 
       {/* sizes */}
-      {Array.isArray(sizes) && sizes.length > 0 && (
-        <div className="flex items-center gap-2">
-          {sizes.map((s) => (
-            <button
-              key={`s-${s.variantId}`}
-              onMouseEnter={() => renderHover(s.variantId)}
-              onFocus={() => renderHover(s.variantId)}
-              onMouseLeave={() => renderHover(null)}
-              className={`text-[12px] px-2.5 py-1 rounded-full border bg-white ${hoveredVariantId === s.variantId ? 'ring-2 ring-offset-1 ring-[#17396f]' : ''}`}
-              title={s.value}
-              aria-label={`Size ${s.value}`}
-            >
-              {s.value}
-            </button>
-          ))}
-        </div>
-      )}
+      {Array.isArray(sizes) && sizes.length > 0 && (() => {
+        const visibleSizes = sizes.slice(0, maxSizes);
+        const hiddenCount = sizes.length - visibleSizes.length;
+        return (
+          <div className="flex items-center gap-2 flex-wrap">
+            {visibleSizes.map((s) => (
+              <button
+                type="button"
+                key={`s-${s.variantId}`}
+                onMouseEnter={() => renderHover(s.variantId)}
+                onFocus={() => renderHover(s.variantId)}
+                onMouseLeave={() => renderHover(null)}
+                className={`text-[12px] px-2.5 py-1 rounded-full border bg-white ${hoveredVariantId === s.variantId ? 'ring-2 ring-offset-1 ring-[#17396f]' : ''}`}
+                title={s.value}
+                aria-label={`Size ${s.value}`}
+              >
+                {s.value}
+              </button>
+            ))}
+            {hiddenCount > 0 && (
+              <span className="text-[10px] text-gray-400">+{hiddenCount} more</span>
+            )}
+          </div>
+        );
+      })()}
 
       {/* weights */}
-      {Array.isArray(weights) && weights.length > 0 && (
-        <div className="flex items-center gap-2">
-          {weights.map((w) => (
-            <button
-              key={`w-${w.variantId}`}
-              onMouseEnter={() => renderHover(w.variantId)}
-              onFocus={() => renderHover(w.variantId)}
-              onMouseLeave={() => renderHover(null)}
-              className={`text-[12px] px-2.5 py-1 rounded-full border bg-white ${hoveredVariantId === w.variantId ? 'ring-2 ring-offset-1 ring-[#17396f]' : ''}`}
-              title={w.value}
-              aria-label={`Weight ${w.value}`}
-            >
-              {formatWeight(String(w.value))}
-            </button>
-          ))}
-        </div>
-      )}
+      {Array.isArray(weights) && weights.length > 0 && (() => {
+        const visibleWeights = weights.slice(0, maxWeights);
+        const hiddenCount = weights.length - visibleWeights.length;
+        return (
+          <div className="flex items-center gap-2 flex-wrap">
+            {visibleWeights.map((w) => (
+              <button
+                type="button"
+                key={`w-${w.variantId}`}
+                onMouseEnter={() => renderHover(w.variantId)}
+                onFocus={() => renderHover(w.variantId)}
+                onMouseLeave={() => renderHover(null)}
+                className={`text-[12px] px-2.5 py-1 rounded-full border bg-white ${hoveredVariantId === w.variantId ? 'ring-2 ring-offset-1 ring-[#17396f]' : ''}`}
+                title={w.value}
+                aria-label={`Weight ${w.value}`}
+              >
+                {formatWeight(String(w.value))}
+              </button>
+            ))}
+            {hiddenCount > 0 && (
+              <span className="text-[10px] text-gray-400">+{hiddenCount} more</span>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
