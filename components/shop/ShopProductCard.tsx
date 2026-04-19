@@ -19,7 +19,7 @@ import {
 } from "@/lib/api";
 import { normalizeImageUrl } from "@/lib/image";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
-import AttributePills from "@/components/product/AttributePills";
+import AttributePills, { AttributePillsWithVariants } from "@/components/product/AttributePills";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -342,44 +342,46 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
             <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-[#2e7c8a] transition-colors">
               {defaultDisplayTitle}
             </p>
-            {/* Color swatches (interactive) */}
-            {product.variants && (() => {
-              const seen = new Set<string>();
+            {/* Variant attributes (interactive) */}
+            {product.type === "variant" && product.variants && (() => {
+              const seenColor = new Set<string>();
+              const seenSize = new Set<string>();
+              const seenWeight = new Set<string>();
               const colors: { color: string; variantId: number }[] = [];
+              const sizes: { size: string; variantId: number }[] = [];
+              const weights: { weight: string; variantId: number }[] = [];
               for (const v of product.variants) {
-                const col = (v as any).attributes?.color;
-                if (col && !seen.has(col)) {
-                  seen.add(col);
-                  colors.push({ color: String(col), variantId: v.id });
-                }
+                const attrs = (v as any).attributes || {};
+                const col = attrs.color;
+                const sz = attrs.size ?? attrs.size_label ?? attrs.size_in ?? null;
+                const wt = attrs.weight ?? attrs.weight_kg ?? attrs.weight_g ?? null;
+                if (col && !seenColor.has(col)) { seenColor.add(col); colors.push({ color: String(col), variantId: v.id }); }
+                if (sz && !seenSize.has(String(sz))) { seenSize.add(String(sz)); sizes.push({ size: String(sz), variantId: v.id }); }
+                if (wt && !seenWeight.has(String(wt))) { seenWeight.add(String(wt)); weights.push({ weight: String(wt), variantId: v.id }); }
               }
               const hasVariantImages = (product.images?.variant_images?.length ?? 0) > 0;
-              if (colors.length === 0) return <AttributePills attributes={defaultVariant?.attributes ?? null} />;
+              const variantImageSet = new Set<number>(product.variants?.filter((v) => Boolean(v.image)).map((v) => v.id) ?? []);
+              if (colors.length === 0 && sizes.length === 0 && weights.length === 0) {
+                return <AttributePills attributes={defaultVariant?.attributes ?? null} />;
+              }
+
               return (
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    {colors.map((c) => {
-                      const bg = COLOR_MAP[c.color] ?? c.color ?? "#aaa";
-                      const isActive = hoveredVariantId === c.variantId;
-                      const variantHasImage = Boolean(product.variants?.find((v) => v.id === c.variantId)?.image);
-                      return (
-                        <button
-                          key={c.variantId}
-                          onMouseEnter={() => { if (hasVariantImages && variantHasImage) setHoveredVariantId(c.variantId); }}
-                          onFocus={() => { if (hasVariantImages && variantHasImage) setHoveredVariantId(c.variantId); }}
-                          className={`w-4 h-4 rounded-full border ${isActive ? "ring-2 ring-offset-1 ring-[#17396f]" : ""}`}
-                          title={c.color}
-                          style={{ background: bg }}
-                          aria-label={c.color}
-                        />
-                      );
-                    })}
-                  </div>
-                  {/* other attribute pills (hide color since we render swatches above) */}
-                  <AttributePills attributes={defaultVariant?.attributes ?? null} showColorSwatches={false} />
-                </div>
+                <AttributePillsWithVariants
+                  colors={colors.map((c) => c.color)}
+                  sizes={sizes.map((s) => ({ value: s.size, variantId: s.variantId }))}
+                  weights={weights.map((w) => ({ value: w.weight, variantId: w.variantId }))}
+                  hoveredVariantId={hoveredVariantId}
+                  onHoverVariant={(id) => {
+                    if (id == null) { setHoveredVariantId(null); return; }
+                    if (hasVariantImages && variantImageSet.has(id)) setHoveredVariantId(id);
+                  }}
+                  variantImageSet={variantImageSet}
+                  hoverEnabled={hasVariantImages}
+                  showColorSwatches={true}
+                />
               );
             })()}
+            {product.type !== "variant" && <AttributePills attributes={defaultVariant?.attributes ?? null} />}
 
             {/* Bottom row: price+meta left, cart right */}
             <div className="flex items-end justify-between gap-2 mt-auto pt-2 border-t border-gray-100">

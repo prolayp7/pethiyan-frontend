@@ -2,9 +2,20 @@
 
 import React from "react";
 
+interface VariantTag {
+  value: string;
+  variantId: number;
+}
+
 interface Props {
   attributes?: Record<string, any> | null;
   colors?: string[] | null;
+  sizes?: VariantTag[] | null;
+  weights?: VariantTag[] | null;
+  hoveredVariantId?: number | null;
+  onHoverVariant?: (variantId: number | null) => void;
+  variantImageSet?: Set<number> | null;
+  hoverEnabled?: boolean;
   showColorSwatches?: boolean;
   maxColors?: number;
   className?: string;
@@ -35,6 +46,32 @@ const COLOR_MAP: Record<string, string> = {
   Maroon: "#800000",
 };
 
+// Helper: format weight values with unit parsing (module-level so all components can use it)
+export function formatWeight(w: string) {
+  const s = String(w).trim();
+  if (!s) return s;
+  // explicit unit provided
+  const m = s.match(/^\s*(\d+(?:\.\d+)?)\s*(kg|kgs|kilogram|kilograms|g|gm|gram|grams)\s*$/i);
+  if (m) {
+    const n = parseFloat(m[1]);
+    const unit = m[2].toLowerCase();
+    if (/^kg|kgs|kilogram/.test(unit)) return `${Number(n.toFixed(2))} kg`;
+    // grams
+    if (n >= 1000) return `${(n / 1000).toFixed(2)} kg`;
+    return `${Number(n)} g`;
+  }
+  // plain numeric value
+  if (/^\d+(?:\.\d+)?$/.test(s)) {
+    const n = parseFloat(s);
+    // treat decimals as kilograms (e.g. 0.2 -> 0.20 kg), integers < 1000 as grams
+    if (s.includes('.') || n < 1) return `${Number(n.toFixed(2))} kg`;
+    if (n >= 1000) return `${(n / 1000).toFixed(2)} kg`;
+    return `${Number(n)} g`;
+  }
+  // fallback: return original
+  return s;
+}
+
 export default function AttributePills({ attributes, colors, showColorSwatches = true, maxColors = 5, className = "" }: Props) {
   // If explicit color list provided, render swatches
   if (Array.isArray(colors) && colors.length > 0) {
@@ -64,6 +101,8 @@ export default function AttributePills({ attributes, colors, showColorSwatches =
     return 0;
   });
 
+  
+
   return (
     <div className={`flex items-center gap-2 mt-1 flex-wrap ${className}`}>
       {entries.map(([k, v]) => {
@@ -74,11 +113,113 @@ export default function AttributePills({ attributes, colors, showColorSwatches =
           return <span key={k} title={value} className="w-3 h-3 rounded-full border border-black/10 shrink-0" style={{ background: bg }} />;
         }
         return (
-          <span key={k} className="text-[11px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
+          <span key={k} className="text-[12px] bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full border">
             {value}
           </span>
         );
       })}
+
+      {/* Render sizes passed as props */}
+      {(Array.isArray((attributes as any)?.sizes) ? (attributes as any).sizes : null)}
+    </div>
+  );
+}
+
+// Note: keep a separate exported component usage below for sizes/weights with hover support
+
+export function AttributePillsWithVariants({
+  colors,
+  sizes,
+  weights,
+  hoveredVariantId,
+  onHoverVariant,
+  variantImageSet,
+  hoverEnabled = false,
+  showColorSwatches = true,
+  maxColors = 5,
+  className = "",
+}: {
+  colors?: string[] | null;
+  sizes?: VariantTag[] | null;
+  weights?: VariantTag[] | null;
+  hoveredVariantId?: number | null;
+  onHoverVariant?: (variantId: number | null) => void;
+  variantImageSet?: Set<number> | null;
+  hoverEnabled?: boolean;
+  showColorSwatches?: boolean;
+  maxColors?: number;
+  className?: string;
+}) {
+  const renderHover = (variantId: number | null) => {
+    if (!onHoverVariant) return;
+    if (variantId == null) { onHoverVariant(null); return; }
+    if (!hoverEnabled) return;
+    if (variantImageSet && !variantImageSet.has(variantId)) return;
+    onHoverVariant(variantId);
+  };
+
+  return (
+    <div className={`flex items-center gap-2 mt-1 flex-wrap ${className}`}>
+      {/* colors */}
+      {Array.isArray(colors) && colors.length > 0 && (() => {
+        const visible = colors.slice(0, maxColors);
+        return (
+          <>
+            <div className="flex items-center gap-2">
+              {visible.map((c, idx) => (
+                <button
+                  key={`c-${idx}-${c}`}
+                  onMouseEnter={() => renderHover(sizes?.[idx]?.variantId ?? null)}
+                  onFocus={() => renderHover(sizes?.[idx]?.variantId ?? null)}
+                  onMouseLeave={() => renderHover(null)}
+                  title={c}
+                  aria-label={c}
+                  className="w-4 h-4 rounded-full border border-black/10 shrink-0"
+                  style={{ background: COLOR_MAP[c] ?? c ?? "#aaa" }}
+                />
+              ))}
+            </div>
+          </>
+        );
+      })()}
+
+      {/* sizes */}
+      {Array.isArray(sizes) && sizes.length > 0 && (
+        <div className="flex items-center gap-2">
+          {sizes.map((s) => (
+            <button
+              key={`s-${s.variantId}`}
+              onMouseEnter={() => renderHover(s.variantId)}
+              onFocus={() => renderHover(s.variantId)}
+              onMouseLeave={() => renderHover(null)}
+              className={`text-[12px] px-2.5 py-1 rounded-full border bg-white ${hoveredVariantId === s.variantId ? 'ring-2 ring-offset-1 ring-[#17396f]' : ''}`}
+              title={s.value}
+              aria-label={`Size ${s.value}`}
+            >
+              {s.value}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* weights */}
+      {Array.isArray(weights) && weights.length > 0 && (
+        <div className="flex items-center gap-2">
+          {weights.map((w) => (
+            <button
+              key={`w-${w.variantId}`}
+              onMouseEnter={() => renderHover(w.variantId)}
+              onFocus={() => renderHover(w.variantId)}
+              onMouseLeave={() => renderHover(null)}
+              className={`text-[12px] px-2.5 py-1 rounded-full border bg-white ${hoveredVariantId === w.variantId ? 'ring-2 ring-offset-1 ring-[#17396f]' : ''}`}
+              title={w.value}
+              aria-label={`Weight ${w.value}`}
+            >
+              {formatWeight(String(w.value))}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

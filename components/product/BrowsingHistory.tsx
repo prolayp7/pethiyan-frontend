@@ -8,7 +8,7 @@ import Container from "@/components/layout/Container";
 import { getBrowsingHistorySlugs, clearBrowsingHistory } from "@/lib/browsingHistory";
 import { API_BASE, type RealApiProduct } from "@/lib/api";
 import { normalizeImageUrl } from "@/lib/image";
-import AttributePills from "@/components/product/AttributePills";
+import AttributePills, { AttributePillsWithVariants } from "@/components/product/AttributePills";
 
 const COLOR_MAP: Record<string, string> = {
   Transparent: "#c8e6f5", Brown: "#8B6347", Colorful: "linear-gradient(135deg,#f44,#4f4,#44f)",
@@ -109,46 +109,47 @@ function HistoryCard({ product }: { product: RealApiProduct }) {
         <p className="text-xs font-semibold text-(--color-secondary) line-clamp-2 leading-tight group-hover:text-(--color-primary) transition-colors">
           {displayTitle}
         </p>
-        {/* Attributes: color swatches and other attribute pills (interactive) */}
-        {product.variants && (() => {
-          const seen = new Set<string>();
+        {/* Attributes: color, size, weight (interactive when product is variant) */}
+        {product.type === "variant" && product.variants && (() => {
+          const seenColor = new Set<string>();
+          const seenSize = new Set<string>();
+          const seenWeight = new Set<string>();
           const colors: { color: string; variantId: number }[] = [];
+          const sizes: { size: string; variantId: number }[] = [];
+          const weights: { weight: string; variantId: number }[] = [];
           for (const v of product.variants) {
-            const col = (v as any).attributes?.color;
-            if (col && !seen.has(col)) {
-              seen.add(col);
-              colors.push({ color: String(col), variantId: v.id });
-            }
+            const attrs = (v as any).attributes || {};
+            const col = attrs.color;
+            const sz = attrs.size ?? attrs.size_label ?? attrs.size_in ?? null;
+            const wt = attrs.weight ?? attrs.weight_kg ?? attrs.weight_g ?? null;
+            if (col && !seenColor.has(col)) { seenColor.add(col); colors.push({ color: String(col), variantId: v.id }); }
+            if (sz && !seenSize.has(String(sz))) { seenSize.add(String(sz)); sizes.push({ size: String(sz), variantId: v.id }); }
+            if (wt && !seenWeight.has(String(wt))) { seenWeight.add(String(wt)); weights.push({ weight: String(wt), variantId: v.id }); }
           }
-          if (colors.length === 0) {
+          if (colors.length === 0 && sizes.length === 0 && weights.length === 0) {
             const variant = product.variants.find((v) => v.is_default) ?? product.variants[0];
             const attrs = (variant && (variant as any).attributes) || null;
             return <AttributePills attributes={attrs} />;
           }
           const hasVariantImages = (product.images?.variant_images?.length ?? 0) > 0;
+          const variantImageSet = new Set<number>(product.variants?.filter((v) => Boolean(v.image)).map((v) => v.id) ?? []);
           return (
-            <div onMouseLeave={() => setHoveredVariantId(null)} className="flex items-center gap-2 mt-1 flex-wrap">
-              <div className="flex items-center gap-2">
-                {colors.map((c) => {
-                  const bg = (COLOR_MAP as any)[c.color] ?? c.color ?? '#aaa';
-                  const isActive = hoveredVariantId === c.variantId;
-                  const variantHasImage = Boolean(product.variants.find((v) => v.id === c.variantId)?.image);
-                  return (
-                    <button
-                      key={c.variantId}
-                      onMouseEnter={() => { if (hasVariantImages && variantHasImage) setHoveredVariantId(c.variantId); }}
-                      onFocus={() => { if (hasVariantImages && variantHasImage) setHoveredVariantId(c.variantId); }}
-                      className={`w-3 h-3 rounded-full border ${isActive ? 'ring-2 ring-offset-1 ring-[#17396f]' : ''}`}
-                      title={c.color}
-                      style={{ background: bg }}
-                      aria-label={c.color}
-                    />
-                  );
-                })}
-              </div>
-              <AttributePills attributes={(hoveredVariant ?? variant)?.attributes ?? null} showColorSwatches={false} />
-            </div>
+            <AttributePillsWithVariants
+              colors={colors.map((c) => c.color)}
+              sizes={sizes.map((s) => ({ value: s.size, variantId: s.variantId }))}
+              weights={weights.map((w) => ({ value: w.weight, variantId: w.variantId }))}
+              hoveredVariantId={hoveredVariantId}
+              onHoverVariant={(id) => { if (id == null) { setHoveredVariantId(null); return; } if (hasVariantImages && variantImageSet.has(id)) setHoveredVariantId(id); }}
+              variantImageSet={variantImageSet}
+              hoverEnabled={hasVariantImages}
+              showColorSwatches={true}
+            />
           );
+        })()}
+        {product.type !== "variant" && (() => {
+          const variant = product.variants.find((v) => v.is_default) ?? product.variants[0];
+          const attrs = (variant && (variant as any).attributes) || null;
+          return <AttributePills attributes={attrs} />;
         })()}
         {price > 0 && (
           <div className="flex items-baseline gap-1.5 mt-0.5">
