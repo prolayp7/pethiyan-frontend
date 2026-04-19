@@ -79,8 +79,8 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   const inStock   = (defaultPricing?.stock ?? 0) > 0;
   const minQty    = product.policies?.minimum_order_quantity ?? 1;
   const imgSrc    = normalizeImageUrl(
-    // prefer hovered variant image when hovering a swatch
-    (product.variants?.find((v) => v.id === hoveredVariantId)?.image) ?? defaultVariant?.image ?? product.images?.main_image
+    // prefer hovered variant image when hovering a swatch; treat empty string as missing
+    (product.variants?.find((v) => v.id === hoveredVariantId)?.image) || defaultVariant?.image || product.images?.main_image
   );
   const isInWishlist = isWishlisted(product.id);
   

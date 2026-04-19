@@ -60,7 +60,7 @@ function HistoryCard({ product }: { product: RealApiProduct }) {
 
   const hoveredVariant = product.variants.find((v) => v.id === hoveredVariantId) ?? null;
 
-  const img = normalizeImageUrl(hoveredVariant?.image ?? variant?.image ?? product.images?.main_image);
+  const img = normalizeImageUrl(hoveredVariant?.image || variant?.image || product.images?.main_image);
 
   const pricingSource = (v: typeof hoveredVariant | null) => {
     const chosen = v ?? variant;
