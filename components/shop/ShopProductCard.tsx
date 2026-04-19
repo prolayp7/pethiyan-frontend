@@ -350,6 +350,15 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
               const colors: { color: string; variantId: number }[] = [];
               const sizes: { size: string; variantId: number }[] = [];
               const weights: { weight: string; variantId: number }[] = [];
+
+              // Determine the default variant's color so we only show sizes for that color
+              const defaultAttrsRaw = (defaultVariant as any)?.attributes || {};
+              const defaultAttrs: Record<string, any> = {};
+              for (const [k, val] of Object.entries(defaultAttrsRaw)) {
+                defaultAttrs[String(k).toLowerCase()] = val;
+              }
+              const defaultColor = defaultAttrs.color ?? defaultAttrs.col ?? null;
+
               for (const v of product.variants) {
                 const raw = (v as any).attributes || {};
                 // normalize attribute keys to lowercase for robust lookup
@@ -360,7 +369,11 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                 const col = attrs.color ?? attrs.col ?? null;
                 const sz = attrs.size ?? attrs.size_label ?? attrs.size_in ?? attrs.size_cm ?? attrs.dimensions ?? attrs.pouch_size ?? attrs.pouchsize ?? attrs["pouch-size"] ?? attrs["pack_size"] ?? attrs["pack-size"] ?? attrs.measurement ?? attrs.dim ?? null;
                 const wt = attrs.weight ?? attrs.weight_kg ?? attrs.weight_g ?? attrs.wt ?? null;
+                // Always collect colors from all variants
                 if (col && !seenColor.has(String(col))) { seenColor.add(String(col)); colors.push({ color: String(col), variantId: v.id }); }
+                // Only collect sizes/weights for variants matching the default variant's color
+                const colorMatches = !defaultColor || !col || String(col) === String(defaultColor);
+                if (!colorMatches) continue;
                 let finalSize = sz;
                 // fallback: try parsing size-like patterns from title or sku or option values
                 if (!finalSize) {
