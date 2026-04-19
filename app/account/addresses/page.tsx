@@ -325,8 +325,28 @@ export default function AddressesPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-(--color-primary)" />
+        <div className="space-y-4">
+          {[0, 1].map((i) => (
+            <div key={i} className="bg-white rounded-2xl border-2 border-gray-100 shadow-sm p-5 animate-pulse">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-32 bg-gray-200 rounded" />
+                    {i === 0 && <div className="h-4 w-14 bg-gray-200 rounded-full" />}
+                  </div>
+                  <div className="h-3.5 w-64 bg-gray-200 rounded" />
+                  <div className="h-3.5 w-48 bg-gray-200 rounded" />
+                  <div className="h-3.5 w-40 bg-gray-200 rounded" />
+                  <div className="h-3 w-28 bg-gray-100 rounded mt-1" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="h-7 w-16 bg-gray-200 rounded-lg" />
+                {i !== 0 && <div className="h-7 w-28 bg-gray-200 rounded-lg" />}
+                <div className="h-7 w-20 bg-gray-100 rounded-lg ml-auto" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="space-y-4">
