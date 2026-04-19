@@ -358,10 +358,27 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                   attrs[String(k).toLowerCase()] = val;
                 }
                 const col = attrs.color ?? attrs.col ?? null;
-                const sz = attrs.size ?? attrs.size_label ?? attrs.size_in ?? attrs.size_cm ?? attrs.dimensions ?? null;
+                const sz = attrs.size ?? attrs.size_label ?? attrs.size_in ?? attrs.size_cm ?? attrs.dimensions ?? attrs.pouch_size ?? attrs.pouchsize ?? attrs["pouch-size"] ?? attrs["pack_size"] ?? attrs["pack-size"] ?? attrs.measurement ?? attrs.dim ?? null;
                 const wt = attrs.weight ?? attrs.weight_kg ?? attrs.weight_g ?? attrs.wt ?? null;
                 if (col && !seenColor.has(String(col))) { seenColor.add(String(col)); colors.push({ color: String(col), variantId: v.id }); }
-                if (sz && !seenSize.has(String(sz))) { seenSize.add(String(sz)); sizes.push({ size: String(sz), variantId: v.id }); }
+                let finalSize = sz;
+                // fallback: try parsing size-like patterns from title or sku or option values
+                if (!finalSize) {
+                  const titleStr = String(v.title ?? "");
+                  const skuStr = String((v as any).sku ?? "");
+                  const combined = `${titleStr} ${skuStr}`;
+                  const sizeMatch = combined.match(/\b\d+(?:\s*[x×]\s*\d+){1,2}\s*(?:mm|cm|in)?\b/i);
+                  if (sizeMatch) finalSize = sizeMatch[0];
+                }
+                // also check variant.options array (common in some APIs)
+                if (!finalSize && Array.isArray((v as any).options)) {
+                  for (const opt of (v as any).options) {
+                    if (!opt) continue;
+                    const val = String(opt.value ?? opt).trim();
+                    if (/\d+(?:\s*[x×]\s*\d+){1,2}/.test(val)) { finalSize = val; break; }
+                  }
+                }
+                if (finalSize && !seenSize.has(String(finalSize))) { seenSize.add(String(finalSize)); sizes.push({ size: String(finalSize), variantId: v.id }); }
                 if (wt && !seenWeight.has(String(wt))) { seenWeight.add(String(wt)); weights.push({ weight: String(wt), variantId: v.id }); }
               }
               const hasVariantImages = (product.images?.variant_images?.length ?? 0) > 0;
