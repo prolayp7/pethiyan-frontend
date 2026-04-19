@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   User, Phone, Mail, Save, Loader2, CheckCircle2, LogOut, AlertCircle, Building2,
 } from "lucide-react";
-import BrowsingHistory from "@/components/product/BrowsingHistory";
 import { useAuth } from "@/context/AuthContext";
 import { updateProfile } from "@/lib/api";
 
@@ -69,8 +68,7 @@ export default function ProfilePage() {
     "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-(--color-primary) focus:bg-white transition-colors";
 
   return (
-    <div className="space-y-8">
-      <div className="max-w-lg">
+    <div className="max-w-lg">
         <div className="flex items-center gap-2 mb-6">
           <User className="h-5 w-5 text-(--color-primary)" />
           <h1 className="text-xl font-extrabold text-(--color-secondary)">Profile</h1>
@@ -234,9 +232,6 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
-      </div>
-
-      <BrowsingHistory />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
 import LoginModal from "@/components/auth/LoginModal";
+import BrowsingHistory from "@/components/product/BrowsingHistory";
 
 const NAV_ITEMS = [
   { href: "/account/orders",    label: "My Orders",  icon: Package },
@@ -157,6 +158,13 @@ export default function AccountLayoutClient({ children }: { children: React.Reac
             {children}
           </main>
         </div>
+
+        {/* Full-width browsing history — profile page only */}
+        {pathname === "/account/profile" && (
+          <div className="mt-8">
+            <BrowsingHistory />
+          </div>
+        )}
       </div>
     </div>
   );
