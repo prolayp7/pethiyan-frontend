@@ -24,7 +24,18 @@ function normalizeImg(src?: string | null): string | null {
   if (!src) return null;
   const t = String(src).trim();
   if (!t) return null;
-  if (/^https?:\/\//i.test(t)) return t;
+  if (/^https?:\/\//i.test(t)) {
+    try {
+      const u = new URL(t);
+      const apiOrigin = new URL(API_BASE).origin;
+      if (u.hostname === "127.0.0.1" || u.hostname === "localhost") {
+        return apiOrigin + u.pathname + u.search + u.hash;
+      }
+    } catch (e) {
+      // ignore
+    }
+    return t;
+  }
   const base = API_BASE.replace(/\/+$/, "");
   if (t.startsWith("/")) return `${base}${t}`;
   if (t.startsWith("storage/") || t.startsWith("uploads/")) return `${base}/${t}`;
