@@ -2196,7 +2196,7 @@ export async function getAnnouncementBar(): Promise<ApiAnnouncementBar | null> {
   try {
     const res = await fetch(`${API_BASE}/api/announcement-bar`, {
       headers: { Accept: "application/json" },
-      next: { tags: ["announcement-bar"], revalidate: 300 },
+      next: { tags: ["announcement-bar"] },
     });
     if (!res.ok) return null;
     return res.json() as Promise<ApiAnnouncementBar>;
