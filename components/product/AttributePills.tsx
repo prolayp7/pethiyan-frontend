@@ -135,8 +135,7 @@ export default function AttributePills({ attributes, colors, showColorSwatches =
         );
       })}
 
-      {/* Render sizes passed as props */}
-      {(Array.isArray((attributes as any)?.sizes) ? (attributes as any).sizes : null)}
+      {/* sizes in attributes should not be directly rendered here */}
     </div>
   );
 }
