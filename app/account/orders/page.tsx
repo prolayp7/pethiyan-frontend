@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Package, ChevronRight, Loader2, ShoppingBag, ArrowRight,
+  Package, ChevronRight, ShoppingBag, ArrowRight,
 } from "lucide-react";
 import { getOrders, type ApiOrder } from "@/lib/api";
 
@@ -29,6 +29,45 @@ const STATUS_MAP: Record<ApiOrder["status"], { label: string; cls: string }> = {
   delivered:  { label: "Delivered",  cls: "bg-green-100 text-green-700"  },
   cancelled:  { label: "Cancelled",  cls: "bg-red-100 text-red-700"      },
 };
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+function OrderCardSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+        <div className="flex items-center gap-3">
+          <div className="h-3.5 w-32 bg-gray-200 rounded-full" />
+          <div className="h-5 w-20 bg-gray-200 rounded-full" />
+        </div>
+        <div className="h-3 w-20 bg-gray-200 rounded-full" />
+      </div>
+
+      {/* Item row */}
+      <div className="px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gray-200 shrink-0" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="h-3.5 w-3/4 bg-gray-200 rounded-full" />
+            <div className="h-3 w-1/2 bg-gray-200 rounded-full" />
+            <div className="h-3 w-2/5 bg-gray-200 rounded-full" />
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
+        <div className="space-y-1.5">
+          <div className="h-3 w-28 bg-gray-200 rounded-full" />
+          <div className="h-3 w-24 bg-gray-200 rounded-full" />
+          <div className="h-3.5 w-32 bg-gray-200 rounded-full" />
+        </div>
+        <div className="h-4 w-24 bg-gray-200 rounded-full" />
+      </div>
+    </div>
+  );
+}
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
@@ -175,8 +214,8 @@ export default function OrdersPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-(--color-primary)" />
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => <OrderCardSkeleton key={i} />)}
         </div>
       ) : orders.length === 0 ? (
         <EmptyOrders />
