@@ -53,6 +53,7 @@ import { trackViewItem, trackAddToCart } from "@/lib/analytics";
 import { recordBrowsingHistory } from "@/lib/api";
 import { pushRecentlyViewedId } from "@/lib/recently-viewed";
 import { pushBrowsingHistory } from "@/lib/browsingHistory";
+import ReviewForm from "./ReviewForm";
 
 function formatCurrency(amount: number | null | undefined, symbol = "₹"): string {
   const value = toNum(amount);
