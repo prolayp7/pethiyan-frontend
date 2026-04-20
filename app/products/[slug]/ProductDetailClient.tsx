@@ -494,6 +494,32 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
     return Array.from(map.entries()).map(([color, variantId]) => ({ color, variantId }));
   }, [variantList]);
 
+  // Collect all attributes available across variants (case-insensitive keying)
+  const attributeGroups = useMemo(() => {
+    const m = new Map<string, { displayKey: string; values: Map<string, number> }>();
+    variantList.forEach((variant) => {
+      const attrs = variant.attributes ?? {};
+      Object.entries(attrs).forEach(([k, v]) => {
+        const keyNorm = k.trim().toLowerCase();
+        if (!m.has(keyNorm)) m.set(keyNorm, { displayKey: k.trim(), values: new Map() });
+        const entry = m.get(keyNorm)!;
+        if (v && !entry.values.has(v)) entry.values.set(v, variant.id);
+      });
+    });
+    return Array.from(m.entries()).map(([key, { displayKey, values }]) => ({
+      key,
+      displayKey,
+      values: Array.from(values.entries()).map(([value, variantId]) => ({ value, variantId })),
+    }));
+  }, [variantList]);
+
+  function getAttributeValue(variant?: RealApiVariant | undefined, keyNorm?: string) {
+    if (!variant || !keyNorm) return undefined;
+    const attrs = variant.attributes ?? {};
+    const found = Object.entries(attrs).find(([k]) => k.trim().toLowerCase() === keyNorm);
+    return found ? found[1] : undefined;
+  }
+
   const galleryImages = useMemo(() => {
     return uniqueStrings([
       selectedVariant?.image,
@@ -793,36 +819,64 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
               </div>
             )}
 
-            {colorOptions.length > 0 && (
+            {attributeGroups.length > 0 && (
               <div className="mt-5">
-                <p className="text-sm font-semibold text-(--color-secondary) mb-2 flex items-center gap-2">
-                  <Palette className="h-4 w-4" /> Color
-                </p>
-                <p className="text-2xl font-bold text-(--color-secondary) mb-3">
-                  Color: {selectedVariant?.attributes?.color || colorOptions[0]?.color || "-"}
-                </p>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  {colorOptions.map((opt) => {
-                    const selected = selectedVariant?.id === opt.variantId;
-                    return (
-                      <button
-                        key={`${opt.color}-${opt.variantId}`}
-                        onClick={() => { const v = variantList.find((vr) => vr.id === opt.variantId); if (v) navigateToVariant(v); }}
-                        className={`h-10 w-10 rounded-full border-2 transition-all ${
-                          selected
-                            ? "border-white shadow-[0_0_0_3px_#17396f,_0_0_0_5px_#49ad57]"
-                            : "border-(--color-border) hover:border-(--color-primary)/60"
-                        }`}
-                        style={colorSwatchStyle(opt.color)}
-                        aria-pressed={selected}
-                        aria-label={`Select color ${opt.color}`}
-                        title={opt.color}
-                      >
-                        <span className="sr-only">{opt.color}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {attributeGroups.map((group) => {
+                  const selectedValue = getAttributeValue(selectedVariant, group.key) ?? group.values[0]?.value ?? "-";
+                  const isColorGroup = group.key.includes("color") || group.displayKey.toLowerCase().includes("color");
+                  return (
+                    <div key={group.key} className="mb-4">
+                      <p className="text-sm font-semibold text-(--color-secondary) mb-2 flex items-center gap-2">
+                        {isColorGroup ? <Palette className="h-4 w-4" /> : null}
+                        {group.displayKey}
+                      </p>
+                      <p className="text-2xl font-bold text-(--color-secondary) mb-3">
+                        {group.displayKey}: {selectedValue}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        {group.values.map((opt) => {
+                          const selected = selectedVariant?.id === opt.variantId;
+                          const handleClick = () => {
+                            const v = variantList.find((vr) => vr.id === opt.variantId);
+                            if (v) navigateToVariant(v);
+                          };
+
+                          if (isColorGroup) {
+                            return (
+                              <button
+                                key={`${opt.value}-${opt.variantId}`}
+                                onClick={handleClick}
+                                className={`h-10 w-10 rounded-full border-2 transition-all ${
+                                  selected
+                                    ? "border-white shadow-[0_0_0_3px_#17396f,_0_0_0_5px_#49ad57]"
+                                    : "border-(--color-border) hover:border-(--color-primary)/60"
+                                }`}
+                                style={colorSwatchStyle(opt.value)}
+                                aria-pressed={selected}
+                                aria-label={`Select ${group.displayKey} ${opt.value}`}
+                                title={opt.value}
+                              >
+                                <span className="sr-only">{opt.value}</span>
+                              </button>
+                            );
+                          }
+
+                          return (
+                            <button
+                              key={`${opt.value}-${opt.variantId}`}
+                              onClick={handleClick}
+                              className={`px-3 py-2 min-w-[88px] text-center rounded-xl border transition-colors text-sm ${selected ? "btn-brand text-white" : "border-(--color-border) hover:border-(--color-primary)/60 text-(--color-secondary)"}`}
+                              aria-pressed={selected}
+                            >
+                              {opt.value}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
