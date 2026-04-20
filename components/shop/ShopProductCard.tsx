@@ -93,10 +93,13 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     // Prefer a store pricing that matches defaultPricing store_id if available
     const matchStoreId = defaultPricing?.store_id ?? null;
     const pricing = (v.store_pricing?.find((s) => (matchStoreId ? s.store_id === matchStoreId : s.stock_status === "in_stock")) ?? v.store_pricing?.[0]) ?? null;
-    return pricing ? {
-      display: displayPrice,
-      raw: pricing,
-    } : null;
+    return pricing
+      ? {
+          display: pricing.special_price ?? (pricing.cost != null ? parseFloat(String(pricing.cost)) : 0),
+          compare: pricing.price ?? 0,
+          raw: pricing,
+        }
+      : null;
   }
 
   const hoveredPricingInfo = getPricingForVariant(hoveredVariant as any);
