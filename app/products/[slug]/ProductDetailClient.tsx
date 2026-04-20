@@ -729,8 +729,27 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
                 <div className="grid grid-cols-5 gap-2 max-h-[220px] overflow-y-auto">
                   {variantList.map((variant) => {
                     const selected = selectedVariant?.id === variant.id;
-                    const img = variant.image || product.images?.variant_images?.find((u) => !!u) || product.images?.main_image;
                     const attrLabel = Object.entries(variant.attributes ?? {}).map(([k, v]) => `${k}: ${v}`).join(" | ");
+                    const sizeKeys = [
+                      "pouch-size",
+                      "pouchsize",
+                      "size",
+                      "size_label",
+                      "pack_size",
+                      "pack-size",
+                      "dimensions",
+                      "measurement",
+                      "pouch_size",
+                    ];
+                    let variantSize: string | undefined;
+                    for (const k of sizeKeys) {
+                      const v = getAttributeValue(variant, k);
+                      if (v) { variantSize = String(v); break; }
+                    }
+                    if (!variantSize) {
+                      const m = String(variant.title ?? "").match(/\b\d+(?:\s*[x×]\s*\d+){0,2}\b/i);
+                      if (m) variantSize = m[0];
+                    }
                     return (
                       <button
                         key={variant.id}
@@ -739,14 +758,12 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
                         aria-pressed={selected}
                         title={attrLabel}
                       >
-                        <div className={`w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center ${selected ? "border-2 border-(--color-primary)" : "border border-(--color-border)"}`}>
-                          {img ? (
-                            <img src={img} alt={variant.title} className="object-cover w-full h-full" />
-                          ) : (
-                            <div className="w-8 h-8 rounded bg-gray-200" />
-                          )}
+                        <div className={`w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center px-1 ${selected ? "border-2 border-(--color-primary)" : "border border-(--color-border)"}`}>
+                          <div className="text-center">
+                            <div className="text-xs font-semibold text-(--color-secondary) leading-snug line-clamp-2" style={{ maxWidth: 56 }}>{variant.title}</div>
+                            {variantSize ? <div className="text-[10px] text-gray-500 mt-1">{variantSize}</div> : null}
+                          </div>
                         </div>
-                        <span className="text-xs text-gray-600 text-center line-clamp-1 w-16">{variant.title}</span>
                       </button>
                     );
                   })}
