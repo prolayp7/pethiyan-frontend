@@ -94,8 +94,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     const matchStoreId = defaultPricing?.store_id ?? null;
     const pricing = (v.store_pricing?.find((s) => (matchStoreId ? s.store_id === matchStoreId : s.stock_status === "in_stock")) ?? v.store_pricing?.[0]) ?? null;
     return pricing ? {
-      display: pricing.special_price ?? (pricing.cost ? parseFloat(String(pricing.cost)) : pricing.price ?? 0),
-      compare: pricing.price ?? 0,
+      display: displayPrice,
       raw: pricing,
     } : null;
   }
