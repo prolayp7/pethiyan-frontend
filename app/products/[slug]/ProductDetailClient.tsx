@@ -767,20 +767,37 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
                       const m = String(variant.title ?? "").match(/\b\d+(?:\s*[x×]\s*\d+){0,2}\b/i);
                       if (m) variantSize = m[0];
                     }
+                    const variantImage = variant.image || product.images?.main_image;
                     return (
                       <button
                         key={variant.id}
                         onClick={() => navigateToVariant(variant)}
                         aria-pressed={selected}
                         title={attrLabel}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all text-center min-w-[56px] min-h-[56px] ${
+                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all text-center min-w-[56px] ${
                           selected
-                            ? "btn-brand text-white border-2 border-(--color-primary) shadow-md"
+                            ? "border-2 border-(--color-primary) shadow-md bg-white"
                             : "bg-white text-(--color-secondary) border border-(--color-border) hover:shadow-sm"
                         }`}
                       >
-                        <div className="text-xs font-semibold leading-snug line-clamp-2 w-14">{variant.title}</div>
-                        {variantSize ? <div className="text-[10px] mt-0.5">{variantSize}</div> : null}
+                        {variantImage ? (
+                          <div className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 ${selected ? "ring-2 ring-(--color-primary)" : ""}`}>
+                            <Image
+                              src={variantImage}
+                              alt={variant.title}
+                              fill
+                              className="object-cover"
+                              sizes="48px"
+                              unoptimized={shouldBypassOptimizer(variantImage)}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                            <Package className="h-5 w-5 text-gray-300" aria-hidden="true" />
+                          </div>
+                        )}
+                        <div className={`text-xs font-semibold leading-snug line-clamp-2 w-14 ${selected ? "text-(--color-primary)" : "text-(--color-secondary)"}`}>{variant.title}</div>
+                        {variantSize ? <div className={`text-[10px] ${selected ? "text-(--color-primary)/80" : "text-gray-400"}`}>{variantSize}</div> : null}
                       </button>
                     );
                   })}
