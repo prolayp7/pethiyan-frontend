@@ -44,6 +44,8 @@ import {
   getWishlistItems,
   removeWishlistItem,
   getProductReviews,
+  getAvailableOrderItemsForProduct,
+  submitReview,
   getProductFaqs,
   getAddresses,
 } from "@/lib/api";
@@ -558,6 +560,10 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
 
   const rating = 0;
   const reviewCount = reviews.length;
+
+  // Review submission state
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewPendingMessage, setReviewPendingMessage] = useState<string | null>(null);
 
   const specs: Array<{ key: string; value: string }> = [
     { key: "Product Type", value: product.type },
@@ -1087,6 +1093,20 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
             )}
 
             {activeTab === "reviews" && <ReviewsTab reviews={reviews} rating={rating} />}
+
+            {activeTab === "reviews" && (
+              <div className="mt-6">
+                {reviewPendingMessage ? (
+                  <div className="p-3 rounded-md bg-yellow-50 text-yellow-800">{reviewPendingMessage}</div>
+                ) : (
+                  <ReviewForm
+                    productSlug={product.slug}
+                    onSubmitting={() => setSubmittingReview(true)}
+                    onDone={(msg) => { setSubmittingReview(false); setReviewPendingMessage(msg ?? null); }}
+                  />
+                )}
+              </div>
+            )}
 
             {activeTab === "faqs" && <FaqsTab faqs={faqs} />}
           </div>
