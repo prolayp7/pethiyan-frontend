@@ -96,7 +96,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     return pricing
       ? {
           display: pricing.special_price ?? (pricing.cost != null ? parseFloat(String(pricing.cost)) : 0),
-          compare: pricing.price ?? 0,
+          compare: pricing.cost ?? 0,
           raw: pricing,
         }
       : null;
