@@ -822,7 +822,14 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
             {attributeGroups.length > 0 && (
               <div className="mt-5">
                 {attributeGroups.map((group) => {
-                  const selectedValue = getAttributeValue(selectedVariant, group.key) ?? group.values[0]?.value ?? "-";
+                  // Only render attribute groups that exist on the currently
+                  // selected variant. Some variants (e.g. particular pouch
+                  // sizes) may not have a `color` attribute — hide the group
+                  // when the selected variant lacks that attribute.
+                  const selectedAttrValue = getAttributeValue(selectedVariant, group.key);
+                  if (selectedAttrValue == null || String(selectedAttrValue).trim() === "") return null;
+
+                  const selectedValue = selectedAttrValue;
                   const isColorGroup = group.key.includes("color") || group.displayKey.toLowerCase().includes("color");
                   return (
                     <div key={group.key} className="mb-4">
