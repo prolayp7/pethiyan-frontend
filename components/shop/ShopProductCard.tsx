@@ -73,7 +73,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   const price     = defaultPricing?.special_price || defaultPricing?.price || 0;
   const compare   = defaultPricing?.price || 0;
   // Display price: prefer special_price when available, otherwise use cost (price without GST) or price
-  const displayPrice = defaultPricing?.special_price ?? (defaultPricing?.cost ? parseFloat(String(defaultPricing.cost)) : defaultPricing?.price ?? 0);
+  const displayPrice = defaultPricing?.special_price ?? (defaultPricing?.cost ? parseFloat(String(defaultPricing.cost)) : 0);
   const showCompare = compare > 0 && compare > displayPrice;
   const discount  = showCompare ? Math.round(((compare - displayPrice) / compare) * 100) : null;
   const inStock   = (defaultPricing?.stock ?? 0) > 0;
