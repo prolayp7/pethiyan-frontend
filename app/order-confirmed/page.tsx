@@ -36,6 +36,7 @@ function OrderConfirmedInner() {
   const searchParams = useSearchParams();
   const orderNumber  = searchParams.get("order_number") ?? "";
   const orderId      = searchParams.get("order_id")     ?? "";
+  const orderSlug    = searchParams.get("order_slug")   ?? "";
 
   const [order,   setOrder]   = useState<ApiOrder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -255,15 +256,20 @@ function OrderConfirmedInner() {
         {/* ── CTAs ── */}
         <div className="space-y-3">
           {orderId && (
-            <Link
-              href={`/account/orders/${orderId}`}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:-translate-y-0.5 shadow-sm"
-              style={{ background: "linear-gradient(135deg,#1f4f8a,#0f2f5f)" }}
-            >
-              <Package className="h-4 w-4" />
-              View Full Order Details
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            (() => {
+              const orderLink = order?.slug ? `/account/orders/${order.slug}` : (orderSlug ? `/account/orders/${orderSlug}` : `/account/orders/${orderId}`);
+              return (
+                <Link
+                  href={orderLink}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:-translate-y-0.5 shadow-sm"
+                  style={{ background: "linear-gradient(135deg,#1f4f8a,#0f2f5f)" }}
+                >
+                  <Package className="h-4 w-4" />
+                  View Full Order Details
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              );
+            })()
           )}
           <div className="flex gap-3">
             <Link

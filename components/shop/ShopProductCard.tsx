@@ -50,7 +50,7 @@ const QA_BTN =
 
 export default function ShopProductCard({ product }: { product: RealApiProduct }) {
   const router = useRouter();
-  const { addItem, openCart } = useCart();
+  const { addItem, openCart, updateQuantity } = useCart();
   const { isWishlisted, toggle } = useWishlist();
   const { isLoggedIn } = useAuth();
   const {
@@ -162,8 +162,9 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!defaultVariant || !defaultPricing) return;
+    const itemId = `${product.id}-v${defaultVariant.id}-s${defaultPricing.store_id}`;
     addItem({
-      id: `${product.id}-v${defaultVariant.id}-s${defaultPricing.store_id}`,
+      id: itemId,
       productId: product.id,
       name: product.title,
       price,
@@ -172,11 +173,16 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
       variantId: defaultVariant.id,
       variantLabel: defaultVariant.title,
       minQty,
+      step: product.policies?.quantity_step_size ?? 1,
+      totalAllowed: (product as any).policies?.total_allowed_quantity ?? null,
+      stock: defaultPricing?.stock ?? undefined,
       storeId: defaultPricing.store_id,
       currencySymbol: product.currency?.symbol || "₹",
       weight: defaultVariant.weight ?? undefined,
       weightUnit: defaultVariant.weight_unit ?? undefined,
     });
+    // Reflect selected qty (local `qty`) in cart after add
+    setTimeout(() => updateQuantity(itemId, qty), 0);
     openCart();
   };
 
@@ -245,8 +251,9 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   const addSelectedToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!quickViewProduct || !selectedVariant || !selectedPricing) return;
+    const itemId = `${quickViewProduct.id}-v${selectedVariant.id}-s${selectedPricing.store_id}`;
     addItem({
-      id: `${quickViewProduct.id}-v${selectedVariant.id}-s${selectedPricing.store_id}`,
+      id: itemId,
       productId: quickViewProduct.id,
       name: quickViewProduct.title,
       price: Number(priceNow || 0),
@@ -255,11 +262,15 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
       variantId: selectedVariant.id,
       variantLabel: selectedVariant.title,
       minQty: qty,
+      step: quickViewProduct.policies?.quantity_step_size ?? 1,
+      totalAllowed: (quickViewProduct as any).policies?.total_allowed_quantity ?? null,
+      stock: selectedPricing?.stock ?? undefined,
       storeId: selectedPricing.store_id,
       currencySymbol: quickViewProduct.currency?.symbol || "₹",
       weight: selectedVariant.weight ?? undefined,
       weightUnit: selectedVariant.weight_unit ?? undefined,
     });
+    setTimeout(() => updateQuantity(itemId, qty), 0);
     openCart();
     closeQuickView();
   };
