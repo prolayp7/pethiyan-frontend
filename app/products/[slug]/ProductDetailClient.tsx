@@ -754,16 +754,16 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
                       <button
                         key={variant.id}
                         onClick={() => navigateToVariant(variant)}
-                        className={`flex flex-col items-center gap-1 p-1 rounded-xl border transition-all ${selected ? "ring-2 ring-(--color-primary) shadow-md" : "hover:shadow-sm"}`}
                         aria-pressed={selected}
                         title={attrLabel}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all text-center min-w-[56px] min-h-[56px] ${
+                          selected
+                            ? "btn-brand text-white border-2 border-(--color-primary) shadow-md"
+                            : "bg-white text-(--color-secondary) border border-(--color-border) hover:shadow-sm"
+                        }`}
                       >
-                        <div className={`w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center px-1 ${selected ? "border-2 border-(--color-primary)" : "border border-(--color-border)"}`}>
-                          <div className="text-center">
-                            <div className="text-xs font-semibold text-(--color-secondary) leading-snug line-clamp-2" style={{ maxWidth: 56 }}>{variant.title}</div>
-                            {variantSize ? <div className="text-[10px] text-gray-500 mt-1">{variantSize}</div> : null}
-                          </div>
-                        </div>
+                        <div className="text-xs font-semibold leading-snug line-clamp-2 w-14">{variant.title}</div>
+                        {variantSize ? <div className="text-[10px] mt-0.5">{variantSize}</div> : null}
                       </button>
                     );
                   })}
