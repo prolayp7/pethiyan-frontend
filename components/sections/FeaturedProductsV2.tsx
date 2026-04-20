@@ -95,8 +95,9 @@ const staticProducts: Product[] = [
 // ─── Adapter: ApiProduct → Product ───────────────────────────────────────────
 
 function toProduct(p: ApiProduct): Product {
-  const price = toNum(p.sale_price ?? p.price);
-  const comparePrice = toNum(p.compare_price);
+  const rawPrice = (p as any).store_pricing?.[0]?.cost ?? p.sale_price ?? p.price;
+  const price = toNum(rawPrice);
+  const comparePrice = toNum((p as any).store_pricing?.[0]?.price ?? p.compare_price);
 
   // Determine badge
   let badge: Product["badge"] = undefined;
