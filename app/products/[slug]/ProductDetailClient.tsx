@@ -361,6 +361,12 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
   const productName = product.title ?? "Product";
   const variantList = useMemo(() => product.variants ?? [], [product.variants]);
 
+  // Render the selected variant first in the UI so it stays visible.
+  const displayVariantList = useMemo(() => {
+    if (!selectedVariant) return variantList;
+    return [selectedVariant, ...variantList.filter((v) => v.id !== selectedVariant.id)];
+  }, [variantList, selectedVariant]);
+
   // Initialise selected variant from URL slug (variant page pre-selection)
   useEffect(() => {
     if (!initialVariantSlug) return;
@@ -727,7 +733,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
               <div className="mt-4">
                 <p className="text-sm font-semibold text-(--color-secondary) mb-2">Variants</p>
                 <div className="grid grid-cols-5 gap-2 max-h-[220px] overflow-y-auto">
-                  {variantList.map((variant) => {
+                  {displayVariantList.map((variant) => {
                     const selected = selectedVariant?.id === variant.id;
                     const attrLabel = Object.entries(variant.attributes ?? {}).map(([k, v]) => `${k}: ${v}`).join(" | ");
                     const sizeKeys = [
