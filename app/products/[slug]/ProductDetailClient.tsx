@@ -722,6 +722,37 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
               name={productName}
               videoUrl={isVideoLink(product.video?.video_link) ? product.video?.video_link : null}
             />
+            {/* Variant selector moved under gallery (compact square boxes) */}
+            {variantList.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-semibold text-(--color-secondary) mb-2">Variants</p>
+                <div className="grid grid-cols-5 gap-2 max-h-[220px] overflow-y-auto">
+                  {variantList.map((variant) => {
+                    const selected = selectedVariant?.id === variant.id;
+                    const img = variant.image || product.images?.variant_images?.find((u) => !!u) || product.images?.main_image;
+                    const attrLabel = Object.entries(variant.attributes ?? {}).map(([k, v]) => `${k}: ${v}`).join(" | ");
+                    return (
+                      <button
+                        key={variant.id}
+                        onClick={() => navigateToVariant(variant)}
+                        className={`flex flex-col items-center gap-1 p-1 rounded-xl border transition-all ${selected ? "ring-2 ring-(--color-primary) shadow-md" : "hover:shadow-sm"}`}
+                        aria-pressed={selected}
+                        title={attrLabel}
+                      >
+                        <div className={`w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center ${selected ? "border-2 border-(--color-primary)" : "border border-(--color-border)"}`}>
+                          {img ? (
+                            <img src={img} alt={variant.title} className="object-cover w-full h-full" />
+                          ) : (
+                            <div className="w-8 h-8 rounded bg-gray-200" />
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-600 text-center line-clamp-1 w-16">{variant.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col">
@@ -788,36 +819,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
               )}
             </div>
 
-            {variantList.length > 0 && (
-              <div className="mt-5 flex flex-col space-y-2">
-                <p className="text-sm font-semibold text-(--color-secondary) flex items-center gap-2">
-                  Product Variants
-                </p>
-                <div className="grid gap-2 max-h-60 overflow-y-auto pr-1">
-                  {variantList.map((variant) => {
-                    const selected = selectedVariant?.id === variant.id;
-                    const attributeLabel = Object.entries(variant.attributes ?? {})
-                      .map(([k, v]) => `${k}: ${v}`)
-                      .join(" | ");
-                    return (
-                      <button
-                        key={variant.id}
-                        onClick={() => navigateToVariant(variant)}
-                        className={`text-left border rounded-xl p-3 transition-all ${
-                          selected
-                            ? "btn-brand border-transparent shadow-md"
-                            : "border-(--color-border) hover:border-(--color-primary)/50"
-                        }`}
-                        aria-pressed={selected}
-                      >
-                        <p className={`text-sm font-semibold ${selected ? "text-white" : "text-(--color-secondary)"}`}>{variant.title}</p>
-                        {attributeLabel && <p className={`text-xs mt-0.5 ${selected ? "text-white/80" : "text-gray-500"}`}>{attributeLabel}</p>}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            {/* product variants moved to left column */}
 
             {attributeGroups.length > 0 && (
               <div className="mt-5">
