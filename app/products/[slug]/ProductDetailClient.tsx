@@ -776,7 +776,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
                         title={attrLabel}
                         className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all text-center min-w-[56px] ${
                           selected
-                            ? "border-2 border-(--color-primary) shadow-md bg-white"
+                            ? "btn-brand border-2 border-(--color-primary) shadow-md"
                             : "bg-white text-(--color-secondary) border border-(--color-border) hover:shadow-sm"
                         }`}
                       >
@@ -796,8 +796,8 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
                             <Package className="h-5 w-5 text-gray-300" aria-hidden="true" />
                           </div>
                         )}
-                        <div className={`text-xs font-semibold leading-snug line-clamp-2 w-14 ${selected ? "text-(--color-primary)" : "text-(--color-secondary)"}`}>{variant.title}</div>
-                        {variantSize ? <div className={`text-[10px] ${selected ? "text-(--color-primary)/80" : "text-gray-400"}`}>{variantSize}</div> : null}
+                        <div className={`text-xs font-semibold leading-snug line-clamp-2 w-14 ${selected ? "text-white" : "text-(--color-secondary)"}`}>{variant.title}</div>
+                        {variantSize ? <div className={`text-[10px] ${selected ? "text-white/80" : "text-gray-400"}`}>{variantSize}</div> : null}
                       </button>
                     );
                   })}
