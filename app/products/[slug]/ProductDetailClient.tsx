@@ -362,10 +362,14 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
   const variantList = useMemo(() => product.variants ?? [], [product.variants]);
 
   // Render the selected variant first in the UI so it stays visible.
+  // Use `selectedVariantId` here to avoid referencing `selectedVariant`
+  // before it's declared.
   const displayVariantList = useMemo(() => {
-    if (!selectedVariant) return variantList;
-    return [selectedVariant, ...variantList.filter((v) => v.id !== selectedVariant.id)];
-  }, [variantList, selectedVariant]);
+    if (selectedVariantId == null) return variantList;
+    const sel = variantList.find((v) => v.id === selectedVariantId);
+    if (!sel) return variantList;
+    return [sel, ...variantList.filter((v) => v.id !== selectedVariantId)];
+  }, [variantList, selectedVariantId]);
 
   // Initialise selected variant from URL slug (variant page pre-selection)
   useEffect(() => {
