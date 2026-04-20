@@ -70,8 +70,8 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   // ── Derived card values ──────────────────────────────────────────────────
   const { variant: defaultVariant, pricing: defaultPricing } = getDefaultPricing(product);
   const [hoveredVariantId, setHoveredVariantId] = useState<number | null>(null);
-  const price     = defaultPricing?.special_price || defaultPricing?.price || 0;
-  const compare   = defaultPricing?.price || 0;
+  const price     = defaultPricing?.special_price != null ? Number(defaultPricing.special_price) : (defaultPricing?.price != null ? Number(defaultPricing.price) : 0);
+  const compare   = defaultPricing?.price != null ? Number(defaultPricing.price) : 0;
   // Display price: prefer special_price when available, otherwise use cost (price without GST) or price
   const displayPrice = defaultPricing?.special_price ?? (defaultPricing?.cost ? parseFloat(String(defaultPricing.cost)) : 0);
   const showCompare = compare > 0 && compare > displayPrice;
@@ -96,7 +96,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     return pricing
       ? {
           display: pricing.special_price ?? (pricing.cost != null ? parseFloat(String(pricing.cost)) : 0),
-          compare: pricing.cost ?? 0,
+          compare: pricing.price != null ? Number(pricing.price) : 0,
           raw: pricing,
         }
       : null;
