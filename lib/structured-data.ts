@@ -154,11 +154,12 @@ export function productSchema(
     (product as Partial<RealApiProduct>).description ??
     "";
 
-  const storePrice =
+  const storePrice = Number(
     (product as Partial<RealApiProduct>).variants?.[0]?.store_pricing?.[0]?.special_price ??
     (product as Partial<RealApiProduct>).variants?.[0]?.store_pricing?.[0]?.cost ??
     (product as Partial<RealApiProduct>).variants?.[0]?.store_pricing?.[0]?.price ??
-    0;
+    0
+  );
 
   const fallbackPrice =
     typeof (product as Partial<ApiProduct>).sale_price === "number" ||
@@ -166,8 +167,9 @@ export function productSchema(
       ? Number((product as Partial<ApiProduct>).sale_price) || Number((product as Partial<ApiProduct>).price)
       : Number((product as Partial<ApiProduct>).price);
 
-  const variantPrice =
-    variant?.store_pricing?.[0]?.special_price ?? variant?.store_pricing?.[0]?.cost ?? variant?.store_pricing?.[0]?.price ?? 0;
+  const variantPrice = Number(
+    variant?.store_pricing?.[0]?.special_price ?? variant?.store_pricing?.[0]?.cost ?? variant?.store_pricing?.[0]?.price ?? 0
+  );
   const price = Number.isFinite(variantPrice) && variantPrice > 0
     ? variantPrice
     : Number.isFinite(storePrice) && storePrice > 0
