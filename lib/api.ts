@@ -116,6 +116,12 @@ export interface ApiResponse<T> {
   status?: boolean;
 }
 
+export interface ApiMutationResponse<T = unknown> {
+  success: boolean;
+  message?: string;
+  data?: T;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   current_page?: number;
@@ -834,7 +840,7 @@ export async function getAvailableOrderItemsForProduct(slug: string): Promise<Ar
   }
 }
 
-export async function submitReview(formData: FormData): Promise<unknown | null> {
+export async function submitReview(formData: FormData): Promise<ApiMutationResponse | null> {
   const token = getToken();
   try {
     const res = await fetch(`${API_BASE}/api/reviews`, {
@@ -843,7 +849,7 @@ export async function submitReview(formData: FormData): Promise<unknown | null> 
       credentials: 'include',
       body: formData,
     } as RequestInit);
-    return await res.json();
+    return await res.json() as ApiMutationResponse;
   } catch {
     return null;
   }
