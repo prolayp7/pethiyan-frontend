@@ -60,7 +60,7 @@ export default async function NavigationMenuServer() {
         image: p.image,
         name: p.name,
         price: formatPrice(p.price, p.currency_symbol),
-        href: `/shop`,
+        href: p.slug ? `/products/${p.slug}` : `/shop`,
       })),
     })) ?? [];
 
@@ -70,7 +70,7 @@ export default async function NavigationMenuServer() {
       image: p.image,
       name: p.name,
       price: formatPrice(p.price, p.currency_symbol),
-      href: `/shop`,
+      href: p.slug ? `/products/${p.slug}` : `/shop`,
     })) ?? [];
 
   return (
