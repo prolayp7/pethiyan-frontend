@@ -628,7 +628,8 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                         <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-2">
                           {quickViewVariants.map((v) => {
                             const isSelected = selectedVariant?.id === v.id;
-                            const imgUrl = normalizeImageUrl(v.image);
+                            const noVariantImages = (quickViewProduct.images?.variant_images?.length ?? 0) === 0;
+                            const imgUrl = normalizeImageUrl(v.image || (noVariantImages ? quickViewProduct.images?.main_image : null));
                             return (
                               <button
                                 key={v.id}
