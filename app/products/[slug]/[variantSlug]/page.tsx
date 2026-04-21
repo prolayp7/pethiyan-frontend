@@ -18,6 +18,7 @@ import { getCustomJsonLdSchemas, resolveVariantSeo } from "@/lib/seo";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import ProductDetailIsland from "../ProductDetailIsland";
+import { toDisplayTitleCase } from "@/lib/text";
 
 // ─── Pre-render all known product+variant slug pairs at build time ─────────────
 
@@ -128,8 +129,8 @@ export default async function ProductVariantPage({
           href: `/category/${(product as unknown as { category: { slug: string } }).category.slug}`,
         }]
       : []),
-    { label: product.title, href: `/products/${slug}` },
-    { label: variant.title, href: `/products/${slug}/${variantSlug}` },
+    { label: toDisplayTitleCase(product.title), href: `/products/${slug}` },
+    { label: toDisplayTitleCase(variant.title), href: `/products/${slug}/${variantSlug}` },
   ]);
   const customSchemas = getCustomJsonLdSchemas(
     seo.schemaMode,
@@ -160,8 +161,8 @@ export default async function ProductVariantPage({
                 href: `/category/${(product as unknown as { category: { slug: string } }).category.slug}`,
               }]
             : []),
-          { label: product.title, href: `/products/${slug}` },
-          { label: variant.title },
+          { label: toDisplayTitleCase(product.title), href: `/products/${slug}` },
+          { label: toDisplayTitleCase(variant.title) },
         ]}
       />
 

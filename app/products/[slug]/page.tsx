@@ -20,6 +20,7 @@ import RelatedProducts from "@/components/product/RelatedProducts";
 import RecentlyViewedProducts from "@/components/sections/RecentlyViewedProducts";
 import BrowsingHistory from "@/components/product/BrowsingHistory";
 import ProductDetailIsland from "./ProductDetailIsland";
+import { toDisplayTitleCase } from "@/lib/text";
 
 // ─── Pre-render all known product slugs at build time ─────────────────────────
 
@@ -119,7 +120,7 @@ export default async function ProductPage({
           href: `/category/${(product as unknown as { category: { slug: string } }).category.slug}`,
         }]
       : []),
-    { label: product.title, href: `/products/${slug}` },
+    { label: toDisplayTitleCase(product.title), href: `/products/${slug}` },
   ]);
   const customSchemas = getCustomJsonLdSchemas(
     seo.schemaMode,
@@ -150,7 +151,7 @@ export default async function ProductPage({
                 href: `/category/${(product as unknown as { category: { slug: string } }).category.slug}`,
               }]
             : []),
-          { label: product.title },
+          { label: toDisplayTitleCase(product.title) },
         ]}
       />
 
