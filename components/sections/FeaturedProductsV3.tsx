@@ -95,7 +95,11 @@ const staticProducts: Product[] = [
 // ─── Adapter: ApiProduct → Product ───────────────────────────────────────────
 
 function toProduct(p: ApiProduct): Product {
-  const rawPrice = (p as any).store_pricing?.[0]?.cost ?? p.sale_price ?? p.price;
+  const rawPrice =
+    (p as any).store_pricing?.[0]?.special_price ??
+    (p as any).store_pricing?.[0]?.cost ??
+    p.sale_price ??
+    p.price;
   const price = toNum(rawPrice);
   const comparePrice = toNum((p as any).store_pricing?.[0]?.price ?? p.compare_price);
 

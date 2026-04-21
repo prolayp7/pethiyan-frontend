@@ -543,6 +543,8 @@ export interface RealApiVariant {
   schema_mode?: "auto" | "custom" | null;
   schema_json_ld?: string | null;
   is_indexable?: boolean;
+  sku?: string | number | null;
+  options?: Array<{ value?: string } | string> | null;
 }
 
 export interface RealApiProduct {
@@ -597,6 +599,7 @@ export interface RealApiProduct {
   policies: {
     minimum_order_quantity: number;
     quantity_step_size?: number;
+    total_allowed_quantity?: number | null;
     is_returnable: boolean;
     is_cancelable: boolean;
     requires_otp?: boolean;

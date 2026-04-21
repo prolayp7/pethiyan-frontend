@@ -456,7 +456,12 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
   // Fire view_item whenever the selected variant changes (initial load + variant switch).
   useEffect(() => {
     if (!selectedVariant) return;
-    const price = toNum(selectedVariant.store_pricing?.[0]?.special_price ?? selectedVariant.store_pricing?.[0]?.price ?? 0);
+    const price = toNum(
+      selectedVariant.store_pricing?.[0]?.special_price ??
+      selectedVariant.store_pricing?.[0]?.cost ??
+      selectedVariant.store_pricing?.[0]?.price ??
+      0
+    );
     trackViewItem({
       item_id:       String(product.id),
       item_name:     product.title,

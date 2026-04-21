@@ -70,10 +70,16 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   // ── Derived card values ──────────────────────────────────────────────────
   const { variant: defaultVariant, pricing: defaultPricing } = getDefaultPricing(product);
   const [hoveredVariantId, setHoveredVariantId] = useState<number | null>(null);
-  const price     = defaultPricing?.special_price != null ? Number(defaultPricing.special_price) : (defaultPricing?.price != null ? Number(defaultPricing.price) : 0);
+  const price     = defaultPricing?.special_price != null
+    ? Number(defaultPricing.special_price)
+    : defaultPricing?.cost != null
+      ? Number(defaultPricing.cost)
+      : (defaultPricing?.price != null ? Number(defaultPricing.price) : 0);
   const compare   = defaultPricing?.price != null ? Number(defaultPricing.price) : 0;
   // Display price: prefer special_price when available, otherwise use cost (price without GST) or price
-  const displayPrice = defaultPricing?.special_price ?? (defaultPricing?.cost ? parseFloat(String(defaultPricing.cost)) : 0);
+  const displayPrice = defaultPricing?.special_price != null
+    ? Number(defaultPricing.special_price)
+    : (defaultPricing?.cost != null ? parseFloat(String(defaultPricing.cost)) : (defaultPricing?.price != null ? Number(defaultPricing.price) : 0));
   const showCompare = compare > 0 && compare > displayPrice;
   const discount  = showCompare ? Math.round(((compare - displayPrice) / compare) * 100) : null;
   const inStock   = (defaultPricing?.stock ?? 0) > 0;
@@ -102,8 +108,8 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
       : null;
   }
 
-  const hoveredPricingInfo = getPricingForVariant(hoveredVariant as any);
-  const defaultPricingInfo = getPricingForVariant(defaultVariant as any) ?? { display: displayPrice, compare };
+  const hoveredPricingInfo = getPricingForVariant(hoveredVariant);
+  const defaultPricingInfo = getPricingForVariant(defaultVariant) ?? { display: displayPrice, compare };
 
   const priceWithoutGst = hoveredPricingInfo?.display ?? defaultPricingInfo.display ?? 0;
   const compareWithoutGst = hoveredPricingInfo?.compare ?? defaultPricingInfo.compare ?? 0;
@@ -130,7 +136,11 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   }, [quickViewProduct]);
 
   const stepQty       = quickViewProduct?.policies?.minimum_order_quantity ?? minQty;
-  const priceNow      = selectedPricing?.special_price || selectedPricing?.price || price;
+  const priceNow      = selectedPricing?.special_price != null
+    ? Number(selectedPricing.special_price)
+    : selectedPricing?.cost != null
+      ? parseFloat(String(selectedPricing.cost))
+      : (selectedPricing?.price ?? price);
   const priceBase     = selectedPricing?.price || (showCompare ? compare : priceNow);
   const modalDiscount = priceBase > priceNow ? Math.round(((priceBase - priceNow) / priceBase) * 100) : 0;
 
@@ -176,7 +186,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
       variantLabel: defaultVariant.title,
       minQty,
       step: product.policies?.quantity_step_size ?? 1,
-      totalAllowed: (product as any).policies?.total_allowed_quantity ?? null,
+      totalAllowed: product.policies?.total_allowed_quantity ?? null,
       stock: defaultPricing?.stock ?? undefined,
       storeId: defaultPricing.store_id,
       currencySymbol: product.currency?.symbol || "₹",
@@ -265,7 +275,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
       variantLabel: selectedVariant.title,
       minQty: qty,
       step: quickViewProduct.policies?.quantity_step_size ?? 1,
-      totalAllowed: (quickViewProduct as any).policies?.total_allowed_quantity ?? null,
+      totalAllowed: quickViewProduct.policies?.total_allowed_quantity ?? null,
       stock: selectedPricing?.stock ?? undefined,
       storeId: selectedPricing.store_id,
       currencySymbol: quickViewProduct.currency?.symbol || "₹",
@@ -365,8 +375,8 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
               const weights: { weight: string; variantId: number }[] = [];
 
               // Determine the default variant's color so we only show sizes for that color
-              const defaultAttrsRaw = (defaultVariant as any)?.attributes || {};
-              const defaultAttrs: Record<string, any> = {};
+              const defaultAttrsRaw = defaultVariant?.attributes || {};
+              const defaultAttrs: Record<string, string> = {};
               for (const [k, val] of Object.entries(defaultAttrsRaw)) {
                 defaultAttrs[String(k).toLowerCase()] = val;
               }
@@ -374,7 +384,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
 
               // Check if ANY variant in this product has a color attribute
               const productHasColorVariants = product.variants.some((v) => {
-                const a = (v as any).attributes || {};
+                const a = v.attributes || {};
                 return Object.entries(a).some(([k]) => {
                   const key = String(k).toLowerCase();
                   return key === "color" || key === "col";
@@ -382,9 +392,9 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
               });
 
               for (const v of product.variants) {
-                const raw = (v as any).attributes || {};
+                const raw = v.attributes || {};
                 // normalize attribute keys to lowercase for robust lookup
-                const attrs: Record<string, any> = {};
+                const attrs: Record<string, string> = {};
                 for (const [k, val] of Object.entries(raw)) {
                   attrs[String(k).toLowerCase()] = val;
                 }
@@ -404,16 +414,16 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                 // fallback: try parsing size-like patterns from title or sku or option values
                 if (!finalSize) {
                   const titleStr = String(v.title ?? "");
-                  const skuStr = String((v as any).sku ?? "");
+                  const skuStr = String(v.sku ?? "");
                   const combined = `${titleStr} ${skuStr}`;
                   const sizeMatch = combined.match(/\b\d+(?:\s*[x×]\s*\d+){1,2}\s*(?:mm|cm|in)?\b/i);
                   if (sizeMatch) finalSize = sizeMatch[0];
                 }
                 // also check variant.options array (common in some APIs)
-                if (!finalSize && Array.isArray((v as any).options)) {
-                  for (const opt of (v as any).options) {
+                if (!finalSize && Array.isArray(v.options)) {
+                  for (const opt of v.options) {
                     if (!opt) continue;
-                    const val = String(opt.value ?? opt).trim();
+                    const val = String(typeof opt === "string" ? opt : (opt.value ?? "")).trim();
                     if (/\d+(?:\s*[x×]\s*\d+){1,2}/.test(val)) { finalSize = val; break; }
                   }
                 }
