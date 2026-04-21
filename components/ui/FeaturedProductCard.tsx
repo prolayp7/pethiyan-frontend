@@ -162,7 +162,11 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
   }, [quickViewOpen]);
 
   const stepQty = quickViewProduct?.policies?.minimum_order_quantity || p.minQty || 1;
-  const priceNow = selectedPricing?.special_price ?? selectedPricing?.cost ?? selectedPricing?.price ?? p.price;
+  const priceNow = selectedPricing?.special_price != null
+    ? Number(selectedPricing.special_price)
+    : selectedPricing?.cost != null
+      ? parseFloat(String(selectedPricing.cost))
+      : (selectedPricing?.price ?? p.price);
   const priceBase = selectedPricing?.price ?? p.originalPrice ?? priceNow;
   const modalDiscount = priceBase > priceNow ? Math.round(((priceBase - priceNow) / priceBase) * 100) : 0;
 
