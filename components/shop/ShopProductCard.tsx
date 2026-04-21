@@ -625,7 +625,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                         <p className="text-sm font-bold text-[#0f2444] mb-2">
                           Variants <span className="font-normal text-gray-400 text-xs">({quickViewVariants.length})</span>
                         </p>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-2">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-2 max-h-56 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                           {quickViewVariants.map((v) => {
                             const isSelected = selectedVariant?.id === v.id;
                             const noVariantImages = (quickViewProduct.images?.variant_images?.length ?? 0) === 0;
