@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import {
   Heart, ShoppingBag, Package, Tag, Trash2,
   Eye, X, ChevronLeft, ChevronRight, Minus, Plus,
-  CheckCircle, XCircle, Shield, RotateCcw, MapPin, Info,
+  CheckCircle, XCircle, Shield, RotateCcw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
@@ -23,18 +23,6 @@ import { useSiteSettings } from "@/context/SiteSettingsContext";
 import AttributePills, { AttributePillsWithVariants } from "@/components/product/AttributePills";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const COLOR_MAP: Record<string, string> = {
-  Transparent: "#c8e6f5", Brown: "#8B6347",
-  Colorful: "linear-gradient(135deg,#f44,#4f4,#44f)",
-  Black: "#111", White: "#f0f0f0", Red: "#e53", Blue: "#36f",
-  Green: "#4b8", Yellow: "#fb0", Gray: "#9ca3af", Grey: "#9ca3af",
-  "Light Gray": "#d1d5db", "Light Grey": "#d1d5db",
-  "Dark Gray": "#374151", "Dark Grey": "#374151",
-  Silver: "#c0c0c0", Orange: "#f97316", Purple: "#a855f7",
-  Pink: "#ec4899", Beige: "#e8dcc8", Navy: "#1e3a5f", Maroon: "#800000",
-};
-
 
 
 /** Extract the best available pricing from a product's variants. */
@@ -148,19 +136,6 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   const priceBase     = selectedPricing?.cost != null ? parseFloat(String(selectedPricing.cost)) : priceNow;
   // Use discount_percent from API; only show if there is an actual special_price discount
   const modalDiscount = selectedPricing?.discount_percent ?? 0;
-
-  // Generic attribute groups: key → Map<value, first variant with that value>
-  const attrGroups = useMemo(() => {
-    const groups = new Map<string, Map<string, RealApiVariant>>();
-    for (const v of quickViewVariants) {
-      for (const [key, value] of Object.entries(v.attributes ?? {})) {
-        if (!value) continue;
-        if (!groups.has(key)) groups.set(key, new Map());
-        if (!groups.get(key)!.has(value)) groups.get(key)!.set(value, v);
-      }
-    }
-    return groups;
-  }, [quickViewVariants]);
 
   const qvInStock = (selectedPricing?.stock ?? 0) > 0;
 
@@ -637,12 +612,6 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                         </span>
                       )}
                     </div>
-                    {quickViewProduct.tax?.gst_rate && (
-                      <p className="text-[11px] text-gray-400 mt-0.5">
-                        {quickViewProduct.tax.is_inclusive_tax ? "Incl." : "Excl."} {quickViewProduct.tax.gst_rate}% GST
-                      </p>
-                    )}
-
                     {/* Short description */}
                     {(quickViewProduct.short_description || quickViewProduct.description) && (
                       <p className="mt-3 text-sm leading-relaxed text-gray-600">
@@ -650,102 +619,56 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                       </p>
                     )}
 
-                    {/* Variant selector — image cards when variants have images, pills otherwise */}
-                    {quickViewVariants.length > 1 && (() => {
-                      const hasImages = quickViewVariants.some((v) => Boolean(v.image));
-
-                      if (hasImages) {
-                        return (
-                          <div className="mt-4">
-                            <p className="text-sm font-bold text-[#0f2444] mb-2">
-                              Variants <span className="font-normal text-gray-400 text-xs">({quickViewVariants.length})</span>
-                            </p>
-                            <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-2">
-                              {quickViewVariants.map((v) => {
-                                const isSelected = selectedVariant?.id === v.id;
-                                const imgUrl = normalizeImageUrl(v.image);
-                                return (
-                                  <button
-                                    key={v.id}
-                                    type="button"
-                                    onClick={() => setSelectedVariantId(v.id)}
-                                    aria-label={v.title || `Variant ${v.id}`}
-                                    data-selected={isSelected}
-                                    className={`rounded-xl border-2 overflow-hidden transition-all text-left focus:outline-none ${
-                                      isSelected
-                                        ? "border-transparent shadow-md"
-                                        : "border-gray-200 hover:border-gray-300 bg-white"
-                                    }`}
-                                  >
-                                    <div className={`relative aspect-square ${isSelected ? "bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]" : "bg-gray-50"}`}>
-                                      {imgUrl ? (
-                                        <Image src={imgUrl} alt={v.title || ""} fill
-                                          className="object-contain p-1.5" sizes="100px"
-                                          unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgUrl)} />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                          <Package className="h-6 w-6 text-gray-300" />
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className={`px-1.5 py-1.5 ${isSelected ? "bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]" : "bg-white"}`}>
-                                      <p className={`text-[9px] font-semibold leading-tight line-clamp-2 text-center ${isSelected ? "text-white" : "text-gray-700"}`}>
-                                        {v.title}
-                                      </p>
-                                      {v.attributes && Object.keys(v.attributes).length > 0 && (
-                                        <p className={`text-[8px] leading-tight line-clamp-1 text-center mt-0.5 ${isSelected ? "text-white/70" : "text-gray-400"}`}>
-                                          {Object.values(v.attributes).filter(Boolean).join(" · ")}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      // No variant images — fall back to attribute pills
-                      return attrGroups.size > 0 ? (
-                        <div className="mt-4 space-y-4">
-                          {Array.from(attrGroups.entries()).map(([attrKey, valueMap]) => {
-                            const label = attrKey.charAt(0).toUpperCase() + attrKey.slice(1);
-                            const isColor = attrKey.toLowerCase() === "color" || attrKey.toLowerCase() === "colour";
-                            const currentValue = selectedVariant?.attributes?.[attrKey] ?? null;
+                    {/* Variant selector — always image cards when multiple variants exist */}
+                    {quickViewVariants.length > 1 && (
+                      <div className="mt-4">
+                        <p className="text-sm font-bold text-[#0f2444] mb-2">
+                          Variants <span className="font-normal text-gray-400 text-xs">({quickViewVariants.length})</span>
+                        </p>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-2">
+                          {quickViewVariants.map((v) => {
+                            const isSelected = selectedVariant?.id === v.id;
+                            const imgUrl = normalizeImageUrl(v.image);
                             return (
-                              <div key={attrKey}>
-                                <p className="text-sm font-bold text-[#0f2444] mb-2">
-                                  {label}{currentValue ? <span className="font-normal text-gray-500">: {currentValue}</span> : ""}
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                  {Array.from(valueMap.entries()).map(([value, variant]) => {
-                                    const isSelected = selectedVariant?.attributes?.[attrKey] === value;
-                                    if (isColor) {
-                                      return (
-                                        <button key={value}
-                                          onClick={() => setSelectedVariantId(variant.id)}
-                                          className={`h-8 w-8 rounded-full border-2 transition-all ${isSelected ? "border-[#17396f] scale-110 shadow-md ring-2 ring-[#2f6f9f]/40" : "border-gray-200 hover:border-gray-400"}`}
-                                          style={{ background: COLOR_MAP[value] ?? "#aaa" }}
-                                          type="button" aria-label={`Select ${value}`} data-selected={isSelected} />
-                                      );
-                                    }
-                                    return (
-                                      <button key={value} type="button"
-                                        onClick={() => setSelectedVariantId(variant.id)}
-                                        className={`px-3 py-1 text-xs rounded-full border-2 font-semibold transition-all ${isSelected ? "border-transparent text-white bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] shadow-sm" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}
-                                        data-selected={isSelected}>
-                                        {value}
-                                      </button>
-                                    );
-                                  })}
+                              <button
+                                key={v.id}
+                                type="button"
+                                onClick={() => setSelectedVariantId(v.id)}
+                                aria-label={v.title || `Variant ${v.id}`}
+                                data-selected={isSelected}
+                                className={`rounded-xl border-2 overflow-hidden transition-all text-left focus:outline-none ${
+                                  isSelected
+                                    ? "border-transparent shadow-md"
+                                    : "border-gray-200 hover:border-gray-300 bg-white"
+                                }`}
+                              >
+                                <div className={`relative aspect-square ${isSelected ? "bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]" : "bg-gray-50"}`}>
+                                  {imgUrl ? (
+                                    <Image src={imgUrl} alt={v.title || ""} fill
+                                      className="object-contain p-1.5" sizes="100px"
+                                      unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgUrl)} />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <Package className={`h-6 w-6 ${isSelected ? "text-white/60" : "text-gray-300"}`} />
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
+                                <div className={`px-1.5 py-1.5 ${isSelected ? "bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]" : "bg-white"}`}>
+                                  <p className={`text-[9px] font-semibold leading-tight line-clamp-2 text-center ${isSelected ? "text-white" : "text-gray-700"}`}>
+                                    {v.title}
+                                  </p>
+                                  {v.attributes && Object.keys(v.attributes).length > 0 && (
+                                    <p className={`text-[8px] leading-tight line-clamp-1 text-center mt-0.5 ${isSelected ? "text-white/70" : "text-gray-400"}`}>
+                                      {Object.values(v.attributes).filter(Boolean).join(" · ")}
+                                    </p>
+                                  )}
+                                </div>
+                              </button>
                             );
                           })}
                         </div>
-                      ) : null;
-                    })()}
+                      </div>
+                    )}
 
                     {/* Qty + Add to Cart */}
                     <div className="mt-5 flex flex-wrap items-center gap-2.5">
@@ -789,22 +712,10 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                           <span>Guarantee: {quickViewProduct.features.guarantee_period}</span>
                         </div>
                       )}
-                      {quickViewProduct.features?.made_in && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
-                          <span>Made in: {quickViewProduct.features.made_in}</span>
-                        </div>
-                      )}
                       {quickViewProduct.policies?.is_returnable && (
                         <div className="flex items-center gap-2 text-gray-600">
                           <RotateCcw className="h-4 w-4 text-[#49ad57] shrink-0" />
                           <span>Returnable</span>
-                        </div>
-                      )}
-                      {quickViewProduct.tax?.hsn_code && (
-                        <div className="flex items-center gap-2 text-gray-400 text-xs">
-                          <Info className="h-3.5 w-3.5 shrink-0" />
-                          <span>HSN: {quickViewProduct.tax.hsn_code}</span>
                         </div>
                       )}
                     </div>
