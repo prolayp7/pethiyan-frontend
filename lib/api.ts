@@ -2363,6 +2363,7 @@ export interface ApiMenuMegaProduct {
   currency_symbol: string;
   currency_code: string;
   slug: string;
+  product_url: string;
 }
 
 export interface ApiMenuMegaMenuPanel {
