@@ -75,13 +75,15 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     : defaultPricing?.cost != null
       ? Number(defaultPricing.cost)
       : (defaultPricing?.price != null ? Number(defaultPricing.price) : 0);
-  const compare   = defaultPricing?.price != null ? Number(defaultPricing.price) : 0;
-  // Display price: prefer special_price when available, otherwise use cost (price without GST) or price
+  // compare: use cost (GST-excluded base price) as the strikethrough so it's same tax-basis as displayPrice
+  const compare   = defaultPricing?.cost != null ? parseFloat(String(defaultPricing.cost)) : (defaultPricing?.price != null ? Number(defaultPricing.price) : 0);
+  // Display price: prefer special_price when available, otherwise use cost (price without GST)
   const displayPrice = defaultPricing?.special_price != null
     ? Number(defaultPricing.special_price)
-    : (defaultPricing?.cost != null ? parseFloat(String(defaultPricing.cost)) : (defaultPricing?.cost != null ? Number(defaultPricing.cost) : 0));
+    : (defaultPricing?.cost != null ? parseFloat(String(defaultPricing.cost)) : 0);
   const showCompare = compare > 0 && compare > displayPrice;
-  const discount  = showCompare ? Math.round(((compare - displayPrice) / compare) * 100) : null;
+  // Use discount_percent from API if available, otherwise do not show discount badge
+  const discount  = defaultPricing?.discount_percent ?? null;
   const inStock   = (defaultPricing?.stock ?? 0) > 0;
   const minQty    = product.policies?.minimum_order_quantity ?? 1;
   const imgSrc    = normalizeImageUrl(
@@ -101,8 +103,8 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     const pricing = (v.store_pricing?.find((s) => (matchStoreId ? s.store_id === matchStoreId : s.stock_status === "in_stock")) ?? v.store_pricing?.[0]) ?? null;
     return pricing
       ? {
-          display: pricing.special_price ?? (pricing.cost != null ? parseFloat(String(pricing.cost)) : 0),
-          compare: pricing.price != null ? Number(pricing.price) : 0,
+          display: pricing.special_price != null ? Number(pricing.special_price) : (pricing.cost != null ? parseFloat(String(pricing.cost)) : 0),
+          compare: pricing.cost != null ? parseFloat(String(pricing.cost)) : (pricing.price != null ? Number(pricing.price) : 0),
           raw: pricing,
         }
       : null;
@@ -140,9 +142,11 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     ? Number(selectedPricing.special_price)
     : selectedPricing?.cost != null
       ? parseFloat(String(selectedPricing.cost))
-      : (selectedPricing?.cost ?? price);
-  const priceBase     = selectedPricing?.price || (showCompare ? compare : priceNow);
-  const modalDiscount = priceBase > priceNow ? Math.round(((priceBase - priceNow) / priceBase) * 100) : 0;
+      : (selectedPricing?.price != null ? Number(selectedPricing.price) : price);
+  // priceBase is the "was" price — use cost (GST-excluded) so it's on the same tax basis as priceNow
+  const priceBase     = selectedPricing?.cost != null ? parseFloat(String(selectedPricing.cost)) : priceNow;
+  // Use discount_percent from API; only show if there is an actual special_price discount
+  const modalDiscount = selectedPricing?.discount_percent ?? 0;
 
   const colorOptions = useMemo(() => {
     const map = new Map<string, RealApiVariant>();

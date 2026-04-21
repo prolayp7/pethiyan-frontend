@@ -101,11 +101,13 @@ function toProduct(p: ApiProduct): Product {
     p.sale_price ??
     p.price;
   const price = toNum(rawPrice);
-  const comparePrice = toNum((p as any).store_pricing?.[0]?.price ?? p.compare_price);
+  // comparePrice: use cost (GST-excluded) as the strikethrough — only show if special_price < cost
+  const costPrice = toNum((p as any).store_pricing?.[0]?.cost ?? p.compare_price);
+  const comparePrice = price < costPrice ? costPrice : 0;
 
   // Determine badge
   let badge: Product["badge"] = undefined;
-  if (p.sale_price && toNum(p.sale_price) < toNum(p.price)) badge = "Sale";
+  if ((p as any).store_pricing?.[0]?.discount_percent > 0) badge = "Sale";
   else if (p.tags?.includes("new")) badge = "New";
   else if (p.tags?.includes("hot")) badge = "Hot";
 

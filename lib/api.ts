@@ -479,6 +479,7 @@ export interface RealApiStorePricing {
   price: number;
   special_price: number;
   cost: string;
+  discount_percent?: number | null;
   stock: number;
   stock_status: "in_stock" | "out_of_stock";
   gst: {
