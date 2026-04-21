@@ -40,6 +40,8 @@ import {
   type RealApiProduct,
   type RealApiStorePricing,
   type RealApiVariant,
+  selectPrimaryStorePricing,
+  resolveStorePricingDisplay,
   addToWishlist,
   getWishlistItems,
   removeWishlistItem,
@@ -456,12 +458,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
   // Fire view_item whenever the selected variant changes (initial load + variant switch).
   useEffect(() => {
     if (!selectedVariant) return;
-    const price = toNum(
-      selectedVariant.store_pricing?.[0]?.special_price ??
-      selectedVariant.store_pricing?.[0]?.cost ??
-      selectedVariant.store_pricing?.[0]?.price ??
-      0
-    );
+    const price = resolveStorePricingDisplay(selectPrimaryStorePricing(selectedVariant.store_pricing)).mainPrice;
     trackViewItem({
       item_id:       String(product.id),
       item_name:     product.title,
@@ -548,10 +545,14 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
     ]);
   }, [selectedVariant, product.images]);
 
-  const basePrice = toNum(selectedStorePricing?.price ?? selectedStorePricing?.special_price ?? 0);
-  const effectivePrice = toNum(selectedStorePricing?.special_price ?? selectedStorePricing?.price ?? 0);
-  const hasDiscount = basePrice > 0 && effectivePrice > 0 && effectivePrice < basePrice;
-  const discount = hasDiscount ? Math.round(((basePrice - effectivePrice) / basePrice) * 100) : null;
+  const pricingDisplay = useMemo(
+    () => resolveStorePricingDisplay(selectedStorePricing),
+    [selectedStorePricing]
+  );
+  const effectivePrice = pricingDisplay.mainPrice;
+  const basePrice = pricingDisplay.comparePrice;
+  const hasDiscount = pricingDisplay.hasDiscount;
+  const discount = pricingDisplay.discountPercent;
 
   const stockQty = selectedStorePricing?.stock ?? 0;
   const inStock = (selectedStorePricing?.stock_status === "in_stock") && stockQty > 0;
@@ -610,7 +611,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
       variantLabel: selectedVariant.title,
       minQty: moq,
       step: stepSize,
-      totalAllowed: (product as any).policies?.total_allowed_quantity ?? null,
+      totalAllowed: product.policies?.total_allowed_quantity ?? null,
       stock: selectedStorePricing?.stock ?? undefined,
       name: selectedVariant.title || productName,
       price: effectivePrice,
@@ -845,7 +846,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
               )}
             </div>
             <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
-              <p className="text-[11px] text-gray-400">Inclusive of all taxes. GST invoice available.</p>
+              <p className="text-[11px] text-gray-400">GST excluded price shown. GST invoice available.</p>
               {customerStateName && (
                 <span className="inline-flex items-center gap-0.5 text-[11px] text-blue-600">
                   <MapPin className="h-3 w-3" aria-hidden="true" />

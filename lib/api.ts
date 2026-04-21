@@ -497,6 +497,45 @@ export interface RealApiStorePricing {
   };
 }
 
+export interface ResolvedStorePricingDisplay {
+  mainPrice: number;
+  comparePrice: number | null;
+  discountPercent: number | null;
+  hasDiscount: boolean;
+}
+
+export function selectPrimaryStorePricing<T extends Pick<RealApiStorePricing, "stock_status" | "stock">>(
+  pricingList?: T[] | null
+): T | undefined {
+  if (!pricingList || pricingList.length === 0) return undefined;
+
+  return pricingList.find((pricing) => pricing.stock_status === "in_stock" && pricing.stock > 0) ?? pricingList[0];
+}
+
+export function resolveStorePricingDisplay(pricing?: Partial<RealApiStorePricing> | null): ResolvedStorePricingDisplay {
+  const gstIncludedPrice = toNum(pricing?.price ?? 0);
+  const costPrice = toNum(pricing?.cost ?? 0);
+  const specialPrice = toNum(pricing?.special_price ?? 0);
+  const rawDiscountPercent = pricing?.discount_percent;
+  const discountPercent =
+    rawDiscountPercent === null || rawDiscountPercent === undefined
+      ? null
+      : toNum(rawDiscountPercent);
+
+  const mainPrice = specialPrice > 0
+    ? specialPrice
+    : costPrice > 0
+      ? costPrice
+      : gstIncludedPrice;
+
+  return {
+    mainPrice,
+    comparePrice: discountPercent !== null && costPrice > 0 ? costPrice : null,
+    discountPercent,
+    hasDiscount: discountPercent !== null,
+  };
+}
+
 export interface RealApiVariant {
   id: number;
   title: string;
@@ -795,7 +834,7 @@ export async function getAvailableOrderItemsForProduct(slug: string): Promise<Ar
   }
 }
 
-export async function submitReview(formData: FormData): Promise<any | null> {
+export async function submitReview(formData: FormData): Promise<unknown | null> {
   const token = getToken();
   try {
     const res = await fetch(`${API_BASE}/api/reviews`, {

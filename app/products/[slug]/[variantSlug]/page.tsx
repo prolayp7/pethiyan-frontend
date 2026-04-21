@@ -5,7 +5,8 @@ import {
   getProductReviews,
   getProductFaqs,
   getProducts,
-  toNum,
+  selectPrimaryStorePricing,
+  resolveStorePricingDisplay,
 } from "@/lib/api";
 import {
   productSchema,
@@ -48,8 +49,8 @@ export async function generateMetadata({
   const variant = product.variants?.find((v) => v.slug === variantSlug);
   if (!variant) return { title: "Variant Not Found" };
 
-  const firstStorePricing = variant.store_pricing?.[0];
-  const price = toNum(firstStorePricing?.special_price ?? firstStorePricing?.price ?? 0);
+  const firstStorePricing = selectPrimaryStorePricing(variant.store_pricing);
+  const price = resolveStorePricingDisplay(firstStorePricing).mainPrice;
   const productTitle = product.title ?? "Product";
   const variantTitle = variant.title ?? variantSlug;
   const seo = resolveVariantSeo(product, variant);
