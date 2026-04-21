@@ -650,45 +650,102 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                       </p>
                     )}
 
-                    {/* All variant attribute groups */}
-                    {attrGroups.size > 0 && (
-                      <div className="mt-4 space-y-4">
-                        {Array.from(attrGroups.entries()).map(([attrKey, valueMap]) => {
-                          const label = attrKey.charAt(0).toUpperCase() + attrKey.slice(1);
-                          const isColor = attrKey.toLowerCase() === "color" || attrKey.toLowerCase() === "colour";
-                          const currentValue = selectedVariant?.attributes?.[attrKey] ?? null;
-                          return (
-                            <div key={attrKey}>
-                              <p className="text-sm font-bold text-[#0f2444] mb-2">
-                                {label}{currentValue ? <span className="font-normal text-gray-500">: {currentValue}</span> : ""}
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {Array.from(valueMap.entries()).map(([value, variant]) => {
-                                  const isSelected = selectedVariant?.attributes?.[attrKey] === value;
-                                  if (isColor) {
-                                    return (
-                                      <button key={value}
-                                        onClick={() => setSelectedVariantId(variant.id)}
-                                        className={`h-8 w-8 rounded-full border-2 transition-all ${isSelected ? "border-[#0f4d9a] scale-110 shadow" : "border-gray-200 hover:border-gray-400"}`}
-                                        style={{ background: COLOR_MAP[value] ?? "#aaa" }}
-                                        type="button" aria-label={`Select ${value}`} aria-pressed={isSelected ? "true" : "false"} />
-                                    );
-                                  }
-                                  return (
-                                    <button key={value} type="button"
-                                      onClick={() => setSelectedVariantId(variant.id)}
-                                      className={`px-3 py-1 text-xs rounded-full border-2 font-semibold transition-all ${isSelected ? "border-[#0f4d9a] text-[#0f2444] bg-[#0f4d9a]/5" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}
-                                      aria-pressed={isSelected ? "true" : "false"}>
-                                      {value}
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                    {/* Variant selector — image cards when variants have images, pills otherwise */}
+                    {quickViewVariants.length > 1 && (() => {
+                      const hasImages = quickViewVariants.some((v) => Boolean(v.image));
+
+                      if (hasImages) {
+                        return (
+                          <div className="mt-4">
+                            <p className="text-sm font-bold text-[#0f2444] mb-2">
+                              Variants <span className="font-normal text-gray-400 text-xs">({quickViewVariants.length})</span>
+                            </p>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-2">
+                              {quickViewVariants.map((v) => {
+                                const isSelected = selectedVariant?.id === v.id;
+                                const imgUrl = normalizeImageUrl(v.image);
+                                return (
+                                  <button
+                                    key={v.id}
+                                    type="button"
+                                    onClick={() => setSelectedVariantId(v.id)}
+                                    aria-label={v.title || `Variant ${v.id}`}
+                                    data-selected={isSelected}
+                                    className={`rounded-xl border-2 overflow-hidden transition-all text-left focus:outline-none ${
+                                      isSelected
+                                        ? "border-transparent shadow-md"
+                                        : "border-gray-200 hover:border-gray-300 bg-white"
+                                    }`}
+                                  >
+                                    <div className={`relative aspect-square ${isSelected ? "bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]" : "bg-gray-50"}`}>
+                                      {imgUrl ? (
+                                        <Image src={imgUrl} alt={v.title || ""} fill
+                                          className="object-contain p-1.5" sizes="100px"
+                                          unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgUrl)} />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <Package className="h-6 w-6 text-gray-300" />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className={`px-1.5 py-1.5 ${isSelected ? "bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]" : "bg-white"}`}>
+                                      <p className={`text-[9px] font-semibold leading-tight line-clamp-2 text-center ${isSelected ? "text-white" : "text-gray-700"}`}>
+                                        {v.title}
+                                      </p>
+                                      {v.attributes && Object.keys(v.attributes).length > 0 && (
+                                        <p className={`text-[8px] leading-tight line-clamp-1 text-center mt-0.5 ${isSelected ? "text-white/70" : "text-gray-400"}`}>
+                                          {Object.values(v.attributes).filter(Boolean).join(" · ")}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </button>
+                                );
+                              })}
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                          </div>
+                        );
+                      }
+
+                      // No variant images — fall back to attribute pills
+                      return attrGroups.size > 0 ? (
+                        <div className="mt-4 space-y-4">
+                          {Array.from(attrGroups.entries()).map(([attrKey, valueMap]) => {
+                            const label = attrKey.charAt(0).toUpperCase() + attrKey.slice(1);
+                            const isColor = attrKey.toLowerCase() === "color" || attrKey.toLowerCase() === "colour";
+                            const currentValue = selectedVariant?.attributes?.[attrKey] ?? null;
+                            return (
+                              <div key={attrKey}>
+                                <p className="text-sm font-bold text-[#0f2444] mb-2">
+                                  {label}{currentValue ? <span className="font-normal text-gray-500">: {currentValue}</span> : ""}
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {Array.from(valueMap.entries()).map(([value, variant]) => {
+                                    const isSelected = selectedVariant?.attributes?.[attrKey] === value;
+                                    if (isColor) {
+                                      return (
+                                        <button key={value}
+                                          onClick={() => setSelectedVariantId(variant.id)}
+                                          className={`h-8 w-8 rounded-full border-2 transition-all ${isSelected ? "border-[#17396f] scale-110 shadow-md ring-2 ring-[#2f6f9f]/40" : "border-gray-200 hover:border-gray-400"}`}
+                                          style={{ background: COLOR_MAP[value] ?? "#aaa" }}
+                                          type="button" aria-label={`Select ${value}`} data-selected={isSelected} />
+                                      );
+                                    }
+                                    return (
+                                      <button key={value} type="button"
+                                        onClick={() => setSelectedVariantId(variant.id)}
+                                        className={`px-3 py-1 text-xs rounded-full border-2 font-semibold transition-all ${isSelected ? "border-transparent text-white bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] shadow-sm" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}
+                                        data-selected={isSelected}>
+                                        {value}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : null;
+                    })()}
 
                     {/* Qty + Add to Cart */}
                     <div className="mt-5 flex flex-wrap items-center gap-2.5">
