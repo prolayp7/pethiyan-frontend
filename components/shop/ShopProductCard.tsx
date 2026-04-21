@@ -289,7 +289,6 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     closeQuickView();
   };
 
-  const buyNow = (e: React.MouseEvent) => { addSelectedToCart(e); router.push("/checkout"); };
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -708,10 +707,6 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                         Add to Cart
                       </button>
                     </div>
-                    <button onClick={buyNow} disabled={!qvInStock}
-                      className="mt-2.5 w-full h-10 rounded-full text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]">
-                      Buy It Now
-                    </button>
 
                     {stepQty > 1 && (
                       <p className="mt-1.5 text-[11px] text-gray-400 flex items-center justify-center gap-1">
