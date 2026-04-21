@@ -56,13 +56,10 @@ function renderBlock(node: PMNode, idx: number): React.ReactNode {
 
     case 'heading': {
       const level = node.attrs?.level || 2;
-      const Tag = `h${Math.min(4, Math.max(1, level))}` as keyof JSX.IntrinsicElements;
+      const tagName = `h${Math.min(4, Math.max(1, level))}`;
       const className = level <= 2 ? 'text-2xl font-semibold mb-4' : 'text-xl font-semibold mb-3';
-      return (
-        <Tag key={idx} className={`${className} text-gray-900`}>
-          {node.content?.map((n, i) => renderInline(n, i))}
-        </Tag>
-      );
+      const Tag: any = tagName;
+      return React.createElement(Tag, { key: idx, className: `${className} text-gray-900` }, node.content?.map((n, i) => renderInline(n, i)));
     }
 
     case 'image':
