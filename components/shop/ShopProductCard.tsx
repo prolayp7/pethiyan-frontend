@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import {
   Heart, ShoppingBag, Package, Tag, Trash2,
   Eye, X, ChevronLeft, ChevronRight, Minus, Plus,
+  CheckCircle, XCircle, Shield, RotateCcw, MapPin, Info,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
@@ -148,23 +149,20 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   // Use discount_percent from API; only show if there is an actual special_price discount
   const modalDiscount = selectedPricing?.discount_percent ?? 0;
 
-  const colorOptions = useMemo(() => {
-    const map = new Map<string, RealApiVariant>();
+  // Generic attribute groups: key → Map<value, first variant with that value>
+  const attrGroups = useMemo(() => {
+    const groups = new Map<string, Map<string, RealApiVariant>>();
     for (const v of quickViewVariants) {
-      const color = v.attributes?.color;
-      if (color && !map.has(color)) map.set(color, v);
+      for (const [key, value] of Object.entries(v.attributes ?? {})) {
+        if (!value) continue;
+        if (!groups.has(key)) groups.set(key, new Map());
+        if (!groups.get(key)!.has(value)) groups.get(key)!.set(value, v);
+      }
     }
-    return Array.from(map.entries());
+    return groups;
   }, [quickViewVariants]);
 
-  const sizeOptions = useMemo(() => {
-    const map = new Map<string, RealApiVariant>();
-    for (const v of quickViewVariants) {
-      const size = v.attributes?.size;
-      if (size && !map.has(size)) map.set(size, v);
-    }
-    return Array.from(map.entries());
-  }, [quickViewVariants]);
+  const qvInStock = (selectedPricing?.stock ?? 0) > 0;
 
   // Lock body scroll when modal open
   useEffect(() => {
@@ -506,115 +504,264 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
           role="dialog" aria-modal="true" aria-label="Quick product view"
         >
           <div
-            className="w-full max-w-6xl max-h-[92vh] overflow-auto rounded-3xl bg-white shadow-2xl"
+            className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-3xl bg-white shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {quickViewLoading ? (
-              <div className="p-10 text-center text-gray-500">Loading product details...</div>
-            ) : quickViewProduct ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2">
-                {/* Image panel */}
-                <div className="relative bg-[#f3f6fa] min-h-[360px] lg:min-h-[640px]">
-                  {modalImages.length > 0 ? (
-                    <Image
-                      src={modalImages[Math.min(activeImageIndex, modalImages.length - 1)]}
-                      alt={quickViewProduct.title}
-                      fill
-                      unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(modalImages[Math.min(activeImageIndex, modalImages.length - 1)] || "")}
-                      className="object-contain"
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="h-16 w-16 text-gray-300" />
+              /* Skeleton loader */
+              <div className="grid grid-cols-1 lg:grid-cols-2 animate-pulse">
+                <div className="bg-gray-200 min-h-[320px] lg:min-h-[520px] rounded-t-3xl lg:rounded-l-3xl lg:rounded-tr-none" />
+                <div className="p-6 lg:p-8 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="h-5 bg-gray-200 rounded-full w-24" />
+                    <div className="h-8 w-8 bg-gray-200 rounded-full" />
+                  </div>
+                  <div className="h-7 bg-gray-200 rounded w-full" />
+                  <div className="h-7 bg-gray-200 rounded w-3/4" />
+                  <div className="h-8 bg-gray-200 rounded w-1/3 mt-1" />
+                  <div className="space-y-2 pt-1">
+                    <div className="h-3.5 bg-gray-200 rounded" />
+                    <div className="h-3.5 bg-gray-200 rounded w-5/6" />
+                    <div className="h-3.5 bg-gray-200 rounded w-4/6" />
+                  </div>
+                  <div className="pt-2 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-16" />
+                    <div className="flex gap-2">
+                      {[1,2,3].map(i => <div key={i} className="h-8 w-8 bg-gray-200 rounded-full" />)}
                     </div>
-                  )}
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <div className="h-10 bg-gray-200 rounded-full w-28" />
+                    <div className="h-10 bg-gray-200 rounded-full flex-1" />
+                  </div>
+                  <div className="h-10 bg-gray-200 rounded-full w-full" />
+                </div>
+              </div>
+            ) : quickViewProduct ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 min-h-0 flex-1 overflow-hidden">
+                {/* ── Image panel ── */}
+                <div className="bg-[#f3f6fa] rounded-t-3xl lg:rounded-l-3xl lg:rounded-tr-none flex flex-col min-h-0">
+                  <div className="relative flex-1 min-h-[280px] lg:min-h-0">
+                    {modalImages.length > 0 ? (
+                      <Image
+                        src={modalImages[Math.min(activeImageIndex, modalImages.length - 1)]}
+                        alt={quickViewProduct.title}
+                        fill
+                        unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(modalImages[Math.min(activeImageIndex, modalImages.length - 1)] || "")}
+                        className="object-contain"
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="h-16 w-16 text-gray-300" />
+                      </div>
+                    )}
+                    {modalImages.length > 1 && (
+                      <>
+                        <button className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition-colors"
+                          onClick={() => setActiveImageIndex((i) => (i === 0 ? modalImages.length - 1 : i - 1))} aria-label="Previous image">
+                          <ChevronLeft className="h-5 w-5 text-[#0f2444]" />
+                        </button>
+                        <button className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition-colors"
+                          onClick={() => setActiveImageIndex((i) => (i === modalImages.length - 1 ? 0 : i + 1))} aria-label="Next image">
+                          <ChevronRight className="h-5 w-5 text-[#0f2444]" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {/* Thumbnail strip */}
                   {modalImages.length > 1 && (
-                    <>
-                      <button className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 shadow flex items-center justify-center"
-                        onClick={() => setActiveImageIndex((i) => (i === 0 ? modalImages.length - 1 : i - 1))} aria-label="Previous image">
-                        <ChevronLeft className="h-5 w-5 text-[#0f2444]" />
-                      </button>
-                      <button className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 shadow flex items-center justify-center"
-                        onClick={() => setActiveImageIndex((i) => (i === modalImages.length - 1 ? 0 : i + 1))} aria-label="Next image">
-                        <ChevronRight className="h-5 w-5 text-[#0f2444]" />
-                      </button>
-                    </>
+                    <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none shrink-0">
+                      {modalImages.map((img, idx) => (
+                        <button key={idx} onClick={() => setActiveImageIndex(idx)}
+                          className={`relative flex-shrink-0 w-13 h-13 rounded-lg overflow-hidden border-2 transition-all ${activeImageIndex === idx ? "border-[#0f4d9a] shadow-sm" : "border-transparent hover:border-gray-300"}`}
+                          aria-label={`View image ${idx + 1}`}
+                        >
+                          <Image src={img} alt="" fill className="object-cover"
+                            unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(img)} sizes="52px" />
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
 
-                {/* Detail panel */}
-                <div className="p-6 lg:p-8 xl:p-10">
-                  <button className="ml-auto mb-2 hidden lg:flex h-9 w-9 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center text-[#0f2444]"
-                    onClick={closeQuickView} aria-label="Close quick view">
-                    <X className="h-5 w-5" />
-                  </button>
-
-                  <h3 className="text-4xl leading-tight font-extrabold text-[#0f2444]">{quickViewProduct.title}</h3>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <span className="text-4xl font-black text-[#0f4d9a]">{quickViewProduct.currency?.symbol || "₹"}{Number(priceNow).toFixed(2)}</span>
-                    {priceBase > priceNow && (
-                      <span className="text-3xl text-gray-400 line-through">{quickViewProduct.currency?.symbol || "₹"}{Number(priceBase).toFixed(2)}</span>
-                    )}
-                    {modalDiscount > 0 && (
-                      <span className="rounded-full bg-[#ff6f61] text-white text-base font-bold px-3 py-1">{modalDiscount}% Off</span>
-                    )}
-                  </div>
-
-                  <p className="mt-5 text-xl leading-relaxed text-gray-700 line-clamp-4">
-                    {quickViewProduct.short_description || quickViewProduct.description || "Product details available on full product page."}
-                  </p>
-
-                  {colorOptions.length > 0 && (
-                    <div className="mt-6">
-                      <p className="font-bold text-2xl text-[#0f2444]">Color: {selectedVariant?.attributes?.color || "-"}</p>
-                      <div className="mt-3 flex items-center gap-3">
-                        {colorOptions.map(([color, variant]) => (
-                          <button key={color} onClick={() => setSelectedVariantId(variant.id)}
-                            className={`h-10 w-10 rounded-full border-2 ${selectedVariant?.id === variant.id ? "border-[#0f4d9a]" : "border-gray-200"}`}
-                            style={{ background: COLOR_MAP[color] ?? "#aaa" }} aria-label={`Select color ${color}`} />
-                        ))}
+                {/* ── Detail panel ── */}
+                <div className="overflow-y-auto max-h-[92vh] lg:max-h-none">
+                  <div className="p-5 lg:p-7">
+                    {/* Top bar */}
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {quickViewProduct.category && (
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-[#2f6f9f] bg-[#2f6f9f]/10 px-2.5 py-0.5 rounded-full">
+                            {quickViewProduct.category.title}
+                          </span>
+                        )}
+                        {qvInStock ? (
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" /> In Stock
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-red-500 bg-red-50 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                            <XCircle className="h-3 w-3" /> Out of Stock
+                          </span>
+                        )}
                       </div>
-                    </div>
-                  )}
-
-                  {sizeOptions.length > 0 && (
-                    <div className="mt-6">
-                      <p className="font-bold text-2xl text-[#0f2444]">Size: {selectedVariant?.attributes?.size || "-"}</p>
-                      <div className="mt-3 flex items-center gap-3">
-                        {sizeOptions.map(([size, variant]) => (
-                          <button key={size} onClick={() => setSelectedVariantId(variant.id)}
-                            className={`h-12 min-w-12 px-4 rounded-full border-2 text-lg font-semibold ${selectedVariant?.id === variant.id ? "border-[#0f4d9a] text-[#0f2444]" : "border-gray-200 text-gray-600"}`}>
-                            {size}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mt-8 flex flex-wrap items-center gap-3">
-                    <div className="h-12 rounded-full bg-gray-100 px-3 flex items-center gap-4">
-                      <button className="text-gray-700" onClick={() => setQty((q) => Math.max(stepQty, q - 1))} aria-label="Decrease quantity">
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <span className="min-w-8 text-center text-xl font-semibold">{qty}</span>
-                      <button className="text-gray-700" onClick={() => setQty((q) => q + 1)} aria-label="Increase quantity">
-                        <Plus className="h-4 w-4" />
+                      <button className="shrink-0 h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-[#0f2444] transition-colors"
+                        onClick={closeQuickView} aria-label="Close quick view">
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
-                    <button onClick={addSelectedToCart} className="btn-brand h-12 rounded-full px-10 text-white text-lg font-semibold hover:opacity-95">
-                      Add to cart
-                    </button>
-                    <button onClick={buyNow} className="btn-brand h-12 min-w-[320px] flex-1 rounded-full px-10 text-white text-lg font-semibold hover:opacity-95">
+
+                    {/* Title */}
+                    <h3 className="text-xl sm:text-2xl leading-tight font-extrabold text-[#0f2444]">
+                      {quickViewProduct.title}
+                    </h3>
+
+                    {/* SKU */}
+                    {selectedPricing?.sku && (
+                      <p className="mt-1 text-xs text-gray-400">SKU: {selectedPricing.sku}</p>
+                    )}
+
+                    {/* Price */}
+                    <div className="mt-3 flex flex-wrap items-baseline gap-2">
+                      <span className="text-2xl sm:text-3xl font-black text-[#0f4d9a]">
+                        {quickViewProduct.currency?.symbol || "₹"}{Number(priceNow).toFixed(2)}
+                      </span>
+                      {priceBase > priceNow && (
+                        <span className="text-lg text-gray-400 line-through">
+                          {quickViewProduct.currency?.symbol || "₹"}{Number(priceBase).toFixed(2)}
+                        </span>
+                      )}
+                      {modalDiscount > 0 && (
+                        <span className="rounded-full bg-red-500 text-white text-xs font-bold px-2.5 py-0.5">
+                          {modalDiscount}% Off
+                        </span>
+                      )}
+                    </div>
+                    {quickViewProduct.tax?.gst_rate && (
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        {quickViewProduct.tax.is_inclusive_tax ? "Incl." : "Excl."} {quickViewProduct.tax.gst_rate}% GST
+                      </p>
+                    )}
+
+                    {/* Short description */}
+                    {(quickViewProduct.short_description || quickViewProduct.description) && (
+                      <p className="mt-3 text-sm leading-relaxed text-gray-600">
+                        {quickViewProduct.short_description || quickViewProduct.description}
+                      </p>
+                    )}
+
+                    {/* All variant attribute groups */}
+                    {attrGroups.size > 0 && (
+                      <div className="mt-4 space-y-4">
+                        {Array.from(attrGroups.entries()).map(([attrKey, valueMap]) => {
+                          const label = attrKey.charAt(0).toUpperCase() + attrKey.slice(1);
+                          const isColor = attrKey.toLowerCase() === "color" || attrKey.toLowerCase() === "colour";
+                          const currentValue = selectedVariant?.attributes?.[attrKey] ?? null;
+                          return (
+                            <div key={attrKey}>
+                              <p className="text-sm font-bold text-[#0f2444] mb-2">
+                                {label}{currentValue ? <span className="font-normal text-gray-500">: {currentValue}</span> : ""}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {Array.from(valueMap.entries()).map(([value, variant]) => {
+                                  const isSelected = selectedVariant?.attributes?.[attrKey] === value;
+                                  if (isColor) {
+                                    return (
+                                      <button key={value}
+                                        onClick={() => setSelectedVariantId(variant.id)}
+                                        className={`h-8 w-8 rounded-full border-2 transition-all ${isSelected ? "border-[#0f4d9a] scale-110 shadow" : "border-gray-200 hover:border-gray-400"}`}
+                                        style={{ background: COLOR_MAP[value] ?? "#aaa" }}
+                                        type="button" aria-label={`Select ${value}`} aria-pressed={isSelected ? "true" : "false"} />
+                                    );
+                                  }
+                                  return (
+                                    <button key={value} type="button"
+                                      onClick={() => setSelectedVariantId(variant.id)}
+                                      className={`px-3 py-1 text-xs rounded-full border-2 font-semibold transition-all ${isSelected ? "border-[#0f4d9a] text-[#0f2444] bg-[#0f4d9a]/5" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}
+                                      aria-pressed={isSelected ? "true" : "false"}>
+                                      {value}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Qty + Add to Cart */}
+                    <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                      <div className="h-10 rounded-full bg-gray-100 px-3 flex items-center gap-3 shrink-0">
+                        <button className="text-gray-700" onClick={() => setQty((q) => Math.max(stepQty, q - (quickViewProduct?.policies?.quantity_step_size ?? 1)))} aria-label="Decrease quantity">
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <span className="min-w-7 text-center text-base font-semibold">{qty}</span>
+                        <button className="text-gray-700" onClick={() => setQty((q) => q + (quickViewProduct?.policies?.quantity_step_size ?? 1))} aria-label="Increase quantity">
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <button onClick={addSelectedToCart} disabled={!qvInStock}
+                        className="flex-1 h-10 rounded-full text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] flex items-center justify-center gap-1.5">
+                        <ShoppingBag className="h-4 w-4" />
+                        Add to Cart
+                      </button>
+                    </div>
+                    <button onClick={buyNow} disabled={!qvInStock}
+                      className="mt-2.5 w-full h-10 rounded-full text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]">
                       Buy It Now
                     </button>
-                  </div>
 
-                  <button onClick={() => { closeQuickView(); router.push(`/products/${product.slug}`); }}
-                    className="mt-7 text-lg font-semibold text-[#0f4d9a] hover:text-[#49ad57] transition-colors">
-                    View full details →
-                  </button>
+                    {stepQty > 1 && (
+                      <p className="mt-1.5 text-[11px] text-gray-400 flex items-center justify-center gap-1">
+                        <Tag className="h-3 w-3" /> Min. order: {stepQty} pcs
+                        {(quickViewProduct?.policies?.quantity_step_size ?? 1) > 1 && ` · Step: ${quickViewProduct.policies.quantity_step_size}`}
+                      </p>
+                    )}
+
+                    {/* Divider */}
+                    <div className="my-4 border-t border-gray-100" />
+
+                    {/* Product details */}
+                    <div className="space-y-2 text-sm">
+                      {quickViewProduct.features?.warranty_period && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Shield className="h-4 w-4 text-[#2f6f9f] shrink-0" />
+                          <span>Warranty: {quickViewProduct.features.warranty_period}</span>
+                        </div>
+                      )}
+                      {quickViewProduct.features?.guarantee_period && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Shield className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span>Guarantee: {quickViewProduct.features.guarantee_period}</span>
+                        </div>
+                      )}
+                      {quickViewProduct.features?.made_in && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
+                          <span>Made in: {quickViewProduct.features.made_in}</span>
+                        </div>
+                      )}
+                      {quickViewProduct.policies?.is_returnable && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <RotateCcw className="h-4 w-4 text-[#49ad57] shrink-0" />
+                          <span>Returnable</span>
+                        </div>
+                      )}
+                      {quickViewProduct.tax?.hsn_code && (
+                        <div className="flex items-center gap-2 text-gray-400 text-xs">
+                          <Info className="h-3.5 w-3.5 shrink-0" />
+                          <span>HSN: {quickViewProduct.tax.hsn_code}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <button onClick={() => { closeQuickView(); router.push(`/products/${product.slug}`); }}
+                      className="mt-5 text-sm font-semibold text-[#0f4d9a] hover:text-[#49ad57] transition-colors">
+                      View full details →
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
