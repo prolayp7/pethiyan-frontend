@@ -1764,6 +1764,8 @@ export async function getFooterData(): Promise<ApiFooterData | null> {
       logo: normalizeMediaUrl(typeof brand.logo === "string" ? brand.logo : null),
       footerLogo: normalizeMediaUrl(typeof brand.footerLogo === "string" ? brand.footerLogo : null),
       copyrightText: typeof brand.copyrightText === "string" ? brand.copyrightText.trim() : "",
+      shortDescription: typeof brand.shortDescription === "string" ? brand.shortDescription.trim() : "",
+      companyGstin: typeof brand.companyGstin === "string" ? brand.companyGstin.trim() : "",
       address: typeof brand.address === "string" ? brand.address.trim() : "",
       supportEmail: typeof brand.supportEmail === "string" ? brand.supportEmail.trim() : "",
       supportNumber: typeof brand.supportNumber === "string" ? brand.supportNumber.trim() : "",
