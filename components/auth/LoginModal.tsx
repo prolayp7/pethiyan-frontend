@@ -785,10 +785,10 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                     <h2 className="text-lg font-bold text-gray-900">Login with OTP</h2>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {smsOtpEnabled && emailOtpEnabled
-                        ? "We'll send a one-time password to your mobile and/or email"
+                        ? "Enter your mobile number or email address — we'll send you a one-time password"
                         : smsOtpEnabled
-                        ? "We'll send a one-time password to your mobile"
-                        : "We'll send a one-time password to your email"}
+                        ? "Enter your registered mobile number to receive a one-time password"
+                        : "Enter your registered email address to receive a one-time password"}
                     </p>
                   </div>
 
