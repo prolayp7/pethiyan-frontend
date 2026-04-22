@@ -540,8 +540,8 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     setLoading(true);
     try {
       const mobile = smsOtpEnabled && isValidIndianMobile(forgotMobile) ? forgotMobile : null;
-      const email = emailOtpEnabled && forgotEmail.trim() ? forgotEmail.trim() : undefined;
-      const res = await forgotPasswordReset(mobile, forgotOtp, forgotNewPassword, forgotConfirmPassword, email ? { email } : undefined);
+      const email = emailOtpEnabled && forgotEmail.trim() ? forgotEmail.trim() : null;
+      const res = await forgotPasswordReset(email, mobile, forgotOtp, forgotNewPassword, forgotConfirmPassword);
       if (res.success) {
         setForgotStep("success");
       } else {
