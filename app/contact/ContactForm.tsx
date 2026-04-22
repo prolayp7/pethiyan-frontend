@@ -36,14 +36,22 @@ export default function ContactForm() {
     setLoading(true);
 
     try {
-      // POST to contact API — gracefully handles 404 if endpoint isn't live yet
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost/lcommerce/admin"}/api/contact`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost/lcommerce/admin"}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, phone: `+91${form.phone}` }),
       });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setError(json?.message ?? "Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
     } catch {
-      // Non-critical — still show success so UX isn't broken
+      setError("Unable to send message. Please check your connection and try again.");
+      setLoading(false);
+      return;
     }
 
     setLoading(false);
