@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Home, Package, Users, Award, Leaf, ShieldCheck, Truck, HeadphonesIcon, RefreshCw } from "lucide-react";
 import Container from "@/components/layout/Container";
+import { fetchPageBySlug } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "About Us",
-  description: "Learn about Pethiyan — India's trusted packaging brand for custom pouches, kraft bags, and eco-friendly packaging solutions for 50,000+ businesses.",
+type AboutSection = {
+  subheading?: string;
+  heading?: string;
+  body_html?: string;
+  image_url?: string;
+  image_alt?: string;
+  image_position?: "left" | "right";
 };
 
 const STATS = [
@@ -42,7 +48,110 @@ const WHY_US = [
   { icon: Leaf,          title: "Eco Options",        desc: "Compostable, recycled, and kraft packaging options available." },
 ];
 
-export default function AboutPage() {
+const FALLBACK_SECTIONS: AboutSection[] = [
+  {
+    subheading: "Our Story",
+    heading: "Built for India's Growing Businesses",
+    body_html: `
+      <p>Pethiyan started as a simple idea: small and medium businesses in India deserved the same premium packaging options that large corporations had access to — without the high minimum order quantities or the wait.</p>
+      <p>We work directly with certified manufacturers across India to bring you a curated range of pouches, bags, jars, and boxes — all available for order online, with GST invoices, and delivered to your doorstep.</p>
+      <p>Today, over 50,000 food brands, nutraceutical companies, artisan makers, and D2C startups trust Pethiyan to pack their most important product.</p>
+    `,
+    image_position: "right",
+  },
+];
+
+async function getAboutPageData(): Promise<{ title: string; metaTitle: string; metaDescription: string; sections: AboutSection[] }> {
+  try {
+    const page = await fetchPageBySlug("about-us");
+    const blocks = page?.content_blocks && typeof page.content_blocks === "object" ? page.content_blocks : {};
+    const sections = Array.isArray(blocks.story_sections) && blocks.story_sections.length > 0
+      ? blocks.story_sections
+      : FALLBACK_SECTIONS;
+
+    return {
+      title: page?.title ?? "About Us",
+      metaTitle: page?.meta_title ?? "About Us",
+      metaDescription: page?.meta_description ?? "Learn about Pethiyan — India's trusted packaging brand for custom pouches, kraft bags, and eco-friendly packaging solutions for 50,000+ businesses.",
+      sections,
+    };
+  } catch {
+    return {
+      title: "About Us",
+      metaTitle: "About Us",
+      metaDescription: "Learn about Pethiyan — India's trusted packaging brand for custom pouches, kraft bags, and eco-friendly packaging solutions for 50,000+ businesses.",
+      sections: FALLBACK_SECTIONS,
+    };
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const about = await getAboutPageData();
+  return {
+    title: about.metaTitle,
+    description: about.metaDescription,
+  };
+}
+
+function AboutStorySection({ section, index }: { section: AboutSection; index: number }) {
+  const imageOnLeft = section.image_position === "left";
+  const wrapperClass = imageOnLeft ? "lg:grid-cols-[1.05fr_0.95fr]" : "lg:grid-cols-[0.95fr_1.05fr]";
+  const textOrder = imageOnLeft ? "lg:order-2" : "lg:order-1";
+  const imageOrder = imageOnLeft ? "lg:order-1" : "lg:order-2";
+
+  return (
+    <Container className={index === 0 ? "py-16 lg:py-20" : "pb-16 lg:pb-20"}>
+      <div className={`grid grid-cols-1 ${wrapperClass} gap-12 items-center`}>
+        <div className={textOrder}>
+          {section.subheading ? (
+            <p className="text-xs font-bold text-(--color-primary) uppercase tracking-widest mb-2">
+              {section.subheading}
+            </p>
+          ) : null}
+          {section.heading ? (
+            <h2 className="text-3xl font-extrabold text-(--color-secondary) leading-tight mb-5">
+              {section.heading}
+            </h2>
+          ) : null}
+          <div
+            className="about-story-richtext space-y-4 text-gray-600 text-sm leading-relaxed [&_a]:text-(--color-primary) [&_a]:underline [&_a]:underline-offset-2 [&_p]:mb-4 [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5"
+            dangerouslySetInnerHTML={{ __html: section.body_html ?? "" }}
+          />
+        </div>
+
+        <div className={imageOrder}>
+          {section.image_url ? (
+            <Image
+              src={section.image_url}
+              alt={section.image_alt || section.heading || "About section image"}
+              width={1200}
+              height={900}
+              unoptimized
+              className="h-80 w-full rounded-3xl object-cover lg:h-96"
+            />
+          ) : (
+            <div
+              className="relative h-80 lg:h-96 rounded-3xl overflow-hidden"
+              style={{ background: "linear-gradient(135deg,#1f4f8a 0%,#4caf50 100%)" }}
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Package className="h-24 w-24 text-white opacity-20" />
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-8">
+                <p className="text-2xl font-extrabold">{section.image_alt || "Made in India"}</p>
+                <p className="text-white/70 text-sm mt-2">Quality packaging for Indian businesses</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Container>
+  );
+}
+
+export default async function AboutPage() {
+  const about = await getAboutPageData();
+
   return (
     <div style={{ background: "var(--background)" }}>
       <div className="bg-white border-b border-(--color-border) py-5">
@@ -53,7 +162,7 @@ export default function AboutPage() {
                 <Package className="h-5 w-5 text-white" />
               </span>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">About Us</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">{about.title}</h1>
                 <p className="mt-0.5 text-gray-500 text-sm">Learn how Pethiyan helps Indian businesses package better, faster, and smarter.</p>
               </div>
             </div>
@@ -83,49 +192,9 @@ export default function AboutPage() {
         </Container>
       </div>
 
-      {/* ── Our Story ── */}
-      <Container className="py-16 lg:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <p className="text-xs font-bold text-(--color-primary) uppercase tracking-widest mb-2">
-              Our Story
-            </p>
-            <h2 className="text-3xl font-extrabold text-(--color-secondary) leading-tight mb-5">
-              Built for India's Growing Businesses
-            </h2>
-            <div className="space-y-4 text-gray-600 text-sm leading-relaxed">
-              <p>
-                Pethiyan started as a simple idea: small and medium businesses in India
-                deserved the same premium packaging options that large corporations had
-                access to — without the high minimum order quantities or the wait.
-              </p>
-              <p>
-                We work directly with certified manufacturers across India to bring you a
-                curated range of pouches, bags, jars, and boxes — all available for order
-                online, with GST invoices, and delivered to your doorstep.
-              </p>
-              <p>
-                Today, over 50,000 food brands, nutraceutical companies, artisan makers,
-                and D2C startups trust Pethiyan to pack their most important product.
-              </p>
-            </div>
-          </div>
-
-          {/* Image placeholder */}
-          <div
-            className="relative h-80 lg:h-96 rounded-3xl overflow-hidden"
-            style={{ background: "linear-gradient(135deg,#1f4f8a 0%,#4caf50 100%)" }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Package className="h-24 w-24 text-white opacity-20" />
-            </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-8">
-              <p className="text-2xl font-extrabold">Made in India</p>
-              <p className="text-white/70 text-sm mt-2">Quality packaging for Indian businesses</p>
-            </div>
-          </div>
-        </div>
-      </Container>
+      {about.sections.map((section, index) => (
+        <AboutStorySection key={`${section.heading ?? "section"}-${index}`} section={section} index={index} />
+      ))}
 
       {/* ── Values ── */}
       <div className="bg-white py-16 lg:py-20 border-y border-gray-100">
