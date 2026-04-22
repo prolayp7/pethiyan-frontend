@@ -69,44 +69,6 @@ export default function AboutPage() {
         </Container>
       </div>
 
-      {/* ── Hero ── */}
-      <div
-        className="relative overflow-hidden py-20 lg:py-28"
-        style={{ background: "linear-gradient(160deg,#0f2f5f 0%,#1f4f8a 50%,#163d6e 100%)" }}
-      >
-        {/* Decorative blobs */}
-        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle,#4caf50,transparent 70%)" }} />
-        <div className="absolute -bottom-10 -left-10 w-64 h-64 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle,#4caf50,transparent 70%)" }} />
-
-        <Container className="relative z-10 text-center">
-          <h1 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
-            The Power of<br />
-            <span style={{ color: "#4caf50" }}>Perfect Packaging</span>
-          </h1>
-          <p className="text-blue-200 text-lg max-w-2xl mx-auto leading-relaxed">
-            Pethiyan was founded with one mission — to give Indian businesses access to
-            world-class, affordable packaging that protects products and elevates brands.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/shop"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white border-2 border-white hover:bg-white hover:text-(--color-secondary) transition-all"
-            >
-              Explore Products
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold border-2 transition-all"
-              style={{ borderColor: "#4caf50", color: "#4caf50" }}
-            >
-              Get in Touch
-            </Link>
-          </div>
-        </Container>
-      </div>
-
       {/* ── Stats ── */}
       <div className="bg-white border-b border-gray-100">
         <Container className="py-12">
