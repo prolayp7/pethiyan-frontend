@@ -310,6 +310,9 @@ export interface ApiSystemSettings {
   appName: string;
   logo: string | null;
   favicon: string | null;
+  // OTP channel toggles (from /api/settings/auth-config)
+  smsOtpEnabled:   boolean;
+  emailOtpEnabled: boolean;
   // Product grid display toggles
   showVariantColorsInGrid: boolean;
   showGstInGrid:           boolean;
@@ -1067,24 +1070,41 @@ export async function loginWithPassword(
   return { success: res.success, message: res.message, token: res.success && res.data ? AUTH_SESSION_MARKER : undefined, user: res.data };
 }
 
-export async function sendOtp(mobile: string): Promise<{ success: boolean; message?: string; demoOtp?: string }> {
-  const res = await apiFetch<{ success: boolean; message?: string; data?: { demo_otp?: string } }>(
-    "/api/auth/otp/send",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile, country_code: "+91" }),
-    }
-  );
+export async function sendOtp(
+  mobile: string | null,
+  email?: string | null
+): Promise<{ success: boolean; message?: string; demoOtp?: string; smsOtpSent?: boolean; emailOtpSent?: boolean }> {
+  const body: Record<string, string> = {};
+  if (mobile) { body.mobile = mobile; body.country_code = "+91"; }
+  if (email)  { body.email = email; }
+
+  const res = await apiFetch<{
+    success: boolean;
+    message?: string;
+    data?: { demo_otp?: string; sms_otp_sent?: boolean; email_otp_sent?: boolean };
+  }>("/api/auth/otp/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
   if (!res) return { success: false, message: "Request failed" };
-  return { success: res.success, message: res.message, demoOtp: res.data?.demo_otp };
+  return {
+    success: res.success,
+    message: res.message,
+    demoOtp: res.data?.demo_otp,
+    smsOtpSent: res.data?.sms_otp_sent,
+    emailOtpSent: res.data?.email_otp_sent,
+  };
 }
 
 export async function verifyOtp(
-  mobile: string,
+  mobile: string | null,
   otp: string,
   extra?: { name?: string; email?: string }
 ): Promise<{ success: boolean; token?: string; user?: import("@/context/AuthContext").AuthUser; message?: string }> {
+  const body: Record<string, string | undefined> = { otp, ...extra };
+  if (mobile) { body.mobile = mobile; body.country_code = "+91"; }
+
   const res = await apiFetch<{
     success: boolean;
     message?: string;
@@ -1095,7 +1115,7 @@ export async function verifyOtp(
   }>("/api/auth/otp/verify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mobile, country_code: "+91", otp, ...extra }),
+    body: JSON.stringify(body),
   });
   if (!res) return { success: false, message: "Verification failed" };
   return {
@@ -1106,13 +1126,20 @@ export async function verifyOtp(
   };
 }
 
-export async function resendOtp(mobile: string): Promise<{ success: boolean; message?: string; demoOtp?: string }> {
+export async function resendOtp(
+  mobile: string | null,
+  email?: string | null
+): Promise<{ success: boolean; message?: string; demoOtp?: string }> {
+  const body: Record<string, string> = {};
+  if (mobile) { body.mobile = mobile; body.country_code = "+91"; }
+  if (email)  { body.email = email; }
+
   const res = await apiFetch<{ success: boolean; message?: string; data?: { demo_otp?: string } }>(
     "/api/auth/otp/resend",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile, country_code: "+91" }),
+      body: JSON.stringify(body),
     }
   );
   if (!res) return { success: false, message: "Request failed" };
@@ -1637,27 +1664,40 @@ export async function getPaymentSettings(): Promise<ApiPaymentSettings> {
 
 export async function getSystemSettings(): Promise<ApiSystemSettings | null> {
   // Use fetch directly (not apiFetch) so Next.js ISR caching works server-side.
-  const res = await fetch(`${API_BASE}/api/settings/system`, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-  } as RequestInit).then((r) => r.json()).catch(() => null) as {
-    success?: boolean;
-    data?: { value?: Record<string, unknown> } | Record<string, unknown>;
-  } | null;
+  const [sysRes, authRes] = await Promise.all([
+    fetch(`${API_BASE}/api/settings/system`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    } as RequestInit).then((r) => r.json()).catch(() => null) as Promise<{
+      success?: boolean;
+      data?: { value?: Record<string, unknown> } | Record<string, unknown>;
+    } | null>,
+    fetch(`${API_BASE}/api/settings/auth-config`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    } as RequestInit).then((r) => r.json()).catch(() => null) as Promise<{
+      success?: boolean;
+      data?: Record<string, unknown>;
+    } | null>,
+  ]);
 
-  if (!res || !res.success || !res.data) return null;
+  if (!sysRes || !sysRes.success || !sysRes.data) return null;
 
-  const setting = ("value" in res.data ? res.data.value : res.data) as Record<string, unknown> | undefined;
+  const setting = ("value" in sysRes.data ? sysRes.data.value : sysRes.data) as Record<string, unknown> | undefined;
   if (!setting) return null;
 
   const appName = typeof setting.appName === "string" ? setting.appName.trim() : "";
   const logoRaw = typeof setting.logo === "string" ? setting.logo.trim() : "";
   const faviconRaw = typeof setting.favicon === "string" ? setting.favicon.trim() : "";
 
+  const authData = (authRes?.success && authRes.data) ? authRes.data : {};
+
   return {
     appName: appName || "Pethiyan",
     logo: normalizeMediaUrl(logoRaw),
     favicon: normalizeMediaUrl(faviconRaw),
+    smsOtpEnabled:   authData.sms_otp_enabled   === true,
+    emailOtpEnabled: authData.email_otp_enabled  === true,
     showVariantColorsInGrid: setting.showVariantColorsInGrid !== false,
     showGstInGrid:           setting.showGstInGrid           === true,
     showCategoryNameInGrid:  setting.showCategoryNameInGrid  !== false,
