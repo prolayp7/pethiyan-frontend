@@ -375,6 +375,8 @@ export interface ApiFooterData {
     logo: string | null;
     footerLogo: string | null;
     copyrightText: string;
+    shortDescription: string;
+    companyGstin: string;
     address: string;
     supportEmail: string;
     supportNumber: string;
