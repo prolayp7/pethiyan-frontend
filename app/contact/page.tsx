@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Phone, Mail, MapPin, Clock, MessageCircle } from "lucide-react";
+import { ChevronRight, Home, Phone, Mail, MapPin, Clock, MessageCircle } from "lucide-react";
 import Container from "@/components/layout/Container";
 import ContactForm from "./ContactForm";
 
@@ -118,26 +118,30 @@ export default async function ContactPage() {
   return (
     <div style={{ background: "var(--background)" }}>
 
-      {/* ── Hero ── */}
-      <div
-        className="py-14 lg:py-20"
-        style={{ background: "linear-gradient(160deg,#0f2f5f 0%,#1f4f8a 50%,#163d6e 100%)" }}
-      >
-        <Container className="text-center">
-          <nav className="flex items-center justify-center gap-1.5 text-xs text-blue-300 mb-5">
-            <Link href="/" className="hover:text-white">Home</Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-white font-medium">Contact Us</span>
-          </nav>
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 mb-4">
-            <MessageCircle className="h-7 w-7 text-white" />
+      {/* ── Breadcrumb bar ── */}
+      <div className="bg-white border-b border-(--color-border) py-5">
+        <Container>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span
+                className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0 bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]"
+              >
+                <MessageCircle className="h-5 w-5 text-white" />
+              </span>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">Contact Us</h1>
+                <p className="mt-0.5 text-gray-500 text-sm">Questions, bulk pricing, or custom orders? We&apos;re here to help.</p>
+              </div>
+            </div>
+            <nav className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 shrink-0" aria-label="Breadcrumb">
+              <Link href="/" className="flex items-center gap-1 hover:text-(--color-primary) transition-colors">
+                <Home className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Home</span>
+              </Link>
+              <ChevronRight className="h-3.5 w-3.5 text-gray-300" aria-hidden="true" />
+              <span className="text-(--color-secondary) font-medium">Contact Us</span>
+            </nav>
           </div>
-          <h1 className="text-3xl lg:text-4xl font-extrabold text-white mb-3">
-            Get in Touch
-          </h1>
-          <p className="text-blue-200 text-sm max-w-md mx-auto">
-            Questions about products, bulk pricing, or custom orders? Our team is here to help.
-          </p>
         </Container>
       </div>
 
@@ -163,8 +167,7 @@ export default async function ContactPage() {
                     className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm"
                   >
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ background: "linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)" }}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]"
                     >
                       <Icon className="h-5 w-5 text-white" />
                     </div>
