@@ -162,8 +162,11 @@ export default async function ContactPage() {
                     key={title}
                     className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                      <Icon className="h-5 w-5 text-(--color-primary)" />
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: "linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)" }}
+                    >
+                      <Icon className="h-5 w-5 text-white" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{title}</p>

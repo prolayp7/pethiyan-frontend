@@ -184,7 +184,7 @@ export default function ContactForm() {
         type="submit"
         disabled={loading}
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
-        style={{ background: "linear-gradient(135deg,#1f4f8a,#0f2f5f)" }}
+        style={{ background: "linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)" }}
       >
         {loading ? (
           <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
