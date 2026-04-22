@@ -14,6 +14,30 @@ type AboutSection = {
   image_position?: "left" | "right";
 };
 
+type CoreValueItem = {
+  icon?: "leaf" | "award" | "users";
+  title?: string;
+  description?: string;
+};
+
+type CoreValuesSection = {
+  eyebrow?: string;
+  heading?: string;
+  items: CoreValueItem[];
+};
+
+type WhyPethiyanItem = {
+  icon?: "package" | "shieldcheck" | "truck" | "headphonesicon" | "refreshcw" | "leaf";
+  title?: string;
+  description?: string;
+};
+
+type WhyPethiyanSection = {
+  eyebrow?: string;
+  heading?: string;
+  items: WhyPethiyanItem[];
+};
+
 const STATS = [
   { value: "50,000+", label: "Happy Businesses" },
   { value: "100+",    label: "Product Variants" },
@@ -23,29 +47,29 @@ const STATS = [
 
 const VALUES = [
   {
-    icon: Leaf,
+    icon: "leaf" as const,
     title: "Eco-First",
-    desc: "We source sustainable materials and design packaging that minimises environmental impact without compromising on quality.",
+    description: "We source sustainable materials and design packaging that minimises environmental impact without compromising on quality.",
   },
   {
-    icon: Award,
+    icon: "award" as const,
     title: "Uncompromising Quality",
-    desc: "Every product leaves our facility after rigorous quality checks — because your brand deserves nothing less.",
+    description: "Every product leaves our facility after rigorous quality checks — because your brand deserves nothing less.",
   },
   {
-    icon: Users,
+    icon: "users" as const,
     title: "Customer-Centric",
-    desc: "From first inquiry to repeat orders, we are here at every step with fast support and flexible solutions.",
+    description: "From first inquiry to repeat orders, we are here at every step with fast support and flexible solutions.",
   },
 ];
 
 const WHY_US = [
-  { icon: Package,       title: "Wide Range",        desc: "100+ packaging types from stand-up pouches to custom printed boxes." },
-  { icon: ShieldCheck,   title: "BIS Certified",     desc: "All materials meet Indian food-safety and packaging standards." },
-  { icon: Truck,         title: "Pan-India Delivery", desc: "Reliable shipping to all 28 states with real-time tracking." },
-  { icon: HeadphonesIcon, title: "24/7 Support",      desc: "Dedicated support team via chat, email, and phone." },
-  { icon: RefreshCw,     title: "Easy Returns",       desc: "7-day hassle-free returns on all standard products." },
-  { icon: Leaf,          title: "Eco Options",        desc: "Compostable, recycled, and kraft packaging options available." },
+  { icon: "package" as const, title: "Wide Range", desc: "100+ packaging types from stand-up pouches to custom printed boxes." },
+  { icon: "shieldcheck" as const, title: "BIS Certified", desc: "All materials meet Indian food-safety and packaging standards." },
+  { icon: "truck" as const, title: "Pan-India Delivery", desc: "Reliable shipping to all 28 states with real-time tracking." },
+  { icon: "headphonesicon" as const, title: "24/7 Support", desc: "Dedicated support team via chat, email, and phone." },
+  { icon: "refreshcw" as const, title: "Easy Returns", desc: "7-day hassle-free returns on all standard products." },
+  { icon: "leaf" as const, title: "Eco Options", desc: "Compostable, recycled, and kraft packaging options available." },
 ];
 
 const FALLBACK_SECTIONS: AboutSection[] = [
@@ -61,19 +85,62 @@ const FALLBACK_SECTIONS: AboutSection[] = [
   },
 ];
 
-async function getAboutPageData(): Promise<{ title: string; metaTitle: string; metaDescription: string; sections: AboutSection[] }> {
+const ICON_MAP = {
+  leaf: Leaf,
+  award: Award,
+  users: Users,
+} as const;
+
+const FEATURE_ICON_MAP = {
+  package: Package,
+  shieldcheck: ShieldCheck,
+  truck: Truck,
+  headphonesicon: HeadphonesIcon,
+  refreshcw: RefreshCw,
+  leaf: Leaf,
+} as const;
+
+async function getAboutPageData(): Promise<{ title: string; metaTitle: string; metaDescription: string; sections: AboutSection[]; coreValues: CoreValuesSection; whyPethiyan: WhyPethiyanSection }> {
   try {
     const page = await fetchPageBySlug("about-us");
     const blocks = page?.content_blocks && typeof page.content_blocks === "object" ? page.content_blocks : {};
     const sections = Array.isArray(blocks.story_sections) && blocks.story_sections.length > 0
       ? blocks.story_sections
       : FALLBACK_SECTIONS;
+    const coreValues = blocks.core_values && typeof blocks.core_values === "object"
+      ? {
+          eyebrow: blocks.core_values.eyebrow ?? "What Drives Us",
+          heading: blocks.core_values.heading ?? "Our Core Values",
+          items: Array.isArray(blocks.core_values.items) && blocks.core_values.items.length > 0
+            ? blocks.core_values.items
+            : VALUES,
+        }
+      : {
+          eyebrow: "What Drives Us",
+          heading: "Our Core Values",
+          items: VALUES,
+        };
+    const whyPethiyan = blocks.why_pethiyan && typeof blocks.why_pethiyan === "object"
+      ? {
+          eyebrow: blocks.why_pethiyan.eyebrow ?? "Why Pethiyan",
+          heading: blocks.why_pethiyan.heading ?? "Everything Your Business Needs",
+          items: Array.isArray(blocks.why_pethiyan.items) && blocks.why_pethiyan.items.length > 0
+            ? blocks.why_pethiyan.items
+            : WHY_US.map(({ icon, title, desc }) => ({ icon, title, description: desc })),
+        }
+      : {
+          eyebrow: "Why Pethiyan",
+          heading: "Everything Your Business Needs",
+          items: WHY_US.map(({ icon, title, desc }) => ({ icon, title, description: desc })),
+        };
 
     return {
       title: page?.title ?? "About Us",
       metaTitle: page?.meta_title ?? "About Us",
       metaDescription: page?.meta_description ?? "Learn about Pethiyan — India's trusted packaging brand for custom pouches, kraft bags, and eco-friendly packaging solutions for 50,000+ businesses.",
       sections,
+      coreValues,
+      whyPethiyan,
     };
   } catch {
     return {
@@ -81,6 +148,16 @@ async function getAboutPageData(): Promise<{ title: string; metaTitle: string; m
       metaTitle: "About Us",
       metaDescription: "Learn about Pethiyan — India's trusted packaging brand for custom pouches, kraft bags, and eco-friendly packaging solutions for 50,000+ businesses.",
       sections: FALLBACK_SECTIONS,
+      coreValues: {
+        eyebrow: "What Drives Us",
+        heading: "Our Core Values",
+        items: VALUES,
+      },
+      whyPethiyan: {
+        eyebrow: "Why Pethiyan",
+        heading: "Everything Your Business Needs",
+        items: WHY_US.map(({ icon, title, desc }) => ({ icon, title, description: desc })),
+      },
     };
   }
 }
@@ -132,7 +209,7 @@ function AboutStorySection({ section, index }: { section: AboutSection; index: n
           ) : (
             <div
               className="relative h-80 lg:h-96 rounded-3xl overflow-hidden"
-              style={{ background: "linear-gradient(135deg,#1f4f8a 0%,#4caf50 100%)" }}
+              style={{ background: "var(--color-primary)" }}
             >
               <div className="absolute inset-0 flex items-center justify-center">
                 <Package className="h-24 w-24 text-white opacity-20" />
@@ -158,7 +235,7 @@ export default async function AboutPage() {
         <Container>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0 bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]">
+              <span className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0 bg-(--color-primary)">
                 <Package className="h-5 w-5 text-white" />
               </span>
               <div>
@@ -200,20 +277,29 @@ export default async function AboutPage() {
       <div className="bg-white py-16 lg:py-20 border-y border-gray-100">
         <Container>
           <div className="text-center mb-12">
-            <p className="text-xs font-bold text-(--color-primary) uppercase tracking-widest mb-2">What Drives Us</p>
-            <h2 className="text-3xl font-extrabold text-(--color-secondary)">Our Core Values</h2>
+            <p className="text-xs font-bold text-(--color-primary) uppercase tracking-widest mb-2">
+              {about.coreValues.eyebrow || "What Drives Us"}
+            </p>
+            <h2 className="text-3xl font-extrabold text-(--color-secondary)">
+              {about.coreValues.heading || "Our Core Values"}
+            </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {VALUES.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="text-center px-4">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
-                  style={{ background: "linear-gradient(135deg,#1f4f8a,#0f2f5f)" }}>
-                  <Icon className="h-7 w-7 text-white" />
+            {about.coreValues.items.map(({ icon, title, description }, index) => {
+              const Icon = ICON_MAP[icon ?? "leaf"] ?? Leaf;
+              return (
+                <div key={`${title ?? "value"}-${index}`} className="text-center px-4">
+                  <div
+                    className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
+                    style={{ background: "var(--color-primary)" }}
+                  >
+                    <Icon className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-lg font-extrabold text-(--color-secondary) mb-2">{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
                 </div>
-                <h3 className="text-lg font-extrabold text-(--color-secondary) mb-2">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Container>
       </div>
@@ -221,24 +307,31 @@ export default async function AboutPage() {
       {/* ── Why Choose Us ── */}
       <Container className="py-16 lg:py-20">
         <div className="text-center mb-12">
-          <p className="text-xs font-bold text-(--color-primary) uppercase tracking-widest mb-2">Why Pethiyan</p>
-          <h2 className="text-3xl font-extrabold text-(--color-secondary)">Everything Your Business Needs</h2>
+          <p className="text-xs font-bold text-(--color-primary) uppercase tracking-widest mb-2">
+            {about.whyPethiyan.eyebrow || "Why Pethiyan"}
+          </p>
+          <h2 className="text-3xl font-extrabold text-(--color-secondary)">
+            {about.whyPethiyan.heading || "Everything Your Business Needs"}
+          </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {WHY_US.map(({ icon: Icon, title, desc }) => (
-            <div
-              key={title}
-              className="flex items-start gap-4 p-5 rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                <Icon className="h-5 w-5 text-(--color-primary)" />
+          {about.whyPethiyan.items.map(({ icon, title, description }, index) => {
+            const Icon = FEATURE_ICON_MAP[icon ?? "package"] ?? Package;
+            return (
+              <div
+                key={`${title ?? "feature"}-${index}`}
+                className="flex items-start gap-4 p-5 rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="w-10 h-10 rounded-xl bg-(--color-primary) flex items-center justify-center shrink-0">
+                  <Icon className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-(--color-secondary) text-sm mb-1">{title}</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-(--color-secondary) text-sm mb-1">{title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Container>
 
@@ -257,7 +350,7 @@ export default async function AboutPage() {
           <Link
             href="/shop"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5"
-            style={{ background: "#4caf50", color: "#fff" }}
+            style={{ background: "var(--color-primary)", color: "#fff" }}
           >
             Shop Now
             <ChevronRight className="h-4 w-4" />
