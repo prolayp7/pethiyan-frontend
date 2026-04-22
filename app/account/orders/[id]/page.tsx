@@ -163,13 +163,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   const status        = STATUS_MAP[order.status] ?? { label: order.status, cls: "bg-gray-100 text-gray-600" };
   const trackingSteps = order.tracking?.length ? order.tracking : buildDefaultTracking(order.status, order.created_at);
-  const subtotal         = order.subtotal ?? order.total - (order.shipping_charge ?? 0) + (order.discount ?? 0);
-  const productAfterDiscount = subtotal - (order.discount ?? 0);
-  // order.gst_amount may be stored as 0 when not calculated at save-time — derive it from
-  // the product amount after discount (GST is not applicable to shipping or discount savings).
-  const gst = (order.gst_amount != null && order.gst_amount > 0)
-    ? order.gst_amount
-    : Math.round(productAfterDiscount * 18 / 118);
+  const subtotal = order.subtotal;
+  const gst      = order.gst_amount ?? 0;
 
   return (
     <div className="space-y-5">
@@ -249,7 +244,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity}</p>
                   </div>
                   <p className="text-sm font-bold text-(--color-secondary) shrink-0">
-                    {fmt(item.subtotal ?? item.price * item.quantity)}
+                    {fmt(item.price * item.quantity)}
                   </p>
                 </div>
               ))}
@@ -280,10 +275,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   {order.shipping_charge === 0 ? "Free" : fmt(order.shipping_charge)}
                 </span>
               </div>
-              <div className="flex justify-between text-xs text-gray-400 border-t border-dashed border-gray-100 pt-2.5">
-                <span>GST (18% incl.)</span>
-                <span>{fmt(gst)}</span>
-              </div>
+              {gst > 0 && (
+                <div className="flex justify-between text-xs text-gray-400 border-t border-dashed border-gray-100 pt-2.5">
+                  <span>GST</span>
+                  <span>{fmt(gst)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center border-t border-gray-200 pt-2.5">
                 <span className="font-extrabold text-(--color-secondary)">Total</span>
                 <span className="text-lg font-extrabold text-(--color-secondary)">{fmt(order.total)}</span>
