@@ -38,13 +38,6 @@ type WhyPethiyanSection = {
   items: WhyPethiyanItem[];
 };
 
-const STATS = [
-  { value: "50,000+", label: "Happy Businesses" },
-  { value: "100+",    label: "Product Variants" },
-  { value: "28",      label: "States Served" },
-  { value: "5★",      label: "Average Rating" },
-];
-
 const VALUES = [
   {
     icon: "leaf" as const,
@@ -254,20 +247,6 @@ export default async function AboutPage() {
               <ChevronRight className="h-3.5 w-3.5 text-gray-300" aria-hidden="true" />
               <span className="text-(--color-secondary) font-medium">About Us</span>
             </nav>
-          </div>
-        </Container>
-      </div>
-
-      {/* ── Stats ── */}
-      <div className="bg-white border-b border-gray-100">
-        <Container className="py-12">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {STATS.map(({ value, label }) => (
-              <div key={label} className="text-center">
-                <p className="text-3xl lg:text-4xl font-extrabold text-(--color-primary)">{value}</p>
-                <p className="text-sm text-gray-500 mt-1">{label}</p>
-              </div>
-            ))}
           </div>
         </Container>
       </div>
