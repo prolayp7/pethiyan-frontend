@@ -208,6 +208,21 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp]);
 
+  // Auto-submit for forgot password reset when all conditions meet
+  useEffect(() => {
+    if (
+      forgotStep === "reset" &&
+      forgotOtp.length === 6 &&
+      forgotNewPassword &&
+      forgotConfirmPassword === forgotNewPassword &&
+      !validatePassword(forgotNewPassword) &&
+      !loading
+    ) {
+      handleForgotReset();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forgotOtp, forgotNewPassword, forgotConfirmPassword]);
+
   if (!open) return null;
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -526,8 +541,8 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     finally { setLoading(false); }
   }
 
-  async function handleForgotReset(e: React.SyntheticEvent) {
-    e.preventDefault();
+  async function handleForgotReset(e?: React.SyntheticEvent) {
+    if (e) e.preventDefault();
     setApiError("");
     const errs: Record<string, string> = {};
     if (forgotOtp.length !== 6) errs.forgotOtp = "Enter the 6-digit OTP";
