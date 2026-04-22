@@ -336,7 +336,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
                 : "#22c55e",
             }}
           >
-            {p.badge}{discount > 0 ? ` −${discount}%` : ""}
+            {p.badge}{discount > 0 ? ` ${discount}% off` : ""}
           </span>
         )}
 

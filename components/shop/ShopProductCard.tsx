@@ -298,7 +298,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
               )}
               {discount && (
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full text-white bg-red-500">
-                  -{discount}%
+                  {discount}% off
                 </span>
               )}
             </div>
