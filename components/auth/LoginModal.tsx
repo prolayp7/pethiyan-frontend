@@ -895,7 +895,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                     <button type="button" onClick={() => setTab("register")} className="font-semibold hover:underline" style={{ color: "#17396f" }}>Create one</button>
                   </p>
                 </form>
-              ) : (
+              ) : loginMode === "otp" ? (
                 /* OTP login mode */
                 <form onSubmit={handleLoginSendOtp} className="space-y-3.5">
                   <div className="mb-1">
