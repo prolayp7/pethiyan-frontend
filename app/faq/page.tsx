@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, HelpCircle } from "lucide-react";
+import { ChevronRight, HelpCircle, Home } from "lucide-react";
 import Container from "@/components/layout/Container";
 import { staticFaqSchema, jsonLd } from "@/lib/structured-data";
 
@@ -117,29 +117,31 @@ export default function FaqPage() {
     <div style={{ background: "var(--background)" }}>
       <script {...jsonLd(faqSchema)} />
 
-      {/* ── Hero ── */}
-      <div
-        className="py-14 lg:py-20"
-        style={{ background: "linear-gradient(160deg,#0f2f5f 0%,#1f4f8a 50%,#163d6e 100%)" }}
-      >
-        <Container className="text-center">
-          <nav className="flex items-center justify-center gap-1.5 text-xs text-blue-300 mb-5">
-            <Link href="/" className="hover:text-white">Home</Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-white font-medium">FAQ</span>
-          </nav>
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 mb-4">
-            <HelpCircle className="h-7 w-7 text-white" />
+      {/* ── Page Header ── */}
+      <div className="bg-white border-b border-(--color-border) py-5">
+        <Container>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span
+                className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0"
+                style={{ background: "var(--brand-gradient)" }}
+              >
+                <HelpCircle className="h-5 w-5 text-white" />
+              </span>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">FAQ</h1>
+                <p className="mt-0.5 text-gray-500 text-sm">Find answers to common questions about our products, shipping, and more.</p>
+              </div>
+            </div>
+            <nav className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 shrink-0" aria-label="Breadcrumb">
+              <Link href="/" className="flex items-center gap-1 hover:text-(--color-primary) transition-colors">
+                <Home className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Home</span>
+              </Link>
+              <ChevronRight className="h-3.5 w-3.5 text-gray-300" aria-hidden="true" />
+              <span className="text-(--color-secondary) font-medium">FAQ</span>
+            </nav>
           </div>
-          <h1 className="text-3xl lg:text-4xl font-extrabold text-white mb-3">
-            Frequently Asked Questions
-          </h1>
-          <p className="text-blue-200 text-sm max-w-md mx-auto">
-            Can&apos;t find what you&apos;re looking for?{" "}
-            <Link href="/contact" className="text-white font-semibold underline underline-offset-2">
-              Contact our team
-            </Link>
-          </p>
         </Container>
       </div>
 
