@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Package, Users, Award, Leaf, ShieldCheck, Truck, HeadphonesIcon, RefreshCw } from "lucide-react";
+import { ChevronRight, Home, Package, Users, Award, Leaf, ShieldCheck, Truck, HeadphonesIcon, RefreshCw } from "lucide-react";
 import Container from "@/components/layout/Container";
 
 export const metadata: Metadata = {
@@ -46,6 +45,29 @@ const WHY_US = [
 export default function AboutPage() {
   return (
     <div style={{ background: "var(--background)" }}>
+      <div className="bg-white border-b border-(--color-border) py-5">
+        <Container>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0 bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]">
+                <Package className="h-5 w-5 text-white" />
+              </span>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">About Us</h1>
+                <p className="mt-0.5 text-gray-500 text-sm">Learn how Pethiyan helps Indian businesses package better, faster, and smarter.</p>
+              </div>
+            </div>
+            <nav className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 shrink-0" aria-label="Breadcrumb">
+              <Link href="/" className="flex items-center gap-1 hover:text-(--color-primary) transition-colors">
+                <Home className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Home</span>
+              </Link>
+              <ChevronRight className="h-3.5 w-3.5 text-gray-300" aria-hidden="true" />
+              <span className="text-(--color-secondary) font-medium">About Us</span>
+            </nav>
+          </div>
+        </Container>
+      </div>
 
       {/* ── Hero ── */}
       <div
@@ -59,11 +81,6 @@ export default function AboutPage() {
           style={{ background: "radial-gradient(circle,#4caf50,transparent 70%)" }} />
 
         <Container className="relative z-10 text-center">
-          <nav className="flex items-center justify-center gap-1.5 text-xs text-blue-300 mb-6">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-white font-medium">About Us</span>
-          </nav>
           <h1 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
             The Power of<br />
             <span style={{ color: "#4caf50" }}>Perfect Packaging</span>
