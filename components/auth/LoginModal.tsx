@@ -504,7 +504,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
 
           {/* Bottom tagline */}
           <div className="relative z-10">
-            <p className="text-[11px] text-blue-200/50">
+            <p className="text-[11px] text-blue-200/50 whitespace-nowrap">
               © {new Date().getFullYear()} Pethiyan.com. All Rights Reserved.
             </p>
           </div>
