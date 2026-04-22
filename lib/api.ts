@@ -179,7 +179,7 @@ export interface ApiOrder {
   id: number;
   slug: string;
   order_number: string;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status: "pending" | "awaiting_store_response" | "partially_accepted" | "accepted_by_seller" | "ready_for_pickup" | "assigned" | "preparing" | "collected" | "out_for_delivery" | "processing" | "shipped" | "delivered" | "cancelled" | "failed" | "rejected_by_seller" | string;
   total: number;
   final_total: number;
   subtotal: number;
