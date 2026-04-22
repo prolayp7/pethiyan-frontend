@@ -42,8 +42,8 @@ function renderInline(node: PMNode, key?: number): React.ReactNode {
   }
 
   if (node.type === 'image') {
-    const src = node.attrs?.src || node.attrs?.srcset || '';
-    const alt = node.attrs?.alt || '';
+    const src = typeof node.attrs?.src === 'string' ? node.attrs.src : (typeof node.attrs?.srcset === 'string' ? node.attrs.srcset : '');
+    const alt = typeof node.attrs?.alt === 'string' ? node.attrs.alt : '';
     return (
       <img key={key} src={src} alt={alt} className="max-w-full h-auto rounded mb-4" />
     );
@@ -67,7 +67,7 @@ function renderBlock(node: PMNode, idx: number): React.ReactNode {
       );
 
     case 'heading': {
-      const level = node.attrs?.level || 2;
+      const level = typeof node.attrs?.level === 'number' ? node.attrs.level : 2;
       const tagName = `h${Math.min(4, Math.max(1, level))}`;
       const className = level <= 2 ? 'text-2xl font-semibold mb-4' : 'text-xl font-semibold mb-3';
       const Tag = tagName as keyof JSX.IntrinsicElements;
@@ -77,7 +77,7 @@ function renderBlock(node: PMNode, idx: number): React.ReactNode {
     case 'image':
       return (
         <div key={idx} className="my-4">
-          <img src={node.attrs?.src} alt={node.attrs?.alt || ''} className="w-full h-auto rounded" />
+          <img src={typeof node.attrs?.src === 'string' ? node.attrs.src : ''} alt={typeof node.attrs?.alt === 'string' ? node.attrs.alt : ''} className="w-full h-auto rounded" />
         </div>
       );
 
