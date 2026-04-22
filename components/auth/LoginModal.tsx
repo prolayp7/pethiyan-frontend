@@ -770,7 +770,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                     value={googleNewUserMobile}
                     onChange={(v) => { setGoogleNewUserMobile(v); setFieldError("googleMobile", isValidIndianMobile(v) ? "" : "Enter a valid 10-digit mobile number"); }}
                     error={errors.googleMobile}
-                    disabled={loading || disabled}
+                    disabled={loading}
                     autoFocus
                   />
                 </div>
