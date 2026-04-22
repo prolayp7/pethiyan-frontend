@@ -8,7 +8,7 @@ import { useSiteSettings } from "@/context/SiteSettingsContext";
 import Link from "next/link";
 import MobileInput, { isValidIndianMobile } from "@/components/auth/MobileInput";
 import OtpInput from "@/components/auth/OtpInput";
-import { sendOtp, verifyOtp, resendOtp, registerUser, verifyMobile, loginWithPassword, googleCallback } from "@/lib/api";
+import { sendOtp, verifyOtp, resendOtp, registerUser, verifyMobile, loginWithPassword, googleCallback, forgotPasswordSendOtp, forgotPasswordReset, forgotPasswordResendOtp } from "@/lib/api";
 import { signInWithGoogle } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import type { AuthUser } from "@/context/AuthContext";
@@ -23,6 +23,8 @@ interface LoginModalProps {
 
 type Tab = "login" | "register";
 type Step = "form" | "otp";
+type LoginMode = "password" | "otp" | "forgot-password";
+type ForgotStep = "identifier" | "reset" | "success";
 
 const RESEND_SECONDS = 60;
 
@@ -82,13 +84,25 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
   const [step, setStep] = useState<Step>("form");
 
   // Login fields
-  const [loginMode, setLoginMode] = useState<"password" | "otp">("password");
+  const [loginMode, setLoginMode] = useState<LoginMode>("password");
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginMobile, setLoginMobile] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginOtpSentTo, setLoginOtpSentTo] = useState<{ sms: boolean; email: boolean }>({ sms: false, email: false });
+
+  // Forgot-password fields
+  const [forgotStep, setForgotStep] = useState<ForgotStep>("identifier");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMobile, setForgotMobile] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showForgotConfirm, setShowForgotConfirm] = useState(false);
+  const [forgotDemoOtp, setForgotDemoOtp] = useState<string | undefined>(undefined);
+  const [forgotCountdown, setForgotCountdown] = useState(0);
 
   // Register fields
   const [regName, setRegName] = useState("");
@@ -132,6 +146,10 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
       setLoginMode("password");
       setLoginIdentifier(""); setLoginPassword(""); setShowLoginPassword(false);
       setLoginMobile(""); setLoginEmail(""); setLoginOtpSentTo({ sms: false, email: false });
+      setForgotStep("identifier"); setForgotEmail(""); setForgotMobile("");
+      setForgotOtp(""); setForgotNewPassword(""); setForgotConfirmPassword("");
+      setShowForgotPassword(false); setShowForgotConfirm(false);
+      setForgotDemoOtp(undefined); setForgotCountdown(0);
       setRegName(""); setRegEmail(""); setRegMobile("");
       setRegPassword(""); setRegConfirmPassword("");
       setOtp("");
@@ -152,6 +170,10 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     setLoginMode("password");
     setLoginIdentifier(""); setLoginPassword(""); setShowLoginPassword(false);
     setLoginMobile(""); setLoginEmail(""); setLoginOtpSentTo({ sms: false, email: false });
+    setForgotStep("identifier"); setForgotEmail(""); setForgotMobile("");
+    setForgotOtp(""); setForgotNewPassword(""); setForgotConfirmPassword("");
+    setShowForgotPassword(false); setShowForgotConfirm(false);
+    setForgotDemoOtp(undefined); setForgotCountdown(0);
     setOtp("");
     setErrors({});
     setShaking(new Set());
@@ -162,12 +184,18 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     pendingAuth.current = null;
   }, [tab]);
 
-  // Countdown timer
+  // Countdown timers
   useEffect(() => {
     if (countdown <= 0) return;
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown]);
+
+  useEffect(() => {
+    if (forgotCountdown <= 0) return;
+    const t = setTimeout(() => setForgotCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [forgotCountdown]);
 
   const startCountdown = useCallback(() => setCountdown(RESEND_SECONDS), []);
 
@@ -457,6 +485,87 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
       }
       if (res.success) { setOtp(""); setDemoOtp(res.demoOtp); startCountdown(); }
       else setApiError(res.message ?? "Could not resend OTP.");
+    } catch { setApiError("Something went wrong. Please try again."); }
+    finally { setLoading(false); }
+  }
+
+  // ── Forgot Password Handlers ──────────────────────────────────────────────────
+
+  async function handleForgotStart(e: React.SyntheticEvent) {
+    e.preventDefault();
+    setApiError("");
+    const errs: Record<string, string> = {};
+    if (smsOtpEnabled && forgotMobile && !isValidIndianMobile(forgotMobile)) {
+      errs.forgotMobile = "Enter a valid 10-digit mobile number";
+    }
+    if (emailOtpEnabled && forgotEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim())) {
+      errs.forgotEmail = "Enter a valid email address";
+    }
+    const hasMobile = smsOtpEnabled && isValidIndianMobile(forgotMobile);
+    const hasEmail = emailOtpEnabled && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim());
+    if (!hasMobile && !hasEmail) {
+      if (smsOtpEnabled && emailOtpEnabled) errs.forgotOtpIdentifier = "Enter your mobile number or email address";
+      else if (smsOtpEnabled) errs.forgotMobile = "Enter a valid 10-digit mobile number";
+      else if (emailOtpEnabled) errs.forgotEmail = "Enter a valid email address";
+    }
+    if (Object.keys(errs).length) { setErrors(errs); triggerShake(Object.keys(errs)); return; }
+
+    setLoading(true);
+    try {
+      const mobile = smsOtpEnabled && isValidIndianMobile(forgotMobile) ? forgotMobile : null;
+      const email = emailOtpEnabled && forgotEmail.trim() ? forgotEmail.trim() : null;
+      const res = await forgotPasswordSendOtp(mobile, email);
+      if (res.success) {
+        setForgotDemoOtp(res.demoOtp);
+        setForgotStep("reset");
+        setForgotCountdown(RESEND_SECONDS);
+      } else {
+        setApiError(res.message ?? "Could not send OTP. Please try again.");
+      }
+    } catch { setApiError("Something went wrong. Please try again."); }
+    finally { setLoading(false); }
+  }
+
+  async function handleForgotReset(e: React.SyntheticEvent) {
+    e.preventDefault();
+    setApiError("");
+    const errs: Record<string, string> = {};
+    if (forgotOtp.length !== 6) errs.forgotOtp = "Enter the 6-digit OTP";
+    const pwErr = validatePassword(forgotNewPassword);
+    if (pwErr) errs.forgotNewPassword = pwErr;
+    if (forgotConfirmPassword !== forgotNewPassword) errs.forgotConfirmPassword = "Passwords do not match";
+    
+    if (Object.keys(errs).length) { setErrors(errs); triggerShake(Object.keys(errs)); return; }
+
+    setLoading(true);
+    try {
+      const mobile = smsOtpEnabled && isValidIndianMobile(forgotMobile) ? forgotMobile : null;
+      const email = emailOtpEnabled && forgotEmail.trim() ? forgotEmail.trim() : undefined;
+      const res = await forgotPasswordReset(mobile, forgotOtp, forgotNewPassword, forgotConfirmPassword, email ? { email } : undefined);
+      if (res.success) {
+        setForgotStep("success");
+      } else {
+        setApiError(res.message ?? "Failed to reset password. Please try again.");
+      }
+    } catch { setApiError("Something went wrong. Please try again."); }
+    finally { setLoading(false); }
+  }
+
+  async function handleForgotResend() {
+    if (forgotCountdown > 0) return;
+    setApiError("");
+    setLoading(true);
+    try {
+      const mobile = smsOtpEnabled && isValidIndianMobile(forgotMobile) ? forgotMobile : null;
+      const email = emailOtpEnabled && forgotEmail.trim() ? forgotEmail.trim() : null;
+      const res = await forgotPasswordResendOtp(mobile, email);
+      if (res.success) {
+        setForgotOtp("");
+        setForgotDemoOtp(res.demoOtp);
+        setForgotCountdown(RESEND_SECONDS);
+      } else {
+        setApiError(res.message ?? "Could not resend OTP.");
+      }
     } catch { setApiError("Something went wrong. Please try again."); }
     finally { setLoading(false); }
   }
@@ -754,18 +863,26 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                     fieldKey="loginPassword"
                   />
 
-                  {(smsOtpEnabled || emailOtpEnabled) && (
-                    <div className="flex justify-end">
+                  <div className="flex items-center justify-between mt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setLoginMode("forgot-password"); setForgotStep("identifier"); setErrors({}); setApiError(""); }}
+                      className="text-xs font-semibold hover:underline"
+                      style={{ color: "#17396f" }}
+                    >
+                      Forgot password?
+                    </button>
+                    {(smsOtpEnabled || emailOtpEnabled) && (
                       <button
                         type="button"
                         onClick={() => { setLoginMode("otp"); setErrors({}); setApiError(""); }}
                         className="text-xs font-semibold hover:underline"
                         style={{ color: "#17396f" }}
                       >
-                        Forgot password? Login with OTP
+                        Login with OTP
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {apiError && <ApiError msg={apiError} />}
 
@@ -858,6 +975,151 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                     </p>
                   </div>
                 </form>
+              ) : (
+
+                /* ── FORGOT PASSWORD ── */
+                forgotStep === "identifier" ? (
+                  <form onSubmit={handleForgotStart} className="space-y-3.5">
+                    <button
+                      type="button"
+                      onClick={() => { setLoginMode("password"); setErrors({}); setApiError(""); }}
+                      className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      ← Back to login
+                    </button>
+                    <div className="mb-1">
+                      <h2 className="text-lg font-bold text-gray-900">Forgot Password</h2>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {smsOtpEnabled && emailOtpEnabled
+                          ? "Enter your mobile or email to reset password"
+                          : smsOtpEnabled
+                          ? "Enter your mobile number to reset password"
+                          : "Enter your email address to reset password"}
+                      </p>
+                    </div>
+
+                    {errors.forgotOtpIdentifier && (
+                      <p className="text-xs text-red-500 error-fade flex items-center gap-1" role="alert">
+                        <span className="inline-block w-1 h-1 rounded-full bg-red-500 shrink-0" />{errors.forgotOtpIdentifier}
+                      </p>
+                    )}
+
+                    {smsOtpEnabled && (
+                      <div className={shaking.has("forgotMobile") || shaking.has("forgotOtpIdentifier") ? "shake" : ""}>
+                        <MobileInput
+                          value={forgotMobile}
+                          onChange={(v) => {
+                            setForgotMobile(v);
+                            setFieldError("forgotMobile", v && !isValidIndianMobile(v) ? "Enter a valid 10-digit mobile number" : "");
+                            setFieldError("forgotOtpIdentifier", "");
+                          }}
+                          error={errors.forgotMobile}
+                          disabled={loading}
+                          autoFocus={smsOtpEnabled}
+                        />
+                      </div>
+                    )}
+
+                    {emailOtpEnabled && (
+                      <FormField error={errors.forgotEmail}>
+                        <div className={`relative ${shaking.has("forgotEmail") || shaking.has("forgotOtpIdentifier") ? "shake" : ""}`}>
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <Mail className="h-4 w-4" />
+                          </span>
+                          <input
+                            type="email"
+                            placeholder={smsOtpEnabled ? "Email address (optional)" : "Email address *"}
+                            value={forgotEmail}
+                            onChange={(e) => {
+                              setForgotEmail(e.target.value);
+                              setFieldError("forgotEmail", e.target.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value.trim()) ? "Enter a valid email address" : "");
+                              setFieldError("forgotOtpIdentifier", "");
+                            }}
+                            disabled={loading}
+                            autoFocus={!smsOtpEnabled && emailOtpEnabled}
+                            className={fieldCls("forgotEmail", "pl-10 pr-4 py-3")}
+                          />
+                        </div>
+                      </FormField>
+                    )}
+
+                    {apiError && <ApiError msg={apiError} />}
+                    <PrimaryButton loading={loading} label="Send OTP" loadingLabel="Sending…" />
+                  </form>
+                ) : forgotStep === "reset" ? (
+                  <form onSubmit={handleForgotReset} className="space-y-4">
+                    <button
+                      type="button"
+                      onClick={() => { setForgotStep("identifier"); setForgotOtp(""); setApiError(""); }}
+                      className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      ← Back
+                    </button>
+                    <div className="mb-2">
+                      <h2 className="text-lg font-bold text-gray-900">Reset Password</h2>
+                      <p className="text-xs text-gray-500 mt-0.5">Enter the OTP sent to you and your new password</p>
+                      {forgotDemoOtp && (
+                        <p className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 inline-block mt-2">
+                          Demo mode — use OTP: <span className="font-bold tracking-widest">{forgotDemoOtp}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    <OtpInput value={forgotOtp} onChange={setForgotOtp} error={errors.forgotOtp} disabled={loading} autoFocus />
+
+                    <PasswordField
+                      placeholder="New password *"
+                      value={forgotNewPassword}
+                      show={showForgotPassword}
+                      onToggle={() => setShowForgotPassword(s => !s)}
+                      onChange={(v) => { setForgotNewPassword(v); setFieldError("forgotNewPassword", validatePassword(v)); if (forgotConfirmPassword) setFieldError("forgotConfirmPassword", v !== forgotConfirmPassword ? "Passwords do not match" : ""); }}
+                      error={errors.forgotNewPassword}
+                      shaking={shaking.has("forgotNewPassword")}
+                      disabled={loading}
+                      fieldCls={fieldCls}
+                      fieldKey="forgotNewPassword"
+                    />
+
+                    <PasswordField
+                      placeholder="Confirm new password *"
+                      value={forgotConfirmPassword}
+                      show={showForgotConfirm}
+                      onToggle={() => setShowForgotConfirm(s => !s)}
+                      onChange={(v) => { setForgotConfirmPassword(v); setFieldError("forgotConfirmPassword", v !== forgotNewPassword ? "Passwords do not match" : ""); }}
+                      error={errors.forgotConfirmPassword}
+                      shaking={shaking.has("forgotConfirmPassword")}
+                      disabled={loading}
+                      fieldCls={fieldCls}
+                      fieldKey="forgotConfirmPassword"
+                    />
+
+                    {apiError && <ApiError msg={apiError} />}
+                    
+                    <PrimaryButton loading={loading} label="Reset Password" loadingLabel="Resetting…" disabled={forgotOtp.length !== 6} />
+
+                    <p className="text-center text-xs text-gray-500">
+                      Didn&apos;t receive it?{" "}
+                      {forgotCountdown > 0
+                        ? <span className="font-medium text-gray-400">Resend in {forgotCountdown}s</span>
+                        : <button type="button" onClick={handleForgotResend} disabled={loading} className="font-semibold" style={{ color: "#17396f" }}>Resend OTP</button>
+                      }
+                    </p>
+                  </form>
+                ) : (
+                  <div className="text-center space-y-4 py-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-2">
+                      <ShieldCheck className="h-8 w-8 text-green-600" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">Password Reset Successful</h2>
+                    <p className="text-sm text-gray-500 pb-4">Your password has been securely updated.</p>
+                    <PrimaryButton 
+                      loading={false} 
+                      label="Back to Login" 
+                      loadingLabel="" 
+                    />
+                    <div className="absolute inset-0 z-10 cursor-pointer" onClick={() => { setLoginMode("password"); setForgotStep("identifier"); setErrors({}); setApiError(""); }} />
+                  </div>
+                )
               )
 
             ) : (

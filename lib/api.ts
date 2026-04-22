@@ -1126,6 +1126,56 @@ export async function verifyOtp(
   };
 }
 
+export async function forgotPasswordSendOtp(
+  email: string | null,
+  mobile?: string | null
+): Promise<{ success: boolean; message?: string; demoOtp?: string }> {
+  const body: Record<string, string> = {};
+  if (email)  { body.email = email; }
+  if (mobile) { body.mobile = mobile; }
+
+  const res = await apiFetch<{ success: boolean; message?: string; data?: { demo_otp?: string } }>(
+    "/api/auth/forgot-password/send-otp",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!res) return { success: false, message: "Request failed" };
+  return { success: res.success, message: res.message, demoOtp: res.data?.demo_otp };
+}
+
+export async function forgotPasswordReset(
+  email: string | null,
+  mobile: string | null,
+  otp: string,
+  password: string,
+  password_confirmation: string
+): Promise<{ success: boolean; message?: string }> {
+  const body: Record<string, string> = { otp, password, password_confirmation };
+  if (email)  { body.email = email; }
+  if (mobile) { body.mobile = mobile; }
+
+  const res = await apiFetch<{ success: boolean; message?: string }>(
+    "/api/auth/forgot-password/reset",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!res) return { success: false, message: "Request failed" };
+  return { success: res.success, message: res.message };
+}
+
+export async function forgotPasswordResendOtp(
+  email: string | null,
+  mobile?: string | null
+): Promise<{ success: boolean; message?: string; demoOtp?: string }> {
+  return forgotPasswordSendOtp(email, mobile);
+}
+
 export async function resendOtp(
   mobile: string | null,
   email?: string | null
