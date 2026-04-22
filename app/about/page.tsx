@@ -209,7 +209,7 @@ function AboutStorySection({ section, index }: { section: AboutSection; index: n
           ) : (
             <div
               className="relative h-80 lg:h-96 rounded-3xl overflow-hidden"
-              style={{ background: "var(--color-primary)" }}
+              style={{ background: "var(--brand-gradient)" }}
             >
               <div className="absolute inset-0 flex items-center justify-center">
                 <Package className="h-24 w-24 text-white opacity-20" />
@@ -235,7 +235,10 @@ export default async function AboutPage() {
         <Container>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0 bg-(--color-primary)">
+              <span
+                className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0"
+                style={{ background: "var(--brand-gradient)" }}
+              >
                 <Package className="h-5 w-5 text-white" />
               </span>
               <div>
@@ -291,7 +294,7 @@ export default async function AboutPage() {
                 <div key={`${title ?? "value"}-${index}`} className="text-center px-4">
                   <div
                     className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
-                    style={{ background: "var(--color-primary)" }}
+                    style={{ background: "var(--brand-gradient)" }}
                   >
                     <Icon className="h-7 w-7 text-white" />
                   </div>
@@ -322,7 +325,10 @@ export default async function AboutPage() {
                 key={`${title ?? "feature"}-${index}`}
                 className="flex items-start gap-4 p-5 rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="w-10 h-10 rounded-xl bg-(--color-primary) flex items-center justify-center shrink-0">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "var(--brand-gradient)" }}
+                >
                   <Icon className="h-5 w-5 text-white" />
                 </div>
                 <div>
@@ -338,7 +344,7 @@ export default async function AboutPage() {
       {/* ── CTA Banner ── */}
       <div
         className="py-16"
-        style={{ background: "linear-gradient(135deg,#1f4f8a,#0f2f5f)" }}
+        style={{ background: "var(--brand-gradient)" }}
       >
         <Container className="text-center">
           <h2 className="text-3xl font-extrabold text-white mb-3">
@@ -349,8 +355,7 @@ export default async function AboutPage() {
           </p>
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5"
-            style={{ background: "var(--color-primary)", color: "#fff" }}
+            className="btn-brand inline-flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5"
           >
             Shop Now
             <ChevronRight className="h-4 w-4" />
