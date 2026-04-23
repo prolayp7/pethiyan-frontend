@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  User, Phone, Mail, Save, Loader2, CheckCircle2, LogOut, AlertCircle, Building2,
+  User, Phone, Mail, Save, Loader2, CheckCircle2, LogOut, AlertCircle, Building2, Lock, Eye, EyeOff,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { updateProfile } from "@/lib/api";
+import { changePassword, updateProfile } from "@/lib/api";
 
 export default function ProfilePage() {
   const { user, updateUser, logout } = useAuth();
@@ -19,6 +19,15 @@ export default function ProfilePage() {
   const [saving,  setSaving]  = useState(false);
   const [success, setSuccess] = useState(false);
   const [error,   setError]   = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const isDirty =
@@ -52,20 +61,58 @@ export default function ProfilePage() {
     }
   }
 
+  const isPasswordDirty =
+    currentPassword.trim().length > 0 ||
+    newPassword.trim().length > 0 ||
+    confirmPassword.trim().length > 0;
+
+  async function handlePasswordSave() {
+    if (!currentPassword) {
+      setPasswordError("Current password is required.");
+      return;
+    }
+    if (!newPassword) {
+      setPasswordError("New password is required.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirm password do not match.");
+      return;
+    }
+
+    setPasswordError("");
+    setPasswordSaving(true);
+    const result = await changePassword({
+      current_password: currentPassword,
+      password: newPassword,
+      password_confirmation: confirmPassword,
+    });
+    setPasswordSaving(false);
+
+    if (result.success) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordSuccess(true);
+      setTimeout(() => setPasswordSuccess(false), 3000);
+      return;
+    }
+
+    setPasswordError(result.message ?? "Password update failed. Please try again.");
+  }
+
   function handleLogout() {
     logout();
     router.push("/");
   }
 
-  const initials = user?.name
-    ?.split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() ?? "U";
-
   const inputCls =
     "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-(--color-primary) focus:bg-white transition-colors";
+  const passwordInputCls = `${inputCls} pl-10 pr-11`;
 
   return (
     <div className="max-w-lg">
@@ -194,6 +241,109 @@ export default function ProfilePage() {
               <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
             ) : (
               <><Save className="h-4 w-4" /> Save Changes</>
+            )}
+          </button>
+        </div>
+
+        <div className="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+          <h2 className="text-sm font-extrabold text-(--color-secondary)">Change Password</h2>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+              Current Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type={showCurrentPassword ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(""); }}
+                placeholder="Enter your current password"
+                className={passwordInputCls}
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword((value) => !value)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+              >
+                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+              New Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => { setNewPassword(e.target.value); setPasswordError(""); }}
+                placeholder="Minimum 8 characters"
+                className={passwordInputCls}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword((value) => !value)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+              >
+                {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+              Confirm New Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(""); }}
+                placeholder="Re-enter new password"
+                className={passwordInputCls}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((value) => !value)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-400 mt-1">Use at least 8 characters for your new password.</p>
+          </div>
+
+          {passwordError && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {passwordError}
+            </div>
+          )}
+
+          {passwordSuccess && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-100 text-sm text-green-700">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Password updated successfully!
+            </div>
+          )}
+
+          <button
+            onClick={handlePasswordSave}
+            disabled={passwordSaving || !isPasswordDirty}
+            className="btn-brand w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
+          >
+            {passwordSaving ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Updating Password…</>
+            ) : (
+              <><Lock className="h-4 w-4" /> Update Password</>
             )}
           </button>
         </div>

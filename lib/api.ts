@@ -1234,6 +1234,23 @@ export async function updateProfile(
   };
 }
 
+export async function changePassword(data: {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}): Promise<{ success: boolean; message?: string }> {
+  const res = await apiAuth<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>(
+    "/api/user/password-update",
+    "POST",
+    data
+  );
+  if (!res) return { success: false, message: "Request failed" };
+  return {
+    success: res.success ?? false,
+    message: getApiErrorMessage(res) ?? res.message,
+  };
+}
+
 export async function logoutUserSession(): Promise<void> {
   await apiFetch("/api/logout", {
     method: "POST",
