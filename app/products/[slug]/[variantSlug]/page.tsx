@@ -17,6 +17,7 @@ import {
 import { getCustomJsonLdSchemas, resolveVariantSeo } from "@/lib/seo";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import RelatedProducts from "@/components/product/RelatedProducts";
+import BrowsingHistory from "@/components/product/BrowsingHistory";
 import ProductDetailIsland from "../ProductDetailIsland";
 import { toDisplayTitleCase } from "@/lib/text";
 
@@ -180,6 +181,8 @@ export default async function ProductVariantPage({
           currentProductId={product.id}
         />
       )}
+
+      <BrowsingHistory excludeSlug={product.slug} />
 
       <div className="h-16 lg:hidden" aria-hidden="true" />
     </div>
