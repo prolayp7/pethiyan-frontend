@@ -30,7 +30,7 @@ function shouldBypassOptimizer(src?: string | null): boolean {
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   pending:                  { label: "Pending",               cls: "bg-amber-100 text-amber-700"   },
-  awaiting_store_response:  { label: "awaiting_store_response", cls: "bg-yellow-100 text-yellow-700" },
+  awaiting_store_response:  { label: "Awaiting Confirmation", cls: "bg-yellow-100 text-yellow-700" },
   partially_accepted:       { label: "Partially Accepted",    cls: "bg-orange-100 text-orange-700" },
   accepted_by_seller:       { label: "Accepted",              cls: "bg-blue-100 text-blue-700"     },
   ready_for_pickup:         { label: "Ready for Pickup",      cls: "bg-indigo-100 text-indigo-700" },
