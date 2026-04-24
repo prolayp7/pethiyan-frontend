@@ -687,7 +687,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                     {/* Qty + Add to Cart */}
                     <div className="mt-5 flex flex-col gap-2.5 lg:flex-row lg:flex-wrap lg:items-center">
                       {/* Qty control + price: stacked on mobile, inline on desktop */}
-                      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-2.5">
+                      <div className="flex items-center gap-2.5">
                         <div className="h-10 rounded-full bg-gray-100 px-3 flex items-center gap-3 shrink-0">
                           <button type="button" className="text-gray-700" onClick={() => setQty((q) => Math.max(stepQty, q - (quickViewProduct?.policies?.quantity_step_size ?? 1)))} aria-label="Decrease quantity">
                             <Minus className="h-4 w-4" />
