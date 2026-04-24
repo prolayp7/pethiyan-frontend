@@ -27,7 +27,7 @@ export default function CartDrawer() {
   const grandTotal = total + totalGst;
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && closeCart()} modal={false}>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && closeCart()}>
       <SheetContent
         side="right"
         className="z-[10001] flex h-full w-full max-w-sm flex-col p-0"

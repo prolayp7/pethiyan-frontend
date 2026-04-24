@@ -357,6 +357,16 @@ body {
 }
 
 /* =============================================
+   RADIX SCROLL-LOCK — prevent body shift
+   scrollbar-gutter:stable on html already reserves scrollbar space,
+   so Radix's margin/padding compensation must be zeroed out.
+   ============================================= */
+body[data-scroll-locked] {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* =============================================
    CORE WEB VITALS — CLS prevention
    ============================================= */
 
