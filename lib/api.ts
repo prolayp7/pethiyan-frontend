@@ -194,6 +194,7 @@ export interface ApiOrder {
   payment_status?: string;
   tracking_code?: string;
   admin_note?: string;
+  invoice_downloadable?: boolean;
   created_at: string;
   updated_at: string;
   items: ApiOrderItem[];
@@ -1524,6 +1525,7 @@ function normalizeOrder(raw: Record<string, unknown>): ApiOrder {
     gst_amount: parseFloat(String(raw.gst_amount ?? raw.total_gst ?? 0)),
     promo_discount: parseFloat(String(raw.promo_discount ?? 0)),
     gift_card_discount: parseFloat(String(raw.gift_card_discount ?? 0)),
+    invoice_downloadable: raw.invoice_downloadable === true,
     items,
   } as ApiOrder;
 }
@@ -1560,6 +1562,20 @@ export async function trackOrder(query: string): Promise<ApiOrder | null> {
   );
   if (!res?.success || !res.data || typeof res.data !== "object" || Array.isArray(res.data)) return null;
   return normalizeOrder(res.data as Record<string, unknown>);
+}
+
+export async function downloadOrderInvoice(slug: string): Promise<Blob | null> {
+  const token = getToken();
+  try {
+    const res = await fetch(`${API_BASE}/api/user/orders/${encodeURIComponent(slug)}/invoice`, {
+      headers: { Accept: "application/pdf", ...getAuthHeaders(token) },
+      credentials: "include",
+    });
+    if (!res.ok) return null;
+    return res.blob();
+  } catch {
+    return null;
+  }
 }
 
 // ─── Coupons ──────────────────────────────────────────────────────────────────

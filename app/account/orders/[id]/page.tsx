@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft, Loader2, Package, MapPin, ShoppingBag,
   CheckCircle2, Circle, Truck, Clock, XCircle, Tag, MessageSquare,
+  FileDown,
 } from "lucide-react";
-import { getOrder, type ApiOrder, type ApiTrackingStep } from "@/lib/api";
+import { getOrder, downloadOrderInvoice, type ApiOrder, type ApiTrackingStep } from "@/lib/api";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -147,9 +148,10 @@ function TrackingTimeline({ steps, status }: { steps: ApiTrackingStep[]; status:
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [order,   setOrder]   = useState<ApiOrder | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [order,           setOrder]           = useState<ApiOrder | null>(null);
+  const [loading,         setLoading]         = useState(true);
+  const [notFound,        setNotFound]        = useState(false);
+  const [invoiceLoading,  setInvoiceLoading]  = useState(false);
 
   useEffect(() => {
     getOrder(id).then((o) => {
@@ -158,6 +160,22 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       setLoading(false);
     });
   }, [id]);
+
+  const handleDownloadInvoice = useCallback(async () => {
+    if (!order) return;
+    setInvoiceLoading(true);
+    const blob = await downloadOrderInvoice(order.slug);
+    setInvoiceLoading(false);
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement("a");
+    a.href     = url;
+    a.download = `invoice-${order.order_number}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, [order]);
 
   if (loading) {
     return (
@@ -204,9 +222,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             </h1>
             <p className="text-xs text-gray-400 mt-0.5">Placed on {fmtDate(order.created_at)}</p>
           </div>
-          <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${status.cls}`}>
-            {status.label}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${status.cls}`}>
+              {status.label}
+            </span>
+            {order.invoice_downloadable && (
+              <button
+                type="button"
+                onClick={handleDownloadInvoice}
+                disabled={invoiceLoading}
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {invoiceLoading
+                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Downloading…</>
+                  : <><FileDown className="h-3.5 w-3.5" /> Download Invoice</>
+                }
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
