@@ -31,7 +31,7 @@ export default function CartDrawer() {
       <SheetContent
         side="right"
         className="z-[10001] flex h-full w-full max-w-sm flex-col p-0"
-        overlayClassName="z-[10000] bg-black/45 backdrop-blur-[1px]"
+        overlayClassName="z-[10000] bg-black/45"
       >
         {/* Header */}
         <SheetHeader className="px-6 py-4 border-b border-gray-100">
