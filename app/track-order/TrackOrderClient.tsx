@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Package, Search, Loader2, CheckCircle2, XCircle,
   Circle, Truck, MapPin, ShoppingBag, ArrowRight, Home,
-  AlertCircle, ChevronRight, Tag, MessageSquare,
+  AlertCircle, ChevronRight, Tag, MessageSquare, LogIn, FileText,
 } from "lucide-react";
 import { trackOrder, type ApiOrder, type ApiTrackingStep } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import LoginModal from "@/components/auth/LoginModal";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -138,7 +140,7 @@ function TrackingTimeline({ steps, status }: { steps: ApiTrackingStep[]; status:
 
 // ─── Order Result ─────────────────────────────────────────────────────────────
 
-function OrderResult({ order }: { order: ApiOrder }) {
+function OrderResult({ order, onViewDetails, isLoggedIn }: { order: ApiOrder; onViewDetails: () => void; isLoggedIn: boolean }) {
   const status = STATUS_MAP[order.status] ?? { label: order.status, cls: "text-gray-600", bg: "bg-gray-100" };
   const steps  = order.tracking?.length
     ? order.tracking
@@ -260,16 +262,19 @@ function OrderResult({ order }: { order: ApiOrder }) {
             </div>
           )}
 
-          {/* Sign in CTA */}
-          <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4 text-center">
-            <p className="text-xs font-semibold text-gray-700 mb-1">Want full order details?</p>
-            <Link
-              href="/login?redirect=/account/orders"
-              className="text-xs font-bold text-(--color-primary) hover:underline flex items-center justify-center gap-1"
-            >
-              Sign in to your account <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
+          {/* View full order details CTA */}
+          <button
+            type="button"
+            onClick={onViewDetails}
+            className="btn-brand w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all hover:-translate-y-0.5"
+          >
+            {isLoggedIn ? (
+              <><FileText className="h-4 w-4" /> View Full Order Details</>
+            ) : (
+              <><LogIn className="h-4 w-4" /> Sign In to View Details</>
+            )}
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>
@@ -280,12 +285,24 @@ function OrderResult({ order }: { order: ApiOrder }) {
 
 export default function TrackOrderClient() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { isLoggedIn } = useAuth();
 
-  const [query,      setQuery]      = useState(searchParams.get("order_number") ?? searchParams.get("query") ?? "");
-  const [loading,    setLoading]    = useState(false);
-  const [result,     setResult]     = useState<ApiOrder | null>(null);
-  const [notFound,   setNotFound]   = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [query,          setQuery]          = useState(searchParams.get("order_number") ?? searchParams.get("query") ?? "");
+  const [loading,        setLoading]        = useState(false);
+  const [result,         setResult]         = useState<ApiOrder | null>(null);
+  const [notFound,       setNotFound]       = useState(false);
+  const [hasSearched,    setHasSearched]    = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+
+  const handleViewDetails = useCallback(() => {
+    if (!result) return;
+    if (isLoggedIn) {
+      router.push(`/account/orders/${result.slug}`);
+    } else {
+      setLoginModalOpen(true);
+    }
+  }, [isLoggedIn, result, router]);
 
   const handleTrack = useCallback(async () => {
     if (!query.trim()) return;
@@ -436,7 +453,19 @@ export default function TrackOrderClient() {
         )}
 
         {/* Result */}
-        {!loading && result && <OrderResult order={result} />}
+        {!loading && result && (
+          <OrderResult order={result} onViewDetails={handleViewDetails} isLoggedIn={isLoggedIn} />
+        )}
+
+        {/* Login modal — opens when guest clicks "Sign In to View Details" */}
+        <LoginModal
+          open={loginModalOpen}
+          onClose={() => setLoginModalOpen(false)}
+          onSuccess={() => {
+            setLoginModalOpen(false);
+            if (result) router.push(`/account/orders/${result.slug}`);
+          }}
+        />
 
         {/* Logged in user shortcut */}
         {!hasSearched && (
