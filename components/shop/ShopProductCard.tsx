@@ -606,7 +606,9 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
 
                     {/* Title */}
                     <h3 className="text-xl sm:text-2xl leading-tight font-extrabold text-[#0f2444]">
-                      {quickViewProduct.title}
+                      {quickViewProduct.type === "variant" && selectedVariant?.title
+                        ? `${quickViewProduct.title} - ${selectedVariant.title}`
+                        : quickViewProduct.title}
                     </h3>
 
                     {/* SKU */}
