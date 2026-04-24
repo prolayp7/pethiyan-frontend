@@ -113,9 +113,9 @@ export default function FooterNavigationGrid({
                 </p>
               )}
               {brand?.companyGstin && (
-                <div className="inline-flex items-center gap-2 rounded-md bg-gray-50 border border-gray-100 px-3 py-2">
+                <div className="inline-flex items-baseline gap-2 rounded-md bg-gray-50 border border-gray-100 px-3 py-2">
                   <span className="text-xs font-semibold text-gray-700">GSTIN:</span>
-                  <span className="text-sm font-medium text-gray-900 uppercase tracking-widest">{brand.companyGstin}</span>
+                  <span className="text-xs font-medium text-gray-900 uppercase tracking-widest">{brand.companyGstin}</span>
                 </div>
               )}
             </div>
