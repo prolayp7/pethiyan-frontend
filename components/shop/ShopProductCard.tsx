@@ -87,7 +87,10 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   // Price to show in grid (prefer discounted special_price when present)
   // If hovering a variant, try to use that variant's pricing
   const hoveredVariant = product.variants?.find((v) => v.id === hoveredVariantId) ?? null;
-  const defaultDisplayTitle = hoveredVariant?.title ?? (product.type === "variant" ? (defaultVariant?.title ?? product.title) : product.title);
+  const activeVariantTitle = hoveredVariant?.title ?? defaultVariant?.title ?? null;
+  const defaultDisplayTitle = (product.type === "variant" && activeVariantTitle)
+    ? `${product.title} - ${activeVariantTitle}`
+    : product.title;
   function getPricingForVariant(v: typeof defaultVariant | null) {
     if (!v) return null;
     // Prefer a store pricing that matches defaultPricing store_id if available
