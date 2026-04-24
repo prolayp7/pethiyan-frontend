@@ -149,6 +149,10 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (product.type === "variant") {
+      void openQuickView(e);
+      return;
+    }
     if (!defaultVariant || !defaultPricing) return;
     const itemId = `${product.id}-v${defaultVariant.id}-s${defaultPricing.store_id}`;
     addItem({

@@ -107,6 +107,10 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
     e.preventDefault();
     e.stopPropagation();
     if (!p.inStock) return;
+    if (p.variantCount > 1 || p.defaultVariantId != null) {
+      void openQuickView(e);
+      return;
+    }
     addItem({
       id: p.id,
       productId: Number.isFinite(numericProductId) ? numericProductId : undefined,
