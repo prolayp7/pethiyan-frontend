@@ -726,7 +726,9 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
   ];
 
   const tags = product.tags ?? [];
-  const displayTitle = toDisplayTitleCase(selectedVariant?.title?.trim() || productName);
+  const displayTitle = (product.type === "variant" && selectedVariant?.title?.trim())
+    ? toDisplayTitleCase(productName) + " - " + toDisplayTitleCase(selectedVariant.title.trim())
+    : toDisplayTitleCase(productName);
   const wishlisted = isWishlisted(product.id);
 
   const handleWishlist = async () => {
