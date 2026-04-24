@@ -177,6 +177,7 @@ type ApiAddressInput = Omit<ApiAddress, "id" | "is_default"> & {
 
 export interface ApiOrder {
   id: number;
+  uuid: string;
   slug: string;
   order_number: string;
   status: "pending" | "awaiting_store_response" | "partially_accepted" | "accepted_by_seller" | "ready_for_pickup" | "assigned" | "preparing" | "collected" | "out_for_delivery" | "processing" | "shipped" | "delivered" | "cancelled" | "failed" | "rejected_by_seller" | string;
@@ -1515,6 +1516,7 @@ function normalizeOrder(raw: Record<string, unknown>): ApiOrder {
 
   return {
     ...(raw as object),
+    uuid: (raw.uuid as string) ?? (raw.slug as string) ?? String(raw.id),
     order_number: (raw.order_number as string) ?? (raw.slug as string) ?? String(raw.id),
     total: parseFloat(String(raw.final_total ?? raw.total_payable ?? 0)),
     final_total: parseFloat(String(raw.final_total ?? raw.total_payable ?? 0)),

@@ -164,7 +164,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const handleDownloadInvoice = useCallback(async () => {
     if (!order) return;
     setInvoiceLoading(true);
-    const blob = await downloadOrderInvoice(order.slug);
+    const blob = await downloadOrderInvoice(order.uuid);
     setInvoiceLoading(false);
     if (!blob) return;
     const url = URL.createObjectURL(blob);
