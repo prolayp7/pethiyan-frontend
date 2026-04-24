@@ -956,6 +956,14 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                     </div>
                   )}
 
+                  {smsOtpEnabled && emailOtpEnabled && (
+                    <div className="flex items-center gap-3 my-1">
+                      <div className="flex-1 h-px bg-gray-200" />
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">OR</span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                  )}
+
                   {emailOtpEnabled && (
                     <FormField error={errors.loginEmail}>
                       <div className={`relative ${shaking.has("loginEmail") || shaking.has("loginOtpIdentifier") ? "shake" : ""}`}>
@@ -1042,6 +1050,14 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                           disabled={loading}
                           autoFocus={smsOtpEnabled}
                         />
+                      </div>
+                    )}
+
+                    {smsOtpEnabled && emailOtpEnabled && (
+                      <div className="flex items-center gap-3 my-1">
+                        <div className="flex-1 h-px bg-gray-200" />
+                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">OR</span>
+                        <div className="flex-1 h-px bg-gray-200" />
                       </div>
                     )}
 
