@@ -56,16 +56,14 @@ function buildDefaultTracking(status: string, createdAt: string): ApiTrackingSte
     ];
   }
 
-  // Map detailed backend statuses → 4 simplified frontend steps
-  const CONFIRMED_STATUSES = ["awaiting_store_response", "partially_accepted", "accepted_by_seller", "ready_for_pickup", "assigned", "preparing", "collected", "out_for_delivery", "processing", "shipped", "delivered"];
+  // Map detailed backend statuses → 3 simplified frontend steps
+  const CONFIRMED_STATUSES  = ["awaiting_store_response", "partially_accepted", "accepted_by_seller", "ready_for_pickup", "assigned", "preparing", "collected", "out_for_delivery", "processing", "shipped", "delivered"];
   const DISPATCHED_STATUSES = ["out_for_delivery", "shipped", "delivered"];
-  const DELIVERED_STATUSES  = ["delivered"];
 
   const steps: ApiTrackingStep[] = [
-    { status: "pending",        label: "Order Placed",    description: "Your order has been placed successfully.", completed: true,                              timestamp: createdAt },
-    { status: "confirmed",      label: "Order Confirmed", description: "We're preparing your items for dispatch.", completed: CONFIRMED_STATUSES.includes(status) },
-    { status: "out_for_delivery", label: "Dispatched",   description: "Your package is on its way.",              completed: DISPATCHED_STATUSES.includes(status) },
-    { status: "delivered",      label: "Delivered",       description: "Your order has been delivered.",           completed: DELIVERED_STATUSES.includes(status)  },
+    { status: "pending",          label: "Order Placed",    description: "Your order has been placed successfully.", completed: true,                               timestamp: createdAt },
+    { status: "confirmed",        label: "Order Confirmed", description: "We're preparing your items for dispatch.", completed: CONFIRMED_STATUSES.includes(status)  },
+    { status: "out_for_delivery", label: "Dispatched",      description: "Your package is on its way.",              completed: DISPATCHED_STATUSES.includes(status) },
   ];
 
   return steps;
