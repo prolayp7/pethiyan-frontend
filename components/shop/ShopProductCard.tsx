@@ -520,6 +520,15 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                 {/* ── Image panel ── */}
                 <div className="bg-[#f3f6fa] rounded-t-3xl lg:rounded-l-3xl lg:rounded-tr-none flex flex-col min-h-0">
                   <div className="relative flex-1 min-h-[280px] lg:min-h-0">
+                    {/* Mobile-only close button — fixed at top-right of image, never scrolls */}
+                    <button
+                      type="button"
+                      className="absolute top-3 right-3 z-20 lg:hidden h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-[#0f2444] hover:bg-white transition-colors"
+                      onClick={closeQuickView}
+                      aria-label="Close quick view"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                     {modalImages.length > 0 ? (
                       <Image
                         src={modalImages[Math.min(activeImageIndex, modalImages.length - 1)]}
@@ -584,7 +593,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                           </span>
                         )}
                       </div>
-                      <button className="shrink-0 h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-[#0f2444] transition-colors"
+                      <button className="shrink-0 h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 hidden lg:flex items-center justify-center text-[#0f2444] transition-colors"
                         onClick={closeQuickView} aria-label="Close quick view">
                         <X className="h-4 w-4" />
                       </button>
