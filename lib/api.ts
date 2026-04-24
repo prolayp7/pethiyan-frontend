@@ -1549,17 +1549,17 @@ export async function getOrders(): Promise<ApiOrder[]> {
   return rows.map(normalizeOrder);
 }
 
-export async function trackOrder(
-  orderNumber: string,
-  phone: string
-): Promise<ApiOrder | null> {
-  const res = await apiFetch<ApiResponse<ApiOrder>>("/api/orders/track", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ order_number: orderNumber, phone }),
-  });
-  if (res && "data" in res) return res.data;
-  return null;
+export async function trackOrder(query: string): Promise<ApiOrder | null> {
+  const res = await apiFetch<{ success: boolean; data: Record<string, unknown> }>(
+    "/api/orders/track",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    }
+  );
+  if (!res?.success || !res.data || typeof res.data !== "object" || Array.isArray(res.data)) return null;
+  return normalizeOrder(res.data as Record<string, unknown>);
 }
 
 // ─── Coupons ──────────────────────────────────────────────────────────────────
