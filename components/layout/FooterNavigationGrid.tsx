@@ -122,7 +122,7 @@ export default function FooterNavigationGrid({
           )}
 
           {/* Nav columns */}
-          <div className="pt-8 lg:pt-0 lg:pl-10 border-t lg:border-t-0 lg:border-l border-gray-100 ml-auto grid grid-cols-2 md:grid-cols-4 gap-8 flex-grow">
+          <div className="pt-8 lg:pt-0 lg:pl-10 border-t lg:border-t-0 lg:border-l border-gray-100 lg:ml-auto w-full lg:w-auto grid grid-cols-2 md:grid-cols-4 gap-8 lg:grow">
             {navColumns.slice(0, 4).map((col) => (
               <div key={col.title}>
                 <h3 className="font-bold text-[15px] mb-4 text-gray-900">
