@@ -683,7 +683,7 @@ export default function ShopClient({ initialProducts, initialCategories, initial
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-5">
                 {filtered.map((product) => (
                   <ShopProductCard key={product.id} product={product} />
                 ))}
