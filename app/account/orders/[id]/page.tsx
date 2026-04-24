@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft, Loader2, Package, MapPin, ShoppingBag,
-  CheckCircle2, Circle, Truck, Clock, XCircle,
+  CheckCircle2, Circle, Truck, Clock, XCircle, Tag, MessageSquare,
 } from "lucide-react";
 import { getOrder, type ApiOrder, type ApiTrackingStep } from "@/lib/api";
 
@@ -27,6 +27,17 @@ function shouldBypassOptimizer(src?: string | null): boolean {
   if (!src) return false;
   return /^https?:\/\//i.test(src);
 }
+
+const PAYMENT_STATUS_MAP: Record<string, { label: string; cls: string }> = {
+  paid:        { label: "Paid",       cls: "bg-green-100 text-green-700"   },
+  success:     { label: "Paid",       cls: "bg-green-100 text-green-700"   },
+  completed:   { label: "Paid",       cls: "bg-green-100 text-green-700"   },
+  pending:     { label: "Pending",    cls: "bg-yellow-100 text-yellow-700" },
+  cod:         { label: "Pending",    cls: "bg-yellow-100 text-yellow-700" },
+  failed:      { label: "Failed",     cls: "bg-red-100 text-red-700"       },
+  cancelled:   { label: "Cancelled",  cls: "bg-red-100 text-red-700"       },
+  refunded:    { label: "Refunded",   cls: "bg-purple-100 text-purple-700" },
+};
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   pending:                  { label: "Pending",               cls: "bg-amber-100 text-amber-700"   },
@@ -213,6 +224,19 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <TrackingTimeline steps={trackingSteps} status={order.status} />
           </div>
 
+          {/* Tracking Code */}
+          {order.tracking_code && (
+            <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Tag className="h-4 w-4 text-(--color-primary)" />
+                <h2 className="text-sm font-extrabold text-(--color-secondary)">Tracking Code</h2>
+              </div>
+              <p className="text-sm font-mono font-semibold text-(--color-secondary) tracking-wide break-all">
+                {order.tracking_code}
+              </p>
+            </div>
+          )}
+
           {/* Items */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -307,7 +331,27 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 </span>
               </div>
             )}
+            {order.payment_status && (() => {
+              const ps = PAYMENT_STATUS_MAP[order.payment_status!.toLowerCase()] ?? { label: order.payment_status!, cls: "bg-gray-100 text-gray-600" };
+              return (
+                <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                  <span>Payment Status</span>
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${ps.cls}`}>{ps.label}</span>
+                </div>
+              );
+            })()}
           </div>
+
+          {/* Admin Note */}
+          {order.admin_note && (
+            <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <MessageSquare className="h-4 w-4 text-amber-500" />
+                <h2 className="text-sm font-extrabold text-(--color-secondary)">Note from our team</h2>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed">{order.admin_note}</p>
+            </div>
+          )}
 
           {/* Delivery address */}
           {order.address && (

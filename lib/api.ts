@@ -192,6 +192,8 @@ export interface ApiOrder {
   currency_code?: string;
   payment_method?: string;
   payment_status?: string;
+  tracking_code?: string;
+  admin_note?: string;
   created_at: string;
   updated_at: string;
   items: ApiOrderItem[];
