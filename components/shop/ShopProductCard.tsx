@@ -685,23 +685,26 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
                     )}
 
                     {/* Qty + Add to Cart */}
-                    <div className="mt-5 flex flex-wrap items-center gap-2.5">
-                      <div className="h-10 rounded-full bg-gray-100 px-3 flex items-center gap-3 shrink-0">
-                        <button className="text-gray-700" onClick={() => setQty((q) => Math.max(stepQty, q - (quickViewProduct?.policies?.quantity_step_size ?? 1)))} aria-label="Decrease quantity">
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <span className="min-w-7 text-center text-base font-semibold">{qty}</span>
-                        <button className="text-gray-700" onClick={() => setQty((q) => q + (quickViewProduct?.policies?.quantity_step_size ?? 1))} aria-label="Increase quantity">
-                          <Plus className="h-4 w-4" />
-                        </button>
+                    <div className="mt-5 flex flex-col gap-2.5 lg:flex-row lg:flex-wrap lg:items-center">
+                      {/* Qty control + price: stacked on mobile, inline on desktop */}
+                      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-2.5">
+                        <div className="h-10 rounded-full bg-gray-100 px-3 flex items-center gap-3 shrink-0">
+                          <button type="button" className="text-gray-700" onClick={() => setQty((q) => Math.max(stepQty, q - (quickViewProduct?.policies?.quantity_step_size ?? 1)))} aria-label="Decrease quantity">
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <span className="min-w-7 text-center text-base font-semibold">{qty}</span>
+                          <button type="button" className="text-gray-700" onClick={() => setQty((q) => q + (quickViewProduct?.policies?.quantity_step_size ?? 1))} aria-label="Increase quantity">
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                        {priceNow > 0 && (
+                          <span className="text-sm font-bold text-[#0f4d9a] shrink-0">
+                            = {quickViewProduct.currency?.symbol || "₹"}{(priceNow * qty).toFixed(2)}
+                          </span>
+                        )}
                       </div>
-                      {priceNow > 0 && (
-                        <span className="text-sm font-bold text-[#0f4d9a] shrink-0">
-                          = {quickViewProduct.currency?.symbol || "₹"}{(priceNow * qty).toFixed(2)}
-                        </span>
-                      )}
                       <button onClick={addSelectedToCart} disabled={!qvInStock}
-                        className="flex-1 h-10 rounded-full text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] flex items-center justify-center gap-1.5">
+                        className="w-full lg:flex-1 h-10 rounded-full text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] flex items-center justify-center gap-1.5">
                         <ShoppingBag className="h-4 w-4" />
                         Add to Cart
                       </button>
