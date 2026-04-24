@@ -122,6 +122,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
       variantId: p.defaultVariantId,
       storeId: p.defaultStoreId,
     });
+    toast.success("Product added to cart");
     openCart();
   };
 
@@ -219,6 +220,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
       weight: selectedVariant.weight ?? undefined,
       weightUnit: selectedVariant.weight_unit ?? undefined,
     });
+    toast.success("Product added to cart");
     openCart();
     closeQuickView();
   };

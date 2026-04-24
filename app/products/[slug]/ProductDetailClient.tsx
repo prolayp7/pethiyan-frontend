@@ -712,6 +712,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
       quantity:     safeQty,
     });
 
+    toast.success("Product added to cart");
     setAddedToCart(true);
     openCart();
     setTimeout(() => setAddedToCart(false), 2500);

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   SlidersHorizontal, X, ChevronDown, ChevronRight, Package, Layers, Home,
+  ArrowLeft, ArrowRight,
 } from "lucide-react";
 import Container from "@/components/layout/Container";
 import ShopProductCard from "@/components/shop/ShopProductCard";
@@ -152,6 +153,16 @@ export default function ShopClient({ initialProducts, initialCategories, initial
   const [expandedCats,    setExpandedCats]    = useState<Set<number>>(new Set());
   const [sort,    setSort]    = useState(() => readCatalogSortPreference());
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const mobileSliderRef = useRef<HTMLDivElement | null>(null);
+  function scrollShopSlider(direction: "prev" | "next") {
+    const el = mobileSliderRef.current;
+    if (!el) return;
+    const firstCard = el.querySelector<HTMLElement>("[data-shop-slide]");
+    const gap = 12;
+    const cardWidth = firstCard?.offsetWidth ?? el.clientWidth * 0.75;
+    el.scrollBy({ left: direction === "next" ? cardWidth + gap : -(cardWidth + gap), behavior: "smooth" });
+  }
 
   // Attribute filters: key → Set of selected values
   const [selectedAttrs, setSelectedAttrs] = useState<Map<string, Set<string>>>(new Map());
@@ -683,10 +694,41 @@ export default function ShopClient({ initialProducts, initialCategories, initial
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-5">
-                {filtered.map((product) => (
-                  <ShopProductCard key={product.id} product={product} />
-                ))}
+              <div className="relative">
+                {/* Prev/Next arrows — mobile only */}
+                <button
+                  type="button"
+                  onClick={() => scrollShopSlider("prev")}
+                  aria-label="Scroll products left"
+                  className="sm:hidden absolute left-0 top-1/2 z-20 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#c8d7ea] bg-white/95 text-[#1a4f83] shadow-sm transition-colors hover:bg-[#f3f8ff]"
+                >
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollShopSlider("next")}
+                  aria-label="Scroll products right"
+                  className="sm:hidden absolute right-0 top-1/2 z-20 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#c8d7ea] bg-white/95 text-[#1a4f83] shadow-sm transition-colors hover:bg-[#f3f8ff]"
+                >
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+
+                {/* Single list: flex carousel on mobile → grid on sm+ */}
+                <div
+                  ref={mobileSliderRef}
+                  className="flex snap-x snap-mandatory overflow-x-auto gap-3 px-11 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 xl:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:snap-none"
+                  aria-label="Shop products"
+                >
+                  {filtered.map((product) => (
+                    <div
+                      key={product.id}
+                      data-shop-slide
+                      className="w-[75%] max-w-70 shrink-0 snap-start sm:w-auto sm:max-w-none"
+                    >
+                      <ShopProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

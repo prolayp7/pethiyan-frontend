@@ -176,6 +176,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
     });
     // Reflect selected qty (local `qty`) in cart after add
     setTimeout(() => updateQuantity(itemId, qty), 0);
+    toast.success("Product added to cart");
     openCart();
   };
 
@@ -265,6 +266,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
       weightUnit: selectedVariant.weight_unit ?? undefined,
     });
     setTimeout(() => updateQuantity(itemId, qty), 0);
+    toast.success("Product added to cart");
     openCart();
   };
 
