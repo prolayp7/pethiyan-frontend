@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getProducts, getCategories, getSeoAdvancedSettings } from "@/lib/api";
-import { fetchActivePages } from "@/lib/pages";
+import { fetchActivePages, fetchBlogPostSlugs } from "@/lib/pages";
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com"
@@ -18,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: SITE_URL,                              lastModified: new Date(), changeFrequency: "daily",   priority: 1.0 },
     { url: `${SITE_URL}/shop`,                    lastModified: new Date(), changeFrequency: "daily",   priority: 0.9 },
     { url: `${SITE_URL}/new-arrivals`,            lastModified: new Date(), changeFrequency: "daily",   priority: 0.8 },
+    { url: `${SITE_URL}/blog`,                    lastModified: new Date(), changeFrequency: "weekly",  priority: 0.7 },
     { url: `${SITE_URL}/about`,                   lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/contact`,                 lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/faq`,                     lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
@@ -36,6 +37,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.5,
+    }));
+
+  // ─── Blog posts ───────────────────────────────────────────────────────────
+  const blogSlugs = await fetchBlogPostSlugs();
+  const blogPages: MetadataRoute.Sitemap = blogSlugs
+    .filter((b) => !excludeUrls.has(`/blog/${b.slug}`))
+    .map((b) => ({
+      url: `${SITE_URL}/blog/${b.slug}`,
+      lastModified: b.updated_at ? new Date(b.updated_at) : new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
     }));
 
   // ─── Dynamic category pages (active + indexable only) ────────────────────
@@ -63,10 +75,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-  // ─── Per-variant URLs (exclude non-indexable variants or products) ─────────
+  // ─── Per-variant URLs ─────────────────────────────────────────────────────
+  // Skip variants whose slug matches the product slug (bad DB data — would
+  // produce duplicate URLs like /products/foo/foo).
   const variantPages: MetadataRoute.Sitemap = indexableProducts.flatMap((p) =>
     (p.variants ?? [])
-      .filter((v) => v.slug && v.is_indexable !== false)
+      .filter((v) => v.slug && v.slug !== p.slug && v.is_indexable !== false)
       .filter((v) => !excludeUrls.has(`/products/${p.slug}/${v.slug}`))
       .map((v) => ({
         url: `${SITE_URL}/products/${p.slug}/${v.slug}`,
@@ -84,5 +98,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: parseFloat(e.priority) || 0.5,
   }));
 
-  return [...staticPages, ...cmsPageEntries, ...categoryPages, ...productPages, ...variantPages, ...adminCustomPages];
+  return [...staticPages, ...cmsPageEntries, ...blogPages, ...categoryPages, ...productPages, ...variantPages, ...adminCustomPages];
 }

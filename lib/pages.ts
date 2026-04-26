@@ -20,3 +20,17 @@ export async function fetchActivePages(): Promise<Array<{ slug: string; title: s
     return [];
   }
 }
+
+export async function fetchBlogPostSlugs(): Promise<Array<{ slug: string; updated_at: string | null }>> {
+  try {
+    const res = await fetch(`${BASE}/api/blog/posts?per_page=500`, {
+      next: { tags: ['blog'], revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const posts: Array<{ slug: string; updated_at?: string | null }> = json?.data ?? json ?? [];
+    return posts.map((p) => ({ slug: p.slug, updated_at: p.updated_at ?? null }));
+  } catch {
+    return [];
+  }
+}
