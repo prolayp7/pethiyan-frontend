@@ -26,9 +26,9 @@ export default async function CmsPage({ params }: Props) {
   const doc = page.content_blocks ?? page.content ?? null;
 
   return (
-    <main className="container mx-auto py-8 px-4">
+    <div className="container mx-auto py-8 px-4 overflow-x-hidden">
       <h1 className="text-3xl font-bold mb-6">{page.title}</h1>
       <PageRenderer doc={doc} />
-    </main>
+    </div>
   );
 }
