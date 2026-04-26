@@ -595,10 +595,6 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     finally { stopLoading(); }
   }
 
-  function handleBackdrop(e: React.MouseEvent<HTMLDivElement>) {
-    if (e.target === e.currentTarget) onClose();
-  }
-
   // ── Field class helper ────────────────────────────────────────────────────────
 
   function fieldCls(field: string, extra = "") {
@@ -650,7 +646,6 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     <div
       className="fixed inset-0 z-[500] flex items-center justify-center p-4"
       style={{ background: "rgba(8,20,45,0.7)", backdropFilter: "blur(8px)" }}
-      onClick={handleBackdrop}
     >
       <div
         className="modal-enter relative w-full flex overflow-hidden rounded-2xl shadow-2xl"
