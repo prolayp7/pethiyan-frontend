@@ -56,6 +56,15 @@ function validatePassword(pw: string): string {
   return "";
 }
 
+function formatCountdown(seconds: number): string {
+  if (seconds >= 60) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+  return `${seconds}s`;
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function LoginModal({ open, onClose, onSuccess, redirectTo }: LoginModalProps) {
@@ -842,7 +851,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                 <p className="text-center text-xs text-gray-500">
                   Didn&apos;t receive it?{" "}
                   {countdown > 0
-                    ? <span className="font-medium text-gray-400">Resend in {countdown}s</span>
+                    ? <span className="font-medium text-gray-400">Resend in {formatCountdown(countdown)}</span>
                     : <button type="button" onClick={handleResend} disabled={loading} className="font-semibold" style={{ color: "#17396f" }}>Resend OTP</button>
                   }
                 </p>
@@ -1120,7 +1129,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                     <p className="text-center text-xs text-gray-500">
                       Didn&apos;t receive it?{" "}
                       {forgotCountdown > 0
-                        ? <span className="font-medium text-gray-400">Resend in {forgotCountdown}s</span>
+                        ? <span className="font-medium text-gray-400">Resend in {formatCountdown(forgotCountdown)}</span>
                         : <button type="button" onClick={handleForgotResend} disabled={loading} className="font-semibold" style={{ color: "#17396f" }}>Resend OTP</button>
                       }
                     </p>
