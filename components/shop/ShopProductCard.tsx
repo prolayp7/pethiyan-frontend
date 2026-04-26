@@ -480,12 +480,10 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
       {quickViewOpen && typeof document !== "undefined" && createPortal(
         <div
           className="fixed inset-0 z-[9999] bg-black/55 backdrop-blur-[1px] flex items-center justify-center p-3 sm:p-6"
-          onClick={closeQuickView}
           role="dialog" aria-modal="true" aria-label="Quick product view"
         >
           <div
             className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-3xl bg-white shadow-2xl flex flex-col"
-            onClick={(e) => e.stopPropagation()}
           >
             {quickViewLoading ? (
               /* Skeleton loader */
