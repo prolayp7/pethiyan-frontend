@@ -1,13 +1,16 @@
 import type { MetadataRoute } from "next";
 import { getProducts, getCategories, getSeoAdvancedSettings } from "@/lib/api";
+import { fetchActivePages } from "@/lib/pages";
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com";
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com"
+).replace(/\/+$/, "");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const seoAdvanced    = await getSeoAdvancedSettings();
   const excludeUrls    = new Set(seoAdvanced?.sitemapExcludeUrls ?? []);
   const customEntries  = (seoAdvanced?.sitemapCustomUrls ?? []).filter((e) => e.url);
+
   // ─── Static pages ─────────────────────────────────────────────────────────
   // Transactional pages (/cart, /checkout, /order-confirmed, /login,
   // /account/*, /wishlist, /track-order, /search) are intentionally excluded.
@@ -23,6 +26,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/privacy-policy`,          lastModified: new Date(), changeFrequency: "yearly",  priority: 0.3 },
     { url: `${SITE_URL}/terms-and-conditions`,    lastModified: new Date(), changeFrequency: "yearly",  priority: 0.3 },
   ];
+
+  // ─── Dynamic CMS pages (non-system, active) ───────────────────────────────
+  const cmsPages = await fetchActivePages();
+  const cmsPageEntries: MetadataRoute.Sitemap = cmsPages
+    .filter((p) => !excludeUrls.has(`/${p.slug}`))
+    .map((p) => ({
+      url: `${SITE_URL}/${p.slug}`,
+      lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    }));
 
   // ─── Dynamic category pages (active + indexable only) ────────────────────
   const categories = await getCategories({ status: "active" });
@@ -70,5 +84,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: parseFloat(e.priority) || 0.5,
   }));
 
-  return [...staticPages, ...categoryPages, ...productPages, ...variantPages, ...adminCustomPages];
+  return [...staticPages, ...cmsPageEntries, ...categoryPages, ...productPages, ...variantPages, ...adminCustomPages];
 }
