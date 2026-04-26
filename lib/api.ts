@@ -693,6 +693,8 @@ export interface RealApiProduct {
   category_id?: number | null;
   category?: { id: number; title: string; slug: string } | null;
   variants: RealApiVariant[];
+  faqs?: ApiFaq[];
+  reviews?: ApiReview[];
 }
 
 // ─── API calls ────────────────────────────────────────────────────────────────
@@ -846,6 +848,13 @@ export async function getProductReviews(slug: string): Promise<ApiReview[]> {
   );
   if (!res) return [];
   if (Array.isArray(res)) return res;
+  // Paginated wrapper: { data: { data: { reviews: [...] } } }
+  const raw = res as unknown as Record<string, unknown>;
+  const outer = raw.data as Record<string, unknown> | undefined;
+  const inner = outer?.data as Record<string, unknown> | undefined;
+  if (inner && Array.isArray(inner.reviews)) return inner.reviews as ApiReview[];
+  // Simple array at data.data
+  if (outer && Array.isArray(outer.data)) return outer.data as ApiReview[];
   if ("data" in res && Array.isArray(res.data)) return res.data;
   return [];
 }
@@ -887,6 +896,10 @@ export async function getProductFaqs(slug: string): Promise<ApiFaq[]> {
   );
   if (!res) return [];
   if (Array.isArray(res)) return res;
+  // Paginated wrapper: { data: { data: [...] } }
+  const raw = res as unknown as Record<string, unknown>;
+  const outer = raw.data as Record<string, unknown> | undefined;
+  if (outer && Array.isArray(outer.data)) return outer.data as ApiFaq[];
   if ("data" in res && Array.isArray(res.data)) return res.data;
   return [];
 }

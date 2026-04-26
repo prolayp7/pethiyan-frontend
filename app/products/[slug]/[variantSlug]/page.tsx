@@ -2,11 +2,11 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
   getProduct,
-  getProductReviews,
-  getProductFaqs,
   getProducts,
   selectPrimaryStorePricing,
   resolveStorePricingDisplay,
+  type ApiFaq,
+  type ApiReview,
 } from "@/lib/api";
 import {
   productSchema,
@@ -101,13 +101,12 @@ export default async function ProductVariantPage({
 }) {
   const { slug, variantSlug } = await params;
 
-  const [product, reviews, faqs] = await Promise.all([
-    getProduct(slug),
-    getProductReviews(slug),
-    getProductFaqs(slug),
-  ]);
+  const product = await getProduct(slug);
 
   if (!product) notFound();
+
+  const faqs: ApiFaq[] = product.faqs ?? [];
+  const reviews: ApiReview[] = product.reviews ?? [];
 
   const variant = product.variants?.find((v) => v.slug === variantSlug);
   if (!variant) notFound();
