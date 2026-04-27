@@ -5,6 +5,7 @@ import RecentlyViewedProducts from "@/components/sections/RecentlyViewedProducts
 
 export default function NotFound() {
   return (
+    <>
     <div style={{ background: "var(--background)", minHeight: "70vh" }} className="flex items-center">
       <Container className="py-20 text-center">
 
@@ -68,5 +69,6 @@ export default function NotFound() {
       description="Products you've browsed recently."
       showClearAction={false}
     />
+    </>
   );
 }
