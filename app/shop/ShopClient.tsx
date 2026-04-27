@@ -764,12 +764,6 @@ export default function ShopClient({
                   </div>
                 )}
 
-                {/* End of results — desktop */}
-                {!hasMore && !loadingMore && allProducts.length > PER_PAGE && (
-                  <p className="hidden sm:block text-center text-xs text-gray-400 mt-6 pb-2">
-                    All {allProducts.length} products loaded
-                  </p>
-                )}
               </div>
             )}
           </div>
