@@ -1141,7 +1141,7 @@ export async function loginWithPassword(
 export async function sendOtp(
   mobile: string | null,
   email?: string | null
-): Promise<{ success: boolean; message?: string; demoOtp?: string; smsOtpSent?: boolean; emailOtpSent?: boolean }> {
+): Promise<{ success: boolean; message?: string; demoOtp?: string; smsOtpSent?: boolean; emailOtpSent?: boolean; emailSentTo?: string }> {
   const body: Record<string, string> = {};
   if (mobile) { body.mobile = mobile; body.country_code = "+91"; }
   if (email)  { body.email = email; }
@@ -1149,7 +1149,7 @@ export async function sendOtp(
   const res = await apiFetch<{
     success: boolean;
     message?: string;
-    data?: { demo_otp?: string; sms_otp_sent?: boolean; email_otp_sent?: boolean };
+    data?: { demo_otp?: string; sms_otp_sent?: boolean; email_otp_sent?: boolean; email_sent_to?: string };
   }>("/api/auth/otp/send", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1162,6 +1162,7 @@ export async function sendOtp(
     demoOtp: res.data?.demo_otp,
     smsOtpSent: res.data?.sms_otp_sent,
     emailOtpSent: res.data?.email_otp_sent,
+    emailSentTo: res.data?.email_sent_to,
   };
 }
 
@@ -1247,12 +1248,12 @@ export async function forgotPasswordResendOtp(
 export async function resendOtp(
   mobile: string | null,
   email?: string | null
-): Promise<{ success: boolean; message?: string; demoOtp?: string }> {
+): Promise<{ success: boolean; message?: string; demoOtp?: string; emailSentTo?: string }> {
   const body: Record<string, string> = {};
   if (mobile) { body.mobile = mobile; body.country_code = "+91"; }
   if (email)  { body.email = email; }
 
-  const res = await apiFetch<{ success: boolean; message?: string; data?: { demo_otp?: string } }>(
+  const res = await apiFetch<{ success: boolean; message?: string; data?: { demo_otp?: string; email_sent_to?: string } }>(
     "/api/auth/otp/resend",
     {
       method: "POST",
@@ -1261,7 +1262,7 @@ export async function resendOtp(
     }
   );
   if (!res) return { success: false, message: "Request failed" };
-  return { success: res.success, message: res.message, demoOtp: res.data?.demo_otp };
+  return { success: res.success, message: res.message, demoOtp: res.data?.demo_otp, emailSentTo: res.data?.email_sent_to };
 }
 
 export async function getProfile(): Promise<import("@/context/AuthContext").AuthUser | null> {

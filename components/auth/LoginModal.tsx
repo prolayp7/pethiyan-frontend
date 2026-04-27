@@ -99,6 +99,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginOtpInput, setLoginOtpInput] = useState("");
   const [loginOtpSentTo, setLoginOtpSentTo] = useState<{ sms: boolean; email: boolean }>({ sms: false, email: false });
+  const [loginOtpEmailSentTo, setLoginOtpEmailSentTo] = useState("");
 
   // Forgot-password fields
   const [forgotStep, setForgotStep] = useState<ForgotStep>("identifier");
@@ -163,7 +164,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
       setStep("form");
       setLoginMode("password");
       setLoginIdentifier(""); setLoginPassword(""); setShowLoginPassword(false);
-      setLoginOtpInput(""); setLoginOtpSentTo({ sms: false, email: false });
+      setLoginOtpInput(""); setLoginOtpSentTo({ sms: false, email: false }); setLoginOtpEmailSentTo("");
       setForgotStep("identifier"); setForgotEmail(""); setForgotMobile("");
       setForgotOtp(""); setForgotNewPassword(""); setForgotConfirmPassword("");
       setShowForgotPassword(false); setShowForgotConfirm(false);
@@ -187,7 +188,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     setStep("form");
     setLoginMode("password");
     setLoginIdentifier(""); setLoginPassword(""); setShowLoginPassword(false);
-    setLoginOtpInput(""); setLoginOtpSentTo({ sms: false, email: false });
+    setLoginOtpInput(""); setLoginOtpSentTo({ sms: false, email: false }); setLoginOtpEmailSentTo("");
     setForgotStep("identifier"); setForgotEmail(""); setForgotMobile("");
     setForgotOtp(""); setForgotNewPassword(""); setForgotConfirmPassword("");
     setShowForgotPassword(false); setShowForgotConfirm(false);
@@ -361,6 +362,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
       if (res.success) {
         setDemoOtp(res.demoOtp);
         setLoginOtpSentTo({ sms: Boolean(res.smsOtpSent), email: Boolean(res.emailOtpSent) });
+        setLoginOtpEmailSentTo(res.emailSentTo ?? "");
         setStep("otp");
         startCountdown();
       } else {
@@ -521,7 +523,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
       } else {
         res = await resendOtp(regMobile, null);
       }
-      if (res.success) { setOtp(""); setDemoOtp(res.demoOtp); startCountdown(); }
+      if (res.success) { setOtp(""); setDemoOtp(res.demoOtp); if (res.emailSentTo) setLoginOtpEmailSentTo(res.emailSentTo); startCountdown(); }
       else setApiError(res.message ?? "Could not resend OTP.");
     } catch { setApiError("Something went wrong. Please try again."); }
     finally { stopLoading(); }
@@ -640,18 +642,9 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     return parts.join(" & ") || `+91 ${regMobile}`;
   })();
 
-  // Login OTP destination
-  const loginOtpHeading = loginOtpSentTo.sms && loginOtpSentTo.email
-    ? "Verify your account"
-    : loginOtpSentTo.sms ? "Verify your mobile" : loginOtpSentTo.email ? "Verify your email" : "Verify your account";
-  const loginOtpDestination = (() => {
-    const val = loginOtpInput.trim();
-    const isPhone = /^\d+$/.test(val);
-    const parts: string[] = [];
-    if (loginOtpSentTo.sms && isPhone) parts.push(`+91 ${val}`);
-    if (loginOtpSentTo.email && !isPhone) parts.push(val);
-    return parts.join(" & ") || (isPhone ? `+91 ${val}` : val);
-  })();
+  // Login OTP destination — OTP always goes to email
+  const loginOtpHeading = "Verify your email";
+  const loginOtpDestination = loginOtpEmailSentTo || loginOtpInput.trim();
 
   const otpHeading     = tab === "login" ? loginOtpHeading     : registerOtpHeading;
   const otpDestination = tab === "login" ? loginOtpDestination : registerOtpDestination;
