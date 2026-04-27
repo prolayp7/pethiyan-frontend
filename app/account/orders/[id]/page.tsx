@@ -8,7 +8,7 @@ import {
   CheckCircle2, Circle, Truck, Clock, XCircle, Tag, MessageSquare,
   FileDown,
 } from "lucide-react";
-import { getOrder, downloadOrderInvoice, type ApiOrder, type ApiTrackingStep } from "@/lib/api";
+import { getOrder, downloadOrderInvoice, type ApiOrder, type ApiTrackingStep, type ApiOrderManagementHistory } from "@/lib/api";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -144,6 +144,74 @@ function TrackingTimeline({ steps, status }: { steps: ApiTrackingStep[]; status:
   );
 }
 
+// ─── Management History Timeline ─────────────────────────────────────────────
+
+function statusLabel(s?: string | null): string {
+  if (!s) return "—";
+  return STATUS_MAP[s]?.label ?? s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function paymentLabel(s?: string | null): string {
+  if (!s) return "—";
+  return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function ManagementHistory({ history }: { history: ApiOrderManagementHistory[] }) {
+  if (!history.length) return null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <Clock className="h-4 w-4 text-(--color-primary)" />
+        <h2 className="text-sm font-extrabold text-(--color-secondary)">Order Update History</h2>
+      </div>
+      <div className="relative">
+        {history.map((entry, i) => {
+          const isLast = i === history.length - 1;
+          const fields = entry.changed_fields ?? [];
+          return (
+            <div key={i} className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-7 rounded-full bg-blue-50 border-2 border-blue-200 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-blue-400" />
+                </div>
+                {!isLast && <div className="w-0.5 flex-1 my-1 bg-gray-100 rounded-full min-h-6" />}
+              </div>
+              <div className="pb-5 flex-1 min-w-0">
+                <p className="text-[11px] text-gray-400 mb-1.5">{fmtDate(entry.created_at)}</p>
+                <div className="space-y-1">
+                  {fields.includes("status") && (
+                    <div className="text-xs text-gray-600">
+                      <span className="font-semibold text-(--color-secondary)">Status:</span>{" "}
+                      <span className="line-through text-gray-400">{statusLabel(entry.previous_status)}</span>{" → "}
+                      <span className="font-semibold text-blue-600">{statusLabel(entry.new_status)}</span>
+                    </div>
+                  )}
+                  {fields.includes("payment_status") && (
+                    <div className="text-xs text-gray-600">
+                      <span className="font-semibold text-(--color-secondary)">Payment:</span>{" "}
+                      <span className="line-through text-gray-400">{paymentLabel(entry.previous_payment_status)}</span>{" → "}
+                      <span className="font-semibold text-green-600">{paymentLabel(entry.new_payment_status)}</span>
+                    </div>
+                  )}
+                  {fields.includes("tracking_code") && (
+                    <div className="text-xs text-gray-600">
+                      <span className="font-semibold text-(--color-secondary)">Tracking Code:</span>{" "}
+                      {entry.tracking_code
+                        ? <span className="font-mono text-gray-700">{entry.tracking_code}</span>
+                        : <span className="text-gray-400 italic">removed</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -268,6 +336,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 {order.tracking_code}
               </p>
             </div>
+          )}
+
+          {/* Management History */}
+          {order.management_history && order.management_history.length > 0 && (
+            <ManagementHistory history={order.management_history} />
           )}
 
           {/* Items */}

@@ -196,11 +196,22 @@ export interface ApiOrder {
   tracking_code?: string;
   admin_note?: string;
   invoice_downloadable?: boolean;
+  management_history?: ApiOrderManagementHistory[];
   created_at: string;
   updated_at: string;
   items: ApiOrderItem[];
   address?: ApiAddress;
   tracking?: ApiTrackingStep[];
+}
+
+export interface ApiOrderManagementHistory {
+  changed_fields: string[];
+  previous_status?: string;
+  new_status?: string;
+  previous_payment_status?: string;
+  new_payment_status?: string;
+  tracking_code?: string | null;
+  created_at: string;
 }
 
 export interface ApiOrderItem {
