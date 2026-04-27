@@ -719,6 +719,39 @@ export async function getProducts(params?: Record<string, string>): Promise<Real
   }
 }
 
+export interface ProductsPageResult {
+  products: RealApiProduct[];
+  currentPage: number;
+  lastPage: number;
+  hasMore: boolean;
+  total: number;
+}
+
+export async function getProductsPage(page = 1, perPage = 24): Promise<ProductsPageResult> {
+  const empty: ProductsPageResult = { products: [], currentPage: page, lastPage: page, hasMore: false, total: 0 };
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/products?page=${page}&per_page=${perPage}`,
+      { headers: { Accept: "application/json" }, next: { revalidate: 60 } } as RequestInit,
+    );
+    if (!res.ok) return empty;
+    const json = await res.json();
+    const d = json?.data;
+    if (!d || !Array.isArray(d.data)) return empty;
+    const currentPage = Number(d.current_page ?? page);
+    const lastPage    = Number(d.last_page    ?? page);
+    return {
+      products:    d.data as RealApiProduct[],
+      currentPage,
+      lastPage,
+      hasMore:     currentPage < lastPage,
+      total:       Number(d.total ?? 0),
+    };
+  } catch {
+    return empty;
+  }
+}
+
 export async function getFeaturedProducts(): Promise<RealApiProduct[]> {
   try {
     const res = await fetch(`${API_BASE}/api/products/featured`, {
