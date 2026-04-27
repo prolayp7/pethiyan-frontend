@@ -202,6 +202,12 @@ function ManagementHistory({ history }: { history: ApiOrderManagementHistory[] }
                         : <span className="text-gray-400 italic">removed</span>}
                     </div>
                   )}
+                  {fields.includes("admin_note") && entry.admin_note && (
+                    <div className="text-xs text-gray-600">
+                      <span className="font-semibold text-(--color-secondary)">Note:</span>{" "}
+                      <span className="text-gray-700">{entry.admin_note}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -448,16 +454,30 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             })()}
           </div>
 
-          {/* Admin Note */}
-          {order.admin_note && (
-            <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4">
-              <div className="flex items-center gap-2 mb-1.5">
-                <MessageSquare className="h-4 w-4 text-amber-500" />
-                <h2 className="text-sm font-extrabold text-(--color-secondary)">Note from our team</h2>
+          {/* Admin Notes — all notes from history, newest first */}
+          {(() => {
+            const notes = (order.management_history ?? [])
+              .filter((h) => h.admin_note)
+              .map((h) => ({ note: h.admin_note!, date: h.created_at }))
+              .reverse();
+            if (!notes.length) return null;
+            return (
+              <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-amber-500" />
+                  <h2 className="text-sm font-extrabold text-(--color-secondary)">
+                    Notes from our team {notes.length > 1 && <span className="font-normal text-gray-400">({notes.length})</span>}
+                  </h2>
+                </div>
+                {notes.map((n, i) => (
+                  <div key={i} className={i > 0 ? "border-t border-amber-100 pt-3" : ""}>
+                    <p className="text-sm text-gray-600 leading-relaxed">{n.note}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">{fmtDate(n.date)}</p>
+                  </div>
+                ))}
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">{order.admin_note}</p>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Delivery address */}
           {order.address && (

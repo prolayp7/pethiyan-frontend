@@ -211,6 +211,7 @@ export interface ApiOrderManagementHistory {
   previous_payment_status?: string;
   new_payment_status?: string;
   tracking_code?: string | null;
+  admin_note?: string | null;
   created_at: string;
 }
 
