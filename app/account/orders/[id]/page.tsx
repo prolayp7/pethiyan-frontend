@@ -52,7 +52,7 @@ const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   out_for_delivery:         { label: "Out for Delivery",      cls: "bg-indigo-100 text-indigo-700" },
   processing:               { label: "Processing",            cls: "bg-blue-100 text-blue-700"     },
   shipped:                  { label: "Shipped",               cls: "bg-indigo-100 text-indigo-700" },
-  delivered:                { label: "Order Completed",       cls: "bg-green-100 text-green-700"   },
+  delivered:                { label: "Order Dispatched",      cls: "bg-green-100 text-green-700"   },
   cancelled:                { label: "Order Cancelled",       cls: "bg-red-100 text-red-700"       },
   failed:                   { label: "Order Failed",          cls: "bg-red-100 text-red-700"       },
   rejected_by_seller:       { label: "Rejected",              cls: "bg-red-100 text-red-700"       },
