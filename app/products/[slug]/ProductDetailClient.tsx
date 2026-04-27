@@ -639,7 +639,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
 
   const qtySafe = Math.max(qty, moq);
 
-  const rating = 0;
+  const rating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
   const reviewCount = reviews.length;
 
   // Review submission state
