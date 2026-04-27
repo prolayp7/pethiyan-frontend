@@ -731,21 +731,22 @@ export async function getProductsPage(page = 1, perPage = 24): Promise<ProductsP
   const empty: ProductsPageResult = { products: [], currentPage: page, lastPage: page, hasMore: false, total: 0 };
   try {
     const res = await fetch(
-      `${API_BASE}/api/products?page=${page}&per_page=${perPage}`,
+      `${API_BASE}/api/products?page=${page}&perPage=${perPage}`,
       { headers: { Accept: "application/json" }, next: { revalidate: 60 } } as RequestInit,
     );
     if (!res.ok) return empty;
     const json = await res.json();
     const d = json?.data;
     if (!d || !Array.isArray(d.data)) return empty;
-    const currentPage = Number(d.current_page ?? page);
-    const lastPage    = Number(d.last_page    ?? page);
+    // API returns: { page, lastPage, hasNext, perPage, total, data: [...] }
+    const currentPage = Number(d.page     ?? page);
+    const lastPage    = Number(d.lastPage ?? page);
     return {
-      products:    d.data as RealApiProduct[],
+      products:  d.data as RealApiProduct[],
       currentPage,
       lastPage,
-      hasMore:     currentPage < lastPage,
-      total:       Number(d.total ?? 0),
+      hasMore:   Boolean(d.hasNext),
+      total:     Number(d.total ?? 0),
     };
   } catch {
     return empty;
