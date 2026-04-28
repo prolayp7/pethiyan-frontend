@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   SlidersHorizontal, X, ChevronDown, ChevronRight, Package, Layers, Home,
-  LayoutGrid, LayoutList, Loader2,
+  Loader2,
 } from "lucide-react";
 import Container from "@/components/layout/Container";
 import ShopProductCard from "@/components/shop/ShopProductCard";
@@ -167,8 +167,6 @@ export default function ShopClient({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedAttrs, setSelectedAttrs] = useState<Map<string, Set<string>>>(new Map());
   const [selectedMinQtys, setSelectedMinQtys] = useState<Set<number>>(new Set());
-
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // ── Fetch next page ─────────────────────────────────────────────────────────
   const fetchMore = useCallback(async () => {
@@ -615,41 +613,18 @@ export default function ShopClient({
                 )}
               </button>
 
-              <div className="flex items-center gap-2 sm:ml-auto">
-                <div className="relative">
-                  <select
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value as typeof sort)}
-                    className="appearance-none pl-4 pr-9 py-2.5 text-sm bg-white border border-(--color-border) rounded-xl focus:outline-none focus:ring-2 focus:ring-(--color-primary)/30 focus:border-(--color-primary) transition cursor-pointer"
-                    aria-label="Sort products"
-                  >
-                    {SORT_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
-                </div>
-
-                <div className="flex items-center gap-0.5 bg-white border border-(--color-border) rounded-xl p-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('grid')}
-                    aria-label="Grid view"
-                    className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'text-white' : 'text-gray-400 hover:text-gray-600'}`}
-                    style={viewMode === 'grid' ? { background: 'linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)' } : undefined}
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('list')}
-                    aria-label="List view"
-                    className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'text-white' : 'text-gray-400 hover:text-gray-600'}`}
-                    style={viewMode === 'list' ? { background: 'linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)' } : undefined}
-                  >
-                    <LayoutList className="h-4 w-4" />
-                  </button>
-                </div>
+              <div className="relative sm:ml-auto">
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as typeof sort)}
+                  className="appearance-none pl-4 pr-9 py-2.5 text-sm bg-white border border-(--color-border) rounded-xl focus:outline-none focus:ring-2 focus:ring-(--color-primary)/30 focus:border-(--color-primary) transition cursor-pointer"
+                  aria-label="Sort products"
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
               </div>
             </div>
 
@@ -706,14 +681,11 @@ export default function ShopClient({
               <div className="relative">
                 {/* Product grid or list */}
                 <div
-                  className={viewMode === 'list'
-                    ? "flex flex-col gap-3"
-                    : "grid grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5"
-                  }
+                  className="grid grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5"
                   aria-label="Shop products"
                 >
                   {filtered.map((product) => (
-                    <ShopProductCard key={product.id} product={product} view={viewMode} />
+                    <ShopProductCard key={product.id} product={product} />
                   ))}
                 </div>
 
