@@ -75,7 +75,7 @@ function buildDefaultTracking(status: string, createdAt: string): ApiTrackingSte
   const steps: ApiTrackingStep[] = [
     { status: "pending",          label: "Order Placed",    description: "Your order has been placed successfully.", completed: true,                               timestamp: createdAt },
     { status: "confirmed",        label: "Order Confirmed", description: "We're preparing your items for dispatch.", completed: CONFIRMED_STATUSES.includes(status)  },
-    { status: "out_for_delivery", label: "Dispatched",      description: "Your package is on its way.",              completed: DISPATCHED_STATUSES.includes(status) },
+    { status: "out_for_delivery", label: "Dispatched",      description: "",                                         completed: DISPATCHED_STATUSES.includes(status) },
   ];
 
   return steps;
