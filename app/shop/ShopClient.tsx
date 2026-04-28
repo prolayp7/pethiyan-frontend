@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   SlidersHorizontal, X, ChevronDown, ChevronRight, Package, Layers, Home,
-  ArrowLeft, ArrowRight, Loader2,
+  LayoutGrid, LayoutList, Loader2,
 } from "lucide-react";
 import Container from "@/components/layout/Container";
 import ShopProductCard from "@/components/shop/ShopProductCard";
@@ -168,15 +168,7 @@ export default function ShopClient({
   const [selectedAttrs, setSelectedAttrs] = useState<Map<string, Set<string>>>(new Map());
   const [selectedMinQtys, setSelectedMinQtys] = useState<Set<number>>(new Set());
 
-  const mobileSliderRef = useRef<HTMLDivElement | null>(null);
-  function scrollShopSlider(direction: "prev" | "next") {
-    const el = mobileSliderRef.current;
-    if (!el) return;
-    const firstCard = el.querySelector<HTMLElement>("[data-shop-slide]");
-    const gap = 12;
-    const cardWidth = firstCard?.offsetWidth ?? el.clientWidth * 0.75;
-    el.scrollBy({ left: direction === "next" ? cardWidth + gap : -(cardWidth + gap), behavior: "smooth" });
-  }
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // ── Fetch next page ─────────────────────────────────────────────────────────
   const fetchMore = useCallback(async () => {
@@ -623,18 +615,41 @@ export default function ShopClient({
                 )}
               </button>
 
-              <div className="relative">
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as typeof sort)}
-                  className="appearance-none pl-4 pr-9 py-2.5 text-sm bg-white border border-(--color-border) rounded-xl focus:outline-none focus:ring-2 focus:ring-(--color-primary)/30 focus:border-(--color-primary) transition cursor-pointer"
-                  aria-label="Sort products"
-                >
-                  {SORT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
+              <div className="flex items-center gap-2 sm:ml-auto">
+                <div className="relative">
+                  <select
+                    value={sort}
+                    onChange={(e) => setSort(e.target.value as typeof sort)}
+                    className="appearance-none pl-4 pr-9 py-2.5 text-sm bg-white border border-(--color-border) rounded-xl focus:outline-none focus:ring-2 focus:ring-(--color-primary)/30 focus:border-(--color-primary) transition cursor-pointer"
+                    aria-label="Sort products"
+                  >
+                    {SORT_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
+                </div>
+
+                <div className="flex items-center gap-0.5 bg-white border border-(--color-border) rounded-xl p-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    aria-label="Grid view"
+                    className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                    style={viewMode === 'grid' ? { background: 'linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)' } : undefined}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    aria-label="List view"
+                    className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                    style={viewMode === 'list' ? { background: 'linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)' } : undefined}
+                  >
+                    <LayoutList className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -689,81 +704,29 @@ export default function ShopClient({
               </div>
             ) : (
               <div className="relative">
-                {/* Carousel prev/next arrows — mobile only, scroll within loaded products */}
-                <button
-                  type="button"
-                  onClick={() => scrollShopSlider("prev")}
-                  aria-label="Scroll products left"
-                  className="sm:hidden absolute left-0 top-1/2 z-20 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#c8d7ea] bg-white/95 text-[#1a4f83] shadow-sm transition-colors hover:bg-[#f3f8ff]"
-                >
-                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollShopSlider("next")}
-                  aria-label="Scroll products right"
-                  className="sm:hidden absolute right-0 top-1/2 z-20 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#c8d7ea] bg-white/95 text-[#1a4f83] shadow-sm transition-colors hover:bg-[#f3f8ff]"
-                >
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </button>
-
-                {/* Product list: flex carousel on mobile → grid on sm+ */}
+                {/* Product grid or list */}
                 <div
-                  ref={mobileSliderRef}
-                  className="flex snap-x snap-mandatory overflow-x-auto gap-3 px-11 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 xl:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:snap-none"
+                  className={viewMode === 'list'
+                    ? "flex flex-col gap-3"
+                    : "grid grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5"
+                  }
                   aria-label="Shop products"
                 >
                   {filtered.map((product) => (
-                    <div
-                      key={product.id}
-                      data-shop-slide
-                      className="w-[75%] max-w-70 shrink-0 snap-start sm:w-auto sm:max-w-none"
-                    >
-                      <ShopProductCard product={product} />
-                    </div>
+                    <ShopProductCard key={product.id} product={product} view={viewMode} />
                   ))}
                 </div>
 
-                {/* ── Mobile: Load More button (hidden on sm+) ── */}
-                {(hasMore || loadingMore) && (
-                  <div className="flex justify-center mt-5 sm:hidden">
-                    <button
-                      type="button"
-                      onClick={fetchMore}
-                      disabled={loadingMore}
-                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold text-white disabled:opacity-60 transition-all"
-                      style={{ background: "linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)" }}
-                    >
-                      {loadingMore ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                          Loading…
-                        </>
-                      ) : (
-                        <>
-                          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                          Load More Products
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
+                {/* Infinite scroll sentinel — all viewports */}
+                <div ref={sentinelRef} className="h-2 mt-6" aria-hidden="true" />
 
-                {/* ── Desktop/tablet: IntersectionObserver sentinel (hidden on mobile) ── */}
-                <div
-                  ref={sentinelRef}
-                  className="hidden sm:block h-2 mt-6"
-                  aria-hidden="true"
-                />
-
-                {/* Desktop loading indicator */}
+                {/* Loading indicator */}
                 {loadingMore && (
-                  <div className="hidden sm:flex justify-center items-center gap-2 py-6 text-sm text-gray-500">
+                  <div className="flex justify-center items-center gap-2 py-6 text-sm text-gray-500">
                     <Loader2 className="h-5 w-5 animate-spin text-[#2f6f9f]" aria-hidden="true" />
                     Loading more products…
                   </div>
                 )}
-
               </div>
             )}
           </div>

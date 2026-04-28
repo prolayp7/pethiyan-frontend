@@ -46,7 +46,7 @@ const QA_BTN =
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ShopProductCard({ product }: { product: RealApiProduct }) {
+export default function ShopProductCard({ product, view = 'grid' }: { product: RealApiProduct; view?: 'grid' | 'list' }) {
   const router = useRouter();
   const { addItem, openCart, updateQuantity } = useCart();
   const { isWishlisted, toggle } = useWishlist();
@@ -274,6 +274,105 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
+      {view === 'list' ? (
+        <div onMouseLeave={() => setHoveredVariantId(null)} className="featured-card-border transition-all duration-200 bg-white">
+          <Link href={`/products/${product.slug}`} className="group flex items-start gap-3 sm:gap-4 p-3 sm:p-4">
+            {/* Thumbnail */}
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-xl overflow-hidden bg-gray-50">
+              {imgSrc ? (
+                <Image
+                  src={imgSrc}
+                  alt={product.title}
+                  fill
+                  unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgSrc)}
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="96px"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Package className="h-8 w-8 text-gray-200" />
+                </div>
+              )}
+              {discount && (
+                <span className="absolute top-1.5 left-1.5 text-[9px] font-black px-1.5 py-0.5 rounded-full text-white bg-red-500">
+                  {discount}%
+                </span>
+              )}
+              {!inStock && (
+                <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-gray-500 tracking-widest uppercase text-center leading-tight">Out of Stock</span>
+                </div>
+              )}
+            </div>
+
+            {/* Details */}
+            <div className="flex-1 min-w-0">
+              {showCategoryNameInGrid && product.category && (
+                <p className="text-[10px] text-[#1f4f8a] font-semibold uppercase tracking-wider mb-0.5">
+                  {product.category.title}
+                </p>
+              )}
+              <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-[#2e7c8a] transition-colors">
+                {defaultDisplayTitle}
+              </p>
+              {product.type !== "variant" && <AttributePills attributes={defaultVariant?.attributes ?? null} />}
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="text-sm font-extrabold text-gray-900">
+                  {product.currency?.symbol || "₹"}{priceWithoutGst.toFixed(2)}
+                </span>
+                {showCompare && (
+                  <span className="text-[10px] text-gray-400 line-through">
+                    {product.currency?.symbol || "₹"}{compareWithoutGst.toFixed(2)}
+                  </span>
+                )}
+                {discount && (
+                  <span className="text-[10px] font-bold text-red-500">{discount}% off</span>
+                )}
+              </div>
+              {showGstInGrid && (
+                <span className="text-[10px] text-gray-400 block">+{product.tax?.gst_rate ?? ""}% GST</span>
+              )}
+              {showMinQtyInGrid && (
+                <span className="flex items-center gap-1 text-[10px] text-gray-400 mt-0.5">
+                  <Tag className="h-2.5 w-2.5 shrink-0" />
+                  Min: {minQty} pcs
+                </span>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleToggleWishlist}
+                disabled={wishlistBusy}
+                className="h-8 w-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors"
+                aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                {isInWishlist ? <Trash2 className="h-3.5 w-3.5 text-red-400" /> : <Heart className="h-3.5 w-3.5" />}
+              </button>
+              <button
+                type="button"
+                onClick={openQuickView}
+                className="h-8 w-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#2f6f9f] hover:border-[#2f6f9f]/30 transition-colors"
+                aria-label="Quick view"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={!inStock}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]"
+                aria-label="Add to cart"
+              >
+                <ShoppingBag className="h-3.5 w-3.5" />
+                Add to Cart
+              </button>
+            </div>
+          </Link>
+        </div>
+      ) : (
       <div onMouseLeave={() => setHoveredVariantId(null)} className="featured-card-border transition-all duration-300 hover:-translate-y-1 h-full">
         <Link href={`/products/${product.slug}`} className="group flex flex-col h-full">
 
@@ -475,6 +574,7 @@ export default function ShopProductCard({ product }: { product: RealApiProduct }
           </div>
         </Link>
       </div>
+      )}
 
       {/* ── Quick View Modal ── */}
       {quickViewOpen && typeof document !== "undefined" && createPortal(
