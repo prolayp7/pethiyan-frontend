@@ -439,6 +439,19 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             })()}
           </div>
 
+          {/* Tracking Code */}
+          {order.tracking_code && (
+            <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Tag className="h-4 w-4 text-(--color-primary)" />
+                <h2 className="text-sm font-extrabold text-(--color-secondary)">Tracking Code</h2>
+              </div>
+              <p className="text-sm font-mono font-semibold text-(--color-secondary) tracking-wide break-all">
+                {order.tracking_code}
+              </p>
+            </div>
+          )}
+
           {/* Admin Notes — all notes from history, newest first */}
           {(() => {
             const notes = (order.management_history ?? [])
@@ -490,23 +503,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             </Link>
           </div>
 
-          {/* Tracking Code */}
-          {order.tracking_code && (
-            <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Tag className="h-4 w-4 text-(--color-primary)" />
-                <h2 className="text-sm font-extrabold text-(--color-secondary)">Tracking Code</h2>
-              </div>
-              <p className="text-sm font-mono font-semibold text-(--color-secondary) tracking-wide break-all">
-                {order.tracking_code}
-              </p>
-            </div>
-          )}
-
-          {/* Management History */}
-          {order.management_history && order.management_history.length > 0 && (
-            <ManagementHistory history={order.management_history} />
-          )}
         </div>
       </div>
     </div>
