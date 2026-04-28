@@ -305,70 +305,79 @@ export default function ShopProductCard({ product, view = 'grid' }: { product: R
               )}
             </div>
 
-            {/* Details */}
-            <div className="flex-1 min-w-0">
-              {showCategoryNameInGrid && product.category && (
-                <p className="text-[10px] text-[#1f4f8a] font-semibold uppercase tracking-wider mb-0.5">
-                  {product.category.title}
-                </p>
-              )}
-              <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-[#2e7c8a] transition-colors">
-                {defaultDisplayTitle}
-              </p>
-              {product.type !== "variant" && <AttributePills attributes={defaultVariant?.attributes ?? null} />}
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-sm font-extrabold text-gray-900">
-                  {product.currency?.symbol || "₹"}{priceWithoutGst.toFixed(2)}
-                </span>
-                {showCompare && (
-                  <span className="text-[10px] text-gray-400 line-through">
-                    {product.currency?.symbol || "₹"}{compareWithoutGst.toFixed(2)}
+            {/* Right column: details + actions */}
+            <div className="flex-1 min-w-0 flex flex-col min-h-20 sm:min-h-24">
+              {/* Top: text info + wishlist/quickview icons side by side */}
+              <div className="flex items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  {showCategoryNameInGrid && product.category && (
+                    <p className="text-[10px] text-[#1f4f8a] font-semibold uppercase tracking-wider mb-0.5">
+                      {product.category.title}
+                    </p>
+                  )}
+                  <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-[#2e7c8a] transition-colors">
+                    {defaultDisplayTitle}
+                  </p>
+                  {product.type !== "variant" && <AttributePills attributes={defaultVariant?.attributes ?? null} />}
+                  <div className="flex items-baseline gap-1.5 mt-1">
+                    <span className="text-sm font-extrabold text-gray-900">
+                      {product.currency?.symbol || "₹"}{priceWithoutGst.toFixed(2)}
+                    </span>
+                    {showCompare && (
+                      <span className="text-[10px] text-gray-400 line-through">
+                        {product.currency?.symbol || "₹"}{compareWithoutGst.toFixed(2)}
+                      </span>
+                    )}
+                    {discount && (
+                      <span className="text-[10px] font-bold text-red-500">{discount}% off</span>
+                    )}
+                  </div>
+                  {showGstInGrid && (
+                    <span className="text-[10px] text-gray-400 block">+{product.tax?.gst_rate ?? ""}% GST</span>
+                  )}
+                </div>
+
+                {/* Wishlist + quick view — horizontal row, top right */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleToggleWishlist}
+                    disabled={wishlistBusy}
+                    className="h-7 w-7 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors"
+                    aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                  >
+                    {isInWishlist ? <Trash2 className="h-3 w-3 text-red-400" /> : <Heart className="h-3 w-3" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openQuickView}
+                    className="h-7 w-7 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#2f6f9f] hover:border-[#2f6f9f]/30 transition-colors"
+                    aria-label="Quick view"
+                  >
+                    <Eye className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Bottom row: min qty (left) + add to cart (right) — same horizontal line */}
+              <div className="flex items-center gap-2 mt-auto pt-1.5">
+                {showMinQtyInGrid && (
+                  <span className="flex items-center gap-1 text-[10px] text-gray-400 mr-auto">
+                    <Tag className="h-2.5 w-2.5 shrink-0" />
+                    Min: {minQty} pcs
                   </span>
                 )}
-                {discount && (
-                  <span className="text-[10px] font-bold text-red-500">{discount}% off</span>
-                )}
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={!inStock}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ml-auto bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]"
+                  aria-label="Add to cart"
+                >
+                  <ShoppingBag className="h-3.5 w-3.5" />
+                  Add to Cart
+                </button>
               </div>
-              {showGstInGrid && (
-                <span className="text-[10px] text-gray-400 block">+{product.tax?.gst_rate ?? ""}% GST</span>
-              )}
-              {showMinQtyInGrid && (
-                <span className="flex items-center gap-1 text-[10px] text-gray-400 mt-0.5">
-                  <Tag className="h-2.5 w-2.5 shrink-0" />
-                  Min: {minQty} pcs
-                </span>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col items-end gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleToggleWishlist}
-                disabled={wishlistBusy}
-                className="h-8 w-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors"
-                aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
-              >
-                {isInWishlist ? <Trash2 className="h-3.5 w-3.5 text-red-400" /> : <Heart className="h-3.5 w-3.5" />}
-              </button>
-              <button
-                type="button"
-                onClick={openQuickView}
-                className="h-8 w-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#2f6f9f] hover:border-[#2f6f9f]/30 transition-colors"
-                aria-label="Quick view"
-              >
-                <Eye className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!inStock}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]"
-                aria-label="Add to cart"
-              >
-                <ShoppingBag className="h-3.5 w-3.5" />
-                Add to Cart
-              </button>
             </div>
           </Link>
         </div>
