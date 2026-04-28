@@ -233,11 +233,7 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
             style={{
               width: "100%",
               fontSize: headingFontSize,
-              backgroundImage:
-                "linear-gradient(135deg, #6ea8d8 0%, #2e7c8a 42%, #4ea85f 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              color: "#ffffff",
               animationDelay: "55ms",
               marginBottom: contentGapHeading,
             }}
