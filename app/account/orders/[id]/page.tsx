@@ -334,19 +334,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <TrackingTimeline steps={trackingSteps} status={order.status} />
           </div>
 
-          {/* Tracking Code */}
-          {order.tracking_code && (
-            <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Tag className="h-4 w-4 text-(--color-primary)" />
-                <h2 className="text-sm font-extrabold text-(--color-secondary)">Tracking Code</h2>
-              </div>
-              <p className="text-sm font-mono font-semibold text-(--color-secondary) tracking-wide break-all">
-                {order.tracking_code}
-              </p>
-            </div>
-          )}
-
           {/* Items */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -502,6 +489,19 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               Contact Support →
             </Link>
           </div>
+
+          {/* Tracking Code */}
+          {order.tracking_code && (
+            <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Tag className="h-4 w-4 text-(--color-primary)" />
+                <h2 className="text-sm font-extrabold text-(--color-secondary)">Tracking Code</h2>
+              </div>
+              <p className="text-sm font-mono font-semibold text-(--color-secondary) tracking-wide break-all">
+                {order.tracking_code}
+              </p>
+            </div>
+          )}
 
           {/* Management History */}
           {order.management_history && order.management_history.length > 0 && (
