@@ -275,10 +275,10 @@ export default function ShopProductCard({ product, view = 'grid' }: { product: R
   return (
     <>
       {view === 'list' ? (
-        <div onMouseLeave={() => setHoveredVariantId(null)} className="featured-card-border transition-all duration-200 bg-white">
-          <Link href={`/products/${product.slug}`} className="group flex items-start gap-3 sm:gap-4 p-3 sm:p-4">
-            {/* Thumbnail */}
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-xl overflow-hidden bg-gray-50">
+        <div onMouseLeave={() => setHoveredVariantId(null)} className="featured-card-border transition-all duration-200 bg-white overflow-hidden">
+          <Link href={`/products/${product.slug}`} className="group flex items-stretch">
+            {/* Thumbnail — full-height left panel */}
+            <div className="relative w-28 sm:w-32 shrink-0 bg-gray-50">
               {imgSrc ? (
                 <Image
                   src={imgSrc}
@@ -286,7 +286,7 @@ export default function ShopProductCard({ product, view = 'grid' }: { product: R
                   fill
                   unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgSrc)}
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  sizes="96px"
+                  sizes="128px"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -306,7 +306,7 @@ export default function ShopProductCard({ product, view = 'grid' }: { product: R
             </div>
 
             {/* Right column: details + actions */}
-            <div className="flex-1 min-w-0 flex flex-col min-h-20 sm:min-h-24">
+            <div className="flex-1 min-w-0 flex flex-col p-3 sm:p-4">
               {/* Top: text info + wishlist/quickview icons side by side */}
               <div className="flex items-start gap-2">
                 <div className="flex-1 min-w-0">
