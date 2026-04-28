@@ -117,9 +117,9 @@ function TrackingTimeline({ steps, status }: { steps: ApiTrackingStep[]; status:
                 )}
               </div>
               {!isLast && (
-                <div className={`w-0.5 flex-1 my-1 rounded-full ${
+                <div className={`w-0.5 flex-1 my-1 rounded-full min-h-8 ${
                   step.completed && steps[i + 1]?.completed ? "bg-green-300" : "bg-gray-100"
-                }`} style={{ minHeight: "2rem" }} />
+                }`} />
               )}
             </div>
 
@@ -456,23 +456,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           {(() => {
             const notes = (order.management_history ?? [])
               .filter((h) => h.admin_note)
-              .map((h) => ({ note: h.admin_note!, date: h.created_at }))
-              .reverse();
+              .map((h) => ({ note: h.admin_note!, date: h.created_at }));
             if (!notes.length) return null;
             return (
-              <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 space-y-3">
-                <div className="flex items-center gap-2">
+              <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4">
+                <div className="flex items-center gap-2 mb-3">
                   <MessageSquare className="h-4 w-4 text-amber-500" />
                   <h2 className="text-sm font-extrabold text-(--color-secondary)">
                     Notes from our team {notes.length > 1 && <span className="font-normal text-gray-400">({notes.length})</span>}
                   </h2>
                 </div>
-                {notes.map((n, i) => (
-                  <div key={i} className={i > 0 ? "border-t border-amber-100 pt-3" : ""}>
-                    <p className="text-sm text-gray-600 leading-relaxed">{n.note}</p>
-                    <p className="text-[11px] text-gray-400 mt-1">{fmtDate(n.date)}</p>
-                  </div>
-                ))}
+                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                  {notes.map((n, i) => (
+                    <div key={i} className={i > 0 ? "border-t border-amber-100 pt-3" : ""}>
+                      <p className="text-sm text-gray-600 leading-relaxed">{n.note}</p>
+                      <p className="text-[11px] text-gray-400 mt-1">{fmtDate(n.date)}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             );
           })()}
