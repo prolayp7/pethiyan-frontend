@@ -9,7 +9,6 @@ import {
   FileDown,
 } from "lucide-react";
 import { getOrder, downloadOrderInvoice, type ApiOrder, type ApiTrackingStep, type ApiOrderManagementHistory } from "@/lib/api";
-import BrowsingHistory from "@/components/product/BrowsingHistory";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -282,7 +281,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const gst      = order.gst_amount ?? 0;
 
   return (
-    <>
     <div className="space-y-5">
 
       {/* Back + header */}
@@ -509,8 +507,5 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
     </div>
-
-    <BrowsingHistory />
-    </>
   );
 }
