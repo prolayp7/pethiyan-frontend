@@ -278,7 +278,7 @@ export default function ShopProductCard({ product, view = 'grid' }: { product: R
         <div onMouseLeave={() => setHoveredVariantId(null)} className="featured-card-border transition-all duration-200 bg-white overflow-hidden">
           <Link href={`/products/${product.slug}`} className="group flex items-stretch">
             {/* Thumbnail — full-height left panel */}
-            <div className="relative w-28 sm:w-32 shrink-0 bg-gray-50">
+            <div className="relative w-28 sm:w-32 shrink-0 bg-gray-50 min-h-28 sm:min-h-32">
               {imgSrc ? (
                 <Image
                   src={imgSrc}
