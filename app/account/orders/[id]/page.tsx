@@ -156,57 +156,60 @@ function paymentLabel(s?: string | null): string {
   return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function hasVisibleContent(entry: ApiOrderManagementHistory): boolean {
+  const fields = entry.changed_fields ?? [];
+  return (
+    fields.includes("status") ||
+    fields.includes("payment_status") ||
+    fields.includes("tracking_code") ||
+    (fields.includes("admin_note") && !!entry.admin_note)
+  );
+}
+
 function ManagementHistory({ history }: { history: ApiOrderManagementHistory[] }) {
-  if (!history.length) return null;
+  const visible = history.filter(hasVisibleContent);
+  if (!visible.length) return null;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       <div className="flex items-center gap-2 mb-5">
         <Clock className="h-4 w-4 text-(--color-primary)" />
-        <h2 className="text-sm font-extrabold text-(--color-secondary)">Order Update History</h2>
+        <h2 className="text-sm font-extrabold text-(--color-secondary)">Order Management History</h2>
       </div>
       <div className="relative">
-        {history.map((entry, i) => {
-          const isLast = i === history.length - 1;
+        {visible.map((entry, i) => {
+          const isLast = i === visible.length - 1;
           const fields = entry.changed_fields ?? [];
           return (
             <div key={i} className="flex gap-4">
               <div className="flex flex-col items-center">
-                <div className="w-7 h-7 rounded-full bg-blue-50 border-2 border-blue-200 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-blue-400" />
+                <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                  <Clock className="h-4 w-4 text-blue-400" />
                 </div>
                 {!isLast && <div className="w-0.5 flex-1 my-1 bg-gray-100 rounded-full min-h-6" />}
               </div>
               <div className="pb-5 flex-1 min-w-0">
-                <p className="text-[11px] text-gray-400 mb-1.5">{fmtDate(entry.created_at)}</p>
-                <div className="space-y-1">
+                <p className="text-xs text-gray-500 font-medium mb-2">{fmtDate(entry.created_at)}</p>
+                <div className="flex flex-wrap gap-1.5">
                   {fields.includes("status") && (
-                    <div className="text-xs text-gray-600">
-                      <span className="font-semibold text-(--color-secondary)">Status:</span>{" "}
-                      <span className="line-through text-gray-400">{statusLabel(entry.previous_status)}</span>{" → "}
-                      <span className="font-semibold text-blue-600">{statusLabel(entry.new_status)}</span>
-                    </div>
+                    <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-100">
+                      Status: {statusLabel(entry.previous_status)} → {statusLabel(entry.new_status)}
+                    </span>
                   )}
                   {fields.includes("payment_status") && (
-                    <div className="text-xs text-gray-600">
-                      <span className="font-semibold text-(--color-secondary)">Payment:</span>{" "}
-                      <span className="line-through text-gray-400">{paymentLabel(entry.previous_payment_status)}</span>{" → "}
-                      <span className="font-semibold text-green-600">{paymentLabel(entry.new_payment_status)}</span>
-                    </div>
+                    <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-lg bg-green-50 text-green-700 border border-green-100">
+                      Payment: {paymentLabel(entry.previous_payment_status)} → {paymentLabel(entry.new_payment_status)}
+                    </span>
                   )}
                   {fields.includes("tracking_code") && (
-                    <div className="text-xs text-gray-600">
-                      <span className="font-semibold text-(--color-secondary)">Tracking Code:</span>{" "}
-                      {entry.tracking_code
-                        ? <span className="font-mono text-gray-700">{entry.tracking_code}</span>
-                        : <span className="text-gray-400 italic">removed</span>}
-                    </div>
+                    <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-100">
+                      Tracking updated: {entry.tracking_code ?? "removed"}
+                    </span>
                   )}
                   {fields.includes("admin_note") && entry.admin_note && (
-                    <div className="text-xs text-gray-600">
-                      <span className="font-semibold text-(--color-secondary)">Note:</span>{" "}
-                      <span className="text-gray-700">{entry.admin_note}</span>
-                    </div>
+                    <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-100">
+                      Note updated: {entry.admin_note}
+                    </span>
                   )}
                 </div>
               </div>
