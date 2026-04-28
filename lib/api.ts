@@ -843,7 +843,7 @@ export async function getBestSellers(limit = 40): Promise<RealApiProduct[]> {
       `${API_BASE}/api/products/best-sellers?limit=${limit}`,
       {
         headers: { Accept: "application/json" },
-        next: { revalidate: 300 },
+        cache: "no-store",
       } as RequestInit
     );
     if (!res.ok) return [];

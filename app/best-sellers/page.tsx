@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   description: "Shop our most popular packaging products — top-selling pouches, bags, tapes, and more chosen by thousands of customers.",
 };
 
-export const revalidate = 300;
+// Always SSR — best sellers change with orders, never cache stale empty data.
+export const dynamic = "force-dynamic";
 
 export default async function BestSellersPage() {
   const products = await getBestSellers(40) as RealApiProduct[];
