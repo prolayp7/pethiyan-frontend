@@ -347,11 +347,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Management History */}
-          {order.management_history && order.management_history.length > 0 && (
-            <ManagementHistory history={order.management_history} />
-          )}
-
           {/* Items */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -507,6 +502,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               Contact Support →
             </Link>
           </div>
+
+          {/* Management History */}
+          {order.management_history && order.management_history.length > 0 && (
+            <ManagementHistory history={order.management_history} />
+          )}
         </div>
       </div>
     </div>
