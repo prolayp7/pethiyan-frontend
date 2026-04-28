@@ -534,9 +534,9 @@ export default function ShopProductCard({ product, view = 'grid' }: { product: R
             })()}
             {product.type !== "variant" && <AttributePills attributes={defaultVariant?.attributes ?? null} />}
 
-            {/* Bottom row: price+meta left, cart right */}
-            <div className="flex items-end justify-between gap-2 mt-auto pt-2 border-t border-gray-100">
-              {/* Left: price + GST + min qty */}
+            {/* Bottom row: price+meta, then cart — stacked on mobile, side-by-side on sm+ */}
+            <div className="flex flex-col gap-1.5 mt-auto pt-2 border-t border-gray-100 sm:flex-row sm:items-end sm:justify-between sm:gap-2">
+              {/* Price + GST + min qty */}
               <div className="flex flex-col gap-0.5 min-w-0">
                 <div className="flex items-baseline gap-1">
                   <span className="text-sm font-extrabold text-gray-900">
@@ -559,12 +559,12 @@ export default function ShopProductCard({ product, view = 'grid' }: { product: R
                 )}
               </div>
 
-              {/* Right: add to cart */}
+              {/* Add to cart — full width on mobile, auto on sm+ */}
               <button
                 type="button"
                 onClick={handleAddToCart}
                 disabled={!inStock}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]"
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto sm:shrink-0 bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]"
                 aria-label="Add to cart"
               >
                 <ShoppingBag className="h-3.5 w-3.5" />
