@@ -421,7 +421,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
 
   useEffect(() => {
     if (initialReviews.length === 0) {
-      getProductReviews(product.slug).then((data) => setReviews(data));
+      getProductReviews(product.slug).then(({ reviews: data }) => setReviews(data));
     }
     if (initialFaqs.length === 0) {
       getProductFaqs(product.slug).then((data) => setFaqs(data));

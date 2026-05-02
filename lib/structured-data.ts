@@ -129,6 +129,7 @@ interface ProductSchemaOptions {
   titleOverride?: string;
   descriptionOverride?: string;
   imageOverride?: string;
+  aggregateRating?: { ratingValue: number; reviewCount: number } | null;
 }
 
 export function productSchema(
@@ -229,11 +230,20 @@ export function productSchema(
     },
   };
 
-  if ((product as Partial<ApiProduct>).rating != null && (product as Partial<ApiProduct>).reviews_count != null) {
+  const productRating = (product as Partial<ApiProduct>).rating;
+  const productReviewCount = (product as Partial<ApiProduct>).reviews_count;
+  const explicitRating = options.aggregateRating;
+  if (productRating != null && productReviewCount != null) {
     schema.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: (product as Partial<ApiProduct>).rating,
-      reviewCount: (product as Partial<ApiProduct>).reviews_count,
+      ratingValue: productRating,
+      reviewCount: productReviewCount,
+    };
+  } else if (explicitRating && explicitRating.reviewCount > 0 && explicitRating.ratingValue > 0) {
+    schema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: explicitRating.ratingValue,
+      reviewCount: explicitRating.reviewCount,
     };
   }
 

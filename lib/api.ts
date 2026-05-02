@@ -906,21 +906,39 @@ export async function getProductsByIds(
   return [];
 }
 
-export async function getProductReviews(slug: string): Promise<ApiReview[]> {
+export interface ApiReviewsResult {
+  reviews: ApiReview[];
+  averageRating: number;
+  totalReviews: number;
+}
+
+export async function getProductReviews(slug: string): Promise<ApiReviewsResult> {
   const res = await apiFetch<ApiResponse<ApiReview[]> | ApiReview[]>(
     `/api/products/${slug}/reviews`
   );
-  if (!res) return [];
-  if (Array.isArray(res)) return res;
-  // Paginated wrapper: { data: { data: { reviews: [...] } } }
+  const empty: ApiReviewsResult = { reviews: [], averageRating: 0, totalReviews: 0 };
+  if (!res) return empty;
+  if (Array.isArray(res)) return { reviews: res, averageRating: 0, totalReviews: res.length };
+
+  // Response shape: { success, data: { current_page, data: { average_rating, total_reviews, reviews: { data: [...] } } } }
   const raw = res as unknown as Record<string, unknown>;
   const outer = raw.data as Record<string, unknown> | undefined;
   const inner = outer?.data as Record<string, unknown> | undefined;
-  if (inner && Array.isArray(inner.reviews)) return inner.reviews as ApiReview[];
-  // Simple array at data.data
-  if (outer && Array.isArray(outer.data)) return outer.data as ApiReview[];
-  if ("data" in res && Array.isArray(res.data)) return res.data;
-  return [];
+
+  const averageRating = typeof inner?.average_rating === "number" ? inner.average_rating : 0;
+  const totalReviews = typeof inner?.total_reviews === "number" ? inner.total_reviews : 0;
+
+  if (inner) {
+    const reviewsRaw = inner.reviews as ApiReview[] | { data: ApiReview[] } | undefined;
+    if (Array.isArray(reviewsRaw)) return { reviews: reviewsRaw, averageRating, totalReviews };
+    if (reviewsRaw && Array.isArray((reviewsRaw as { data: ApiReview[] }).data)) {
+      return { reviews: (reviewsRaw as { data: ApiReview[] }).data, averageRating, totalReviews };
+    }
+  }
+  // Fallback: simple array at data.data
+  if (outer && Array.isArray(outer.data)) return { reviews: outer.data as ApiReview[], averageRating, totalReviews };
+  if ("data" in res && Array.isArray(res.data)) return { reviews: res.data, averageRating, totalReviews };
+  return empty;
 }
 
 export async function getAvailableOrderItemsForProduct(slug: string): Promise<Array<{id:number, order_id:number, product_id:number}>> {

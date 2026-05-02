@@ -95,13 +95,15 @@ export default async function ProductPage({
   const { slug } = await params;
 
   // All fetches in parallel
-  const [product, reviews, faqs] = await Promise.all([
+  const [product, reviewsResult, faqs] = await Promise.all([
     getProduct(slug),
     getProductReviews(slug),
     getProductFaqs(slug),
   ]);
 
   if (!product) notFound();
+
+  const { reviews, averageRating, totalReviews } = reviewsResult;
 
   // ── JSON-LD schemas ──
   const seo = resolveProductSeo(product);
@@ -110,6 +112,9 @@ export default async function ProductPage({
     titleOverride: seo.openGraphTitle,
     descriptionOverride: seo.openGraphDescription,
     imageOverride: seo.openGraphImage,
+    aggregateRating: totalReviews > 0 && averageRating > 0
+      ? { ratingValue: averageRating, reviewCount: totalReviews }
+      : null,
   });
   const bcSchema = breadcrumbSchema([
     { label: "Home", href: "/" },
