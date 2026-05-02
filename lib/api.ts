@@ -685,6 +685,7 @@ export interface RealApiProduct {
     quantity_step_size?: number;
     total_allowed_quantity?: number | null;
     is_returnable: boolean;
+    returnable_days?: number | null;
     is_cancelable: boolean;
     requires_otp?: boolean;
   };

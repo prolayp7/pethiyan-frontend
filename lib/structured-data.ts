@@ -14,6 +14,14 @@ const SITE_NAME = "Pethiyan";
 const SITE_DESCRIPTION =
   "High-quality packaging products — pouches, jars, delivery boxes and custom packaging for modern brands.";
 
+// Default shipping constants (pincode-based rates computed at checkout; these are representative estimates)
+const SHIPPING_COUNTRY = "IN";
+const SHIPPING_CURRENCY = "INR";
+const SHIPPING_HANDLING_MIN_DAYS = 1;
+const SHIPPING_HANDLING_MAX_DAYS = 2;
+const SHIPPING_TRANSIT_MIN_DAYS = 3;
+const SHIPPING_TRANSIT_MAX_DAYS = 7;
+
 // ─── Organization ─────────────────────────────────────────────────────────────
 
 export function organizationSchema() {
@@ -123,6 +131,31 @@ export function collectionPageSchema(
 
 // ─── Product ──────────────────────────────────────────────────────────────────
 
+function buildReturnPolicy(product: ApiProduct | RealApiProduct): Record<string, unknown> {
+  const policies = (product as Partial<RealApiProduct>).policies;
+  const isReturnable = policies?.is_returnable ?? false;
+  const returnableDays = policies?.returnable_days ?? null;
+
+  if (!isReturnable) {
+    return {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: SHIPPING_COUNTRY,
+      returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+    };
+  }
+
+  return {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: SHIPPING_COUNTRY,
+    returnPolicyCategory: returnableDays
+      ? "https://schema.org/MerchantReturnFiniteReturnWindow"
+      : "https://schema.org/MerchantReturnUnlimitedWindow",
+    ...(returnableDays ? { merchantReturnDays: returnableDays } : {}),
+    returnMethod: "https://schema.org/ReturnByMail",
+    returnFees: "https://schema.org/FreeReturn",
+  };
+}
+
 interface ProductSchemaOptions {
   variant?: RealApiVariant | null;
   canonicalPath?: string;
@@ -227,6 +260,34 @@ export function productSchema(
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
       seller: { "@type": "Organization", name: SITE_NAME },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: "0",
+          currency: SHIPPING_CURRENCY,
+        },
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: SHIPPING_COUNTRY,
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: {
+            "@type": "QuantitativeValue",
+            minValue: SHIPPING_HANDLING_MIN_DAYS,
+            maxValue: SHIPPING_HANDLING_MAX_DAYS,
+            unitCode: "DAY",
+          },
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: SHIPPING_TRANSIT_MIN_DAYS,
+            maxValue: SHIPPING_TRANSIT_MAX_DAYS,
+            unitCode: "DAY",
+          },
+        },
+      },
+      hasMerchantReturnPolicy: buildReturnPolicy(product),
     },
   };
 
