@@ -32,7 +32,7 @@ export default async function Footer() {
 
   return (
     <footer
-      className="bg-[#050810] text-white overflow-x-hidden pb-20 lg:pb-0"
+      className="bg-[#050810] text-white pb-20 lg:pb-0"
       aria-label="Site footer"
     >
 
