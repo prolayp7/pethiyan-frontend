@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import dynamic from "next/dynamic";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
@@ -16,15 +15,12 @@ import OfferTickerClient from "@/components/headers/OfferTickerClient";
 import MainHeader from "@/components/headers/MainHeader1";
 import NavigationMenu from "@/components/headers/NavigationMenuServer";
 import Footer from "@/components/layout/Footercopy7";
+import GlobalClientMounts from "@/components/layout/GlobalClientMounts";
 import { organizationSchema, websiteSchema, jsonLd } from "@/lib/structured-data";
 import { API_BASE } from "@/lib/api";
 import { Toaster } from "react-hot-toast";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com";
-const MobileBottomNav = dynamic(() => import("@/components/ui/MobileBottomNav"), { ssr: false });
-const CartDrawer = dynamic(() => import("@/components/ui/CartDrawer"), { ssr: false });
-const ScrollToTop = dynamic(() => import("@/components/ui/ScrollToTop"), { ssr: false });
-const CouponPopup = dynamic(() => import("@/components/popups/CouponPopup"), { ssr: false });
 const API_ORIGIN = (() => {
   try {
     return new URL(API_BASE).origin;
@@ -206,17 +202,7 @@ export default async function RootLayout({
                 <Footer />
               </CartPushLayout>
 
-              {/* Mobile Bottom Navigation */}
-              <MobileBottomNav />
-
-              {/* Cart Drawer (portal) */}
-              <CartDrawer />
-
-              {/* Floating scroll-to-top */}
-              <ScrollToTop />
-
-              {/* Coupon popup — shown once per session after 2s */}
-              <CouponPopup />
+              <GlobalClientMounts />
 
             </CartProvider>
           </WishlistProvider>
