@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { getFooterData } from "@/lib/api";
 import OfferMarquee from "./OfferMarquee";
 import FooterNavigationGrid from "./FooterNavigationGrid";
@@ -20,6 +21,9 @@ const userLinks = {
 /* ─── Component ──────────────────────────────────────────────── */
 
 export default async function Footer() {
+  const headerStore = await headers();
+  const pathname = headerStore.get("x-pathname") ?? "/";
+  const isHomepage = pathname === "/";
   const footerData = await getFooterData();
 
   const navColumns = [
@@ -40,16 +44,15 @@ export default async function Footer() {
           MARQUEE — SCROLLING OFFER STRIP
       ══════════════════════════════════════════════════════════ */}
       <OfferMarquee
-        homepageOnly={footerData?.highlightTicker.homepageOnly ?? true}
         items={footerData?.highlightTicker.items ?? []}
+        shouldRender={!((footerData?.highlightTicker.homepageOnly ?? true) && !isHomepage)}
       />
 
        {/* ══════════════════════════════════════════════════════════
           FOOTER SEO CONTENT — conditionally rendered per admin settings
       ══════════════════════════════════════════════════════════ */}
       <FooterSeoWrapper
-        enabled={footerData?.footerSeo.enabled ?? true}
-        homepageOnly={footerData?.footerSeo.homepageOnly ?? false}
+        shouldRender={Boolean((footerData?.footerSeo.enabled ?? true) && (!footerData?.footerSeo.homepageOnly || isHomepage))}
         introHtml={footerData?.footerSeo.introHtml}
       />
 
@@ -76,7 +79,6 @@ export default async function Footer() {
     </footer>
   );
 }
-
 
 
 

@@ -1,22 +1,18 @@
-"use client";
-
-import { usePathname } from "next/navigation";
 import type { ApiFooterHighlightTickerItem } from "@/lib/api";
 
 interface OfferMarqueeProps {
-  homepageOnly?: boolean;
   items?: ApiFooterHighlightTickerItem[];
+  shouldRender?: boolean;
 }
 
-export default function OfferMarquee({ homepageOnly = true, items = [] }: OfferMarqueeProps) {
-  const pathname = usePathname();
-  const shouldRender = !(homepageOnly && pathname !== "/") && items.length > 0;
+export default function OfferMarquee({ items = [], shouldRender = true }: OfferMarqueeProps) {
+  const showContent = shouldRender && items.length > 0;
 
   return (
     <div
       className="relative min-h-[38px] overflow-hidden border-b border-white/5"
     >
-      {shouldRender ? (
+      {showContent ? (
         <>
           {/* Left fade mask */}
           <div
