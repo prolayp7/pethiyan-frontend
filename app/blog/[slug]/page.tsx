@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -98,9 +99,12 @@ export default async function BlogPostPage({
 
                   <div className="mt-8 flex flex-wrap items-center justify-between gap-5 border-y border-slate-200 py-5">
                     <div className="flex items-center gap-4">
-                      <img
+                      <Image
                         src={post.author.avatar}
                         alt={post.author.name}
+                        width={56}
+                        height={56}
+                        sizes="56px"
                         className="h-14 w-14 rounded-full object-cover"
                       />
                       <div>
@@ -119,9 +123,12 @@ export default async function BlogPostPage({
                 </header>
 
                 <div className="relative mt-8 overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-                  <img
+                  <Image
                     src={post.featuredImage}
                     alt={post.title}
+                    width={1280}
+                    height={720}
+                    sizes="(min-width: 1280px) 960px, (min-width: 768px) 92vw, 100vw"
                     className="aspect-[16/9] w-full object-cover"
                   />
                 </div>
@@ -177,9 +184,12 @@ export default async function BlogPostPage({
                     </h2>
                     <div className="mt-4 rounded-[22px] bg-slate-50 p-4">
                       <div className="flex items-center gap-3">
-                        <img
+                        <Image
                           src={post.author.avatar}
                           alt={post.author.name}
+                          width={48}
+                          height={48}
+                          sizes="48px"
                           className="h-12 w-12 rounded-full object-cover"
                         />
                         <div>

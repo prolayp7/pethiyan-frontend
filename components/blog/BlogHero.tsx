@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Search } from "lucide-react";
 import Container from "@/components/layout/Container";
@@ -39,9 +40,12 @@ export default function BlogHero({ title, eyebrow, description, featuredPost }: 
 
         <article className="overflow-hidden rounded-[28px] border border-white/12 bg-white/10 shadow-[0_30px_80px_rgba(2,8,23,0.35)] backdrop-blur">
           <div className="relative aspect-[4/3] overflow-hidden">
-            <img
+            <Image
               src={featuredPost.featuredImage}
               alt={featuredPost.title}
+              fill
+              priority
+              sizes="(min-width: 1024px) 40vw, (min-width: 640px) 92vw, 100vw"
               className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/15 to-transparent" />
