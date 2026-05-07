@@ -55,10 +55,8 @@ export default function YourItems() {
   const [activeCat, setActiveCat]         = useState<string>("All");
   const [savedProducts, setSavedProducts] = useState<RealApiProduct[]>([]);
   const [buyProducts, setBuyProducts]     = useState<RealApiProduct[]>([]);
-  // Start as `true` so the skeleton renders immediately when isLoggedIn
-  // transitions from false → true, preventing a null → section layout shift.
-  const [loadingSaved, setLoadingSaved]   = useState(true);
-  const [loadingBuy, setLoadingBuy]       = useState(true);
+  const [loadingSaved, setLoadingSaved]   = useState(false);
+  const [loadingBuy, setLoadingBuy]       = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Fetch on mount (only when logged in)

@@ -76,6 +76,16 @@ export default function RecentlyViewedProducts({
   const [loaded, setLoaded] = useState(false);
   const mobileSliderRef = useRef<HTMLDivElement | null>(null);
 
+  // Read cookie synchronously on first render to decide whether to reserve
+  // layout space. If there are no IDs (PageSpeed bot / fresh visitor),
+  // we skip the skeleton entirely — no space reserved, no shift.
+  const [hasIds] = useState(() => {
+    if (typeof document === "undefined") return false;
+    return readRecentlyViewedIds()
+      .filter((id) => id !== excludeProductId)
+      .length > 0;
+  });
+
   function scrollSlider(direction: "prev" | "next") {
     const el = mobileSliderRef.current;
     if (!el) return;
@@ -115,10 +125,10 @@ export default function RecentlyViewedProducts({
     };
   }, [excludeProductId, maxItems]);
 
-  // Reserve layout space while loading — prevents the footer shifting when
-  // products eventually appear. Only suppress permanently once confirmed empty.
-  if (!loaded) return <RecentlyViewedSkeleton />;
-  if (products.length === 0) return null;
+  // Only show skeleton when we know there are IDs to fetch.
+  // For empty cookie (fresh visitor / PageSpeed bot), return null immediately.
+  if (!loaded && hasIds) return <RecentlyViewedSkeleton />;
+  if (!loaded || products.length === 0) return null;
 
   return (
     <section
