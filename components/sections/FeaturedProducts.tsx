@@ -6,7 +6,6 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import Container from "@/components/layout/Container";
 import ShopProductCard from "@/components/shop/ShopProductCard";
 import type { ApiFeaturedProductsSection } from "@/lib/api";
-import styles from "./FeaturedProducts.module.css";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -46,12 +45,12 @@ export default function FeaturedProducts({ section }: FeaturedProductsProps) {
         {/* Header */}
         <div className="mb-6 flex items-end justify-between sm:mb-10">
           <div>
-            <p className={`${styles.eyebrow} mb-2`}>
+            <p className="fp-eyebrow mb-2">
               {eyebrow}
             </p>
             <h2
               id="featured-heading"
-              className={`${styles.headingGradient} text-3xl font-extrabold sm:text-4xl`}
+              className="fp-heading-gradient text-3xl font-extrabold sm:text-4xl"
             >
               {heading}
             </h2>
