@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, Search, X, PackageSearch, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
-import SearchBar from "./SearchBar";
+import DeferredSearchBar from "./DeferredSearchBar";
 import CartButton from "./CartButton";
 import UserMenu from "./UserMenu";
 import { useCart } from "@/context/CartContext";
@@ -85,7 +85,7 @@ export default function MainHeader({ mobileNavItems }: MainHeaderProps) {
             {/* ── CENTER: Search bar — absolutely centered ── */}
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 justify-center pointer-events-none hidden md:flex">
               <div className="w-full max-w-xl lg:max-w-4xl pl-6 pr-10 pointer-events-auto">
-                <SearchBar />
+                <DeferredSearchBar />
               </div>
             </div>
 
