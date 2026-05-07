@@ -9,6 +9,7 @@ import { getLatestPosts } from "@/lib/blog-data";
 
 export default function RecentBlogsSection() {
   const mobileSliderRef = useRef<HTMLDivElement | null>(null);
+  const sliderIndexRef = useRef(0);
   const posts = getLatestPosts().slice(0, 3);
 
   if (posts.length === 0) {
@@ -18,14 +19,13 @@ export default function RecentBlogsSection() {
   function scrollMobileBlogs(direction: "prev" | "next") {
     const el = mobileSliderRef.current;
     if (!el) return;
-    const firstCard = el.querySelector<HTMLElement>("[data-blog-slide]");
-    const gap = 24;
-    const cardWidth = firstCard?.offsetWidth ?? el.clientWidth * 0.9;
-    const amount = cardWidth + gap;
-    el.scrollBy({
-      left: direction === "next" ? amount : -amount,
-      behavior: "smooth",
-    });
+    const slides = el.querySelectorAll<HTMLElement>("[data-blog-slide]");
+    if (slides.length === 0) return;
+
+    const delta = direction === "next" ? 1 : -1;
+    const nextIndex = Math.max(0, Math.min(sliderIndexRef.current + delta, slides.length - 1));
+    sliderIndexRef.current = nextIndex;
+    slides[nextIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
   }
 
   return (

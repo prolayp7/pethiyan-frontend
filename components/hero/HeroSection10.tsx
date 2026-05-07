@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState, useRef } from "react";
+import { useEffect, useLayoutEffect, useCallback, useState, useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
@@ -26,6 +26,11 @@ interface Props {
   slides?: ApiHeroSlide[];
   badges?: ApiHeroBadge[];
   settings?: { autoplayEnabled?: boolean; autoplayDelay?: number; heroHeight?: number };
+}
+
+function shouldBypassOptimizer(src?: string | null): boolean {
+  if (!src) return false;
+  return /^data:/i.test(src) || /\.svg(\?|#|$)/i.test(src);
 }
 
 /* ─── Component ──────────────────────────────────────────────── */
@@ -95,7 +100,7 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
   const paneRef  = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const fit = () => {
       const pane  = paneRef.current;
       const inner = innerRef.current;
@@ -121,10 +126,10 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
         }
       }
     };
-    const raf = requestAnimationFrame(fit);
+    fit();
     const ro  = new ResizeObserver(fit);
     if (paneRef.current) ro.observe(paneRef.current);
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+    return () => { ro.disconnect(); };
   }, [activeIndex]);
 
   if (!hasSlides) return null;
@@ -194,6 +199,7 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
             className="absolute left-0 flex flex-col"
             style={{
               width: "100%",
+              top: 0,
               paddingTop: contentTopPadding,
               paddingBottom: contentBottomPadding,
               paddingLeft: contentSidePadding,
@@ -445,7 +451,7 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
                       fetchPriority={index === 0 ? "high" : "auto"}
                       sizes="(max-width: 1024px) 100vw, 54vw"
                       quality={85}
-                      unoptimized={/^https?:\/\//i.test(s.image)}
+                      unoptimized={shouldBypassOptimizer(s.image)}
                     />
                     {/* Overlay — subtle darkening for visual depth */}
                     <div

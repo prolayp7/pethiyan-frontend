@@ -19,13 +19,20 @@ interface BlogHomeClientProps {
 const ARROW_CLASS =
   "absolute z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#c8d7ea] bg-white/95 text-[#1a4f83] shadow-sm transition-colors hover:bg-[#f3f8ff]";
 
-function scrollSlider(ref: React.RefObject<HTMLDivElement | null>, direction: "prev" | "next") {
+function scrollSlider(
+  ref: React.RefObject<HTMLDivElement | null>,
+  indexRef: React.MutableRefObject<number>,
+  direction: "prev" | "next",
+) {
   const el = ref.current;
   if (!el) return;
-  const firstCard = el.querySelector<HTMLElement>("[data-blog-slide]");
-  const gap = 24;
-  const cardWidth = firstCard?.offsetWidth ?? el.clientWidth * 0.9;
-  el.scrollBy({ left: direction === "next" ? cardWidth + gap : -(cardWidth + gap), behavior: "smooth" });
+  const slides = el.querySelectorAll<HTMLElement>("[data-blog-slide]");
+  if (slides.length === 0) return;
+
+  const delta = direction === "next" ? 1 : -1;
+  const nextIndex = Math.max(0, Math.min(indexRef.current + delta, slides.length - 1));
+  indexRef.current = nextIndex;
+  slides[nextIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
 }
 
 export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }: BlogHomeClientProps) {
@@ -34,6 +41,9 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
   const featuredSliderRef = useRef<HTMLDivElement | null>(null);
   const latestSliderRef = useRef<HTMLDivElement | null>(null);
   const categorySliderRef = useRef<HTMLDivElement | null>(null);
+  const featuredIndexRef = useRef(0);
+  const latestIndexRef = useRef(0);
+  const categoryIndexRef = useRef(0);
 
   const filteredPosts = useMemo(() => {
     const normalized = search.trim().toLowerCase();
@@ -93,7 +103,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
           <div className="relative sm:hidden">
             <button
               type="button"
-              onClick={() => scrollSlider(featuredSliderRef, "prev")}
+              onClick={() => scrollSlider(featuredSliderRef, featuredIndexRef, "prev")}
               aria-label="Scroll featured posts left"
               className={`${ARROW_CLASS} left-2 blog-slider-arrow`}
             >
@@ -101,7 +111,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
             </button>
             <button
               type="button"
-              onClick={() => scrollSlider(featuredSliderRef, "next")}
+              onClick={() => scrollSlider(featuredSliderRef, featuredIndexRef, "next")}
               aria-label="Scroll featured posts right"
               className={`${ARROW_CLASS} right-2 blog-slider-arrow`}
             >
@@ -146,7 +156,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
           <div className="relative sm:hidden bg-white rounded-[20px] py-3 -mx-4 px-4">
             <button
               type="button"
-              onClick={() => scrollSlider(categorySliderRef, "prev")}
+              onClick={() => scrollSlider(categorySliderRef, categoryIndexRef, "prev")}
               aria-label="Scroll categories left"
               className={`${ARROW_CLASS} left-2 blog-slider-arrow`}
             >
@@ -154,7 +164,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
             </button>
             <button
               type="button"
-              onClick={() => scrollSlider(categorySliderRef, "next")}
+              onClick={() => scrollSlider(categorySliderRef, categoryIndexRef, "next")}
               aria-label="Scroll categories right"
               className={`${ARROW_CLASS} right-2 blog-slider-arrow`}
             >
@@ -210,7 +220,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
               <div className="relative sm:hidden">
                 <button
                   type="button"
-                  onClick={() => scrollSlider(latestSliderRef, "prev")}
+                  onClick={() => scrollSlider(latestSliderRef, latestIndexRef, "prev")}
                   aria-label="Scroll latest posts left"
                   className={`${ARROW_CLASS} left-2 blog-slider-arrow`}
                 >
@@ -218,7 +228,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
                 </button>
                 <button
                   type="button"
-                  onClick={() => scrollSlider(latestSliderRef, "next")}
+                  onClick={() => scrollSlider(latestSliderRef, latestIndexRef, "next")}
                   aria-label="Scroll latest posts right"
                   className={`${ARROW_CLASS} right-2 blog-slider-arrow`}
                 >

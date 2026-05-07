@@ -24,9 +24,17 @@ import Footer from "@/components/layout/Footercopy7";
 import CouponPopup from "@/components/popups/CouponPopup";
 import { CART_COUNT_COOKIE, WISHLIST_COUNT_COOKIE, parseCountCookie } from "@/lib/count-preferences";
 import { organizationSchema, websiteSchema, jsonLd } from "@/lib/structured-data";
+import { API_BASE } from "@/lib/api";
 import { Toaster } from "react-hot-toast";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com";
+const API_ORIGIN = (() => {
+  try {
+    return new URL(API_BASE).origin;
+  } catch {
+    return null;
+  }
+})();
 
 const inter = Inter({
   variable: "--font-inter",
@@ -161,6 +169,8 @@ export default async function RootLayout({
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
+        {API_ORIGIN ? <link rel="dns-prefetch" href={API_ORIGIN} /> : null}
+        {API_ORIGIN ? <link rel="preconnect" href={API_ORIGIN} crossOrigin="anonymous" /> : null}
         <script {...jsonLd(orgSchema)} key="org-schema" />
         <script {...jsonLd(siteSchema)} key="site-schema" />
         {webSettings?.googleAnalyticsId  && <GoogleAnalytics id={webSettings.googleAnalyticsId} />}
