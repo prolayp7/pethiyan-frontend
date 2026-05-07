@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
-
-export const dynamic = "force-dynamic";
+import dynamic from "next/dynamic";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
@@ -12,22 +10,21 @@ import { getAnnouncementBar, getHeaderMenu, getSystemSettings, getWebSettings } 
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { GTMScript, GTMNoScript } from "@/components/analytics/GoogleTagManager";
 import FacebookPixel from "@/components/analytics/FacebookPixel";
-import CartDrawer from "@/components/ui/CartDrawer";
 import CartPushLayout from "@/components/layout/CartPushLayout";
 import TopAnnouncementBar from "@/components/headers/TopAnnouncementBar";
 import OfferTickerClient from "@/components/headers/OfferTickerClient";
 import MainHeader from "@/components/headers/MainHeader1";
 import NavigationMenu from "@/components/headers/NavigationMenuServer";
-import MobileBottomNav from "@/components/ui/MobileBottomNav";
-import ScrollToTop from "@/components/ui/ScrollToTop";
 import Footer from "@/components/layout/Footercopy7";
-import CouponPopup from "@/components/popups/CouponPopup";
-import { CART_COUNT_COOKIE, WISHLIST_COUNT_COOKIE, parseCountCookie } from "@/lib/count-preferences";
 import { organizationSchema, websiteSchema, jsonLd } from "@/lib/structured-data";
 import { API_BASE } from "@/lib/api";
 import { Toaster } from "react-hot-toast";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com";
+const MobileBottomNav = dynamic(() => import("@/components/ui/MobileBottomNav"), { ssr: false });
+const CartDrawer = dynamic(() => import("@/components/ui/CartDrawer"), { ssr: false });
+const ScrollToTop = dynamic(() => import("@/components/ui/ScrollToTop"), { ssr: false });
+const CouponPopup = dynamic(() => import("@/components/popups/CouponPopup"), { ssr: false });
 const API_ORIGIN = (() => {
   try {
     return new URL(API_BASE).origin;
@@ -137,9 +134,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const initialCartCount = parseCountCookie(cookieStore.get(CART_COUNT_COOKIE)?.value);
-  const initialWishlistCount = parseCountCookie(cookieStore.get(WISHLIST_COUNT_COOKIE)?.value);
   const orgSchema = organizationSchema();
   const siteSchema = websiteSchema();
   const [siteSettings, webSettings, headerMenu, announcementBar] = await Promise.all([
@@ -186,8 +180,8 @@ export default async function RootLayout({
         <div id="app-root" style={{ isolation: "isolate", position: "relative", zIndex: 0 }}>
         <SiteSettingsProvider settings={siteSettings}>
         <AuthProvider>
-          <WishlistProvider initialCount={initialWishlistCount}>
-            <CartProvider initialItemCount={initialCartCount}>
+          <WishlistProvider>
+            <CartProvider>
               <CartPushLayout>
                 {/* Non-sticky top bars */}
                 {topBarActive && <TopAnnouncementBar text={topBarText} />}

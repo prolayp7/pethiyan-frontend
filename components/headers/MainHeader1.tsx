@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, Search, X, PackageSearch, Heart } from "lucide-react";
@@ -9,20 +10,20 @@ import { cn } from "@/lib/utils";
 import SearchBar from "./SearchBar";
 import CartButton from "./CartButton";
 import UserMenu from "./UserMenu";
-import MobileMenu from "./MobileMenu";
-import LoginModal from "@/components/auth/LoginModal";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import type { ApiMenuItem } from "@/lib/api";
 
+const MobileMenu = dynamic(() => import("./MobileMenu"), { ssr: false });
+const LoginModal = dynamic(() => import("@/components/auth/LoginModal"), { ssr: false });
+
 interface MainHeaderProps {
   mobileNavItems?: ApiMenuItem[];
 }
 
 export default function MainHeader({ mobileNavItems }: MainHeaderProps) {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);

@@ -449,8 +449,8 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
                       priority={index === 0}
                       loading={index === 0 ? "eager" : "lazy"}
                       fetchPriority={index === 0 ? "high" : "auto"}
-                      sizes="(max-width: 1024px) 100vw, 54vw"
-                      quality={85}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 48vw"
+                      quality={75}
                       unoptimized={shouldBypassOptimizer(s.image)}
                     />
                     {/* Overlay — subtle darkening for visual depth */}
