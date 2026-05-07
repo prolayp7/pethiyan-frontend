@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useCallback, useState, useRef } from "react";
+import { useEffect, useCallback, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
@@ -96,42 +96,6 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
-  /* ── Fit content into fixed hero height ── */
-  const paneRef  = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const fit = () => {
-      const pane  = paneRef.current;
-      const inner = innerRef.current;
-      if (!pane || !inner) return;
-      // Reset transforms so we can measure natural size
-      inner.style.transform = "";
-      inner.style.width     = "100%";
-      inner.style.top       = "";
-      const paneH  = pane.clientHeight;
-      const innerH = inner.offsetHeight;
-      if (innerH > 0 && paneH > 0) {
-        if (innerH <= paneH) {
-          // Content fits — vertically centre it
-          inner.style.top = `${Math.round((paneH - innerH) / 2)}px`;
-        } else {
-          // Content overflows — scale down uniformly from the top
-          const s = paneH / innerH;
-          inner.style.top             = "0";
-          inner.style.transform       = `scale(${s})`;
-          inner.style.transformOrigin = "top left";
-          // Compensate for the horizontal shrink so text still fills the pane width
-          inner.style.width = `${(1 / s) * 100}%`;
-        }
-      }
-    };
-    fit();
-    const ro  = new ResizeObserver(fit);
-    if (paneRef.current) ro.observe(paneRef.current);
-    return () => { ro.disconnect(); };
-  }, [activeIndex]);
-
   if (!hasSlides) return null;
 
   const slide = activeSlides[activeIndex] ?? activeSlides[0];
@@ -189,17 +153,13 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
             LEFT — Text content on dark brand panel
         ════════════════════════════════════════ */}
         <div
-          ref={paneRef}
-          className="relative z-20 shrink-0 overflow-visible sm:overflow-hidden"
+          className="relative z-20 flex h-full shrink-0 items-center overflow-visible sm:overflow-hidden"
           style={{ width: contentPaneWidth, maxWidth: "46%" }}
         >
-          {/* Inner wrapper — absolutely positioned so JS can centre or scale it */}
+          {/* Inner wrapper — CSS-centered to avoid post-render layout shifts */}
           <div
-            ref={innerRef}
-            className="absolute left-0 flex flex-col"
+            className="flex w-full flex-col"
             style={{
-              width: "100%",
-              top: 0,
               paddingTop: contentTopPadding,
               paddingBottom: contentBottomPadding,
               paddingLeft: contentSidePadding,
