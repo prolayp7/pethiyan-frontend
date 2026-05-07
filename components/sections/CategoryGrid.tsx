@@ -252,7 +252,7 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
 
         {/* ── Heading ── */}
         <motion.div
-          className="mb-10"
+          className="mb-10 min-h-[110px] sm:min-h-[128px]"
           initial={{ opacity: 0, y: 22 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}

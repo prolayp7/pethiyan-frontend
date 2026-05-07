@@ -32,7 +32,7 @@ const API_ORIGIN = (() => {
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   weight: ["400", "500", "600", "700", "800"],
   // Minimise CLS from font swap — fallback metrics are tuned to match Inter
   adjustFontFallback: true,
