@@ -111,26 +111,8 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
       onMouseEnter={() => autoplay.stop()}
       onMouseLeave={() => autoplay.reset()}
     >
-      <style>{`
-        @media (max-width: 639px) {
-          .hero-mobile-heading {
-            width: min(78vw, 20rem) !important;
-            max-width: none !important;
-            margin-bottom: 0.55rem !important;
-          }
-          .hero-mobile-subheading {
-            display: block;
-            font-size: 1.24em;
-            line-height: 1.2;
-            margin-top: 0.38em !important;
-            white-space: normal !important;
-            max-width: 100%;
-          }
-          .hero-mobile-description {
-            margin-top: 0.15rem;
-          }
-        }
-      `}</style>
+      {/* hero-mobile-heading / hero-mobile-subheading / hero-mobile-description
+          styles live in globals.css — no runtime style injection */}
       {/* Fine grid overlay */}
       <div
         aria-hidden="true"
