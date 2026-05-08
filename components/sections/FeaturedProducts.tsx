@@ -92,13 +92,13 @@ export default function FeaturedProducts({ section }: FeaturedProductsProps) {
                   className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-12 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                   aria-label="Featured products slider"
                 >
-                  {products.map((product) => (
+                  {products.map((product, i) => (
                     <div
                       key={product.id}
                       data-featured-slide
                       className="w-[85%] max-w-[320px] shrink-0 snap-start"
                     >
-                      <ShopProductCard product={product} />
+                      <ShopProductCard product={product} priority={i < 4} />
                     </div>
                   ))}
                 </div>
@@ -107,8 +107,8 @@ export default function FeaturedProducts({ section }: FeaturedProductsProps) {
 
             {/* Desktop grid */}
             <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-5">
-              {products.map((product) => (
-                <ShopProductCard key={product.id} product={product} />
+              {products.map((product, i) => (
+                <ShopProductCard key={product.id} product={product} priority={i < 4} />
               ))}
             </div>
 

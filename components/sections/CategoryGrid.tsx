@@ -32,6 +32,10 @@ const fallbackIcons = [Archive, Box, Truck, Package, Wrench, Layers, Palette, Le
 
 const CG_DELAY_CLASSES = ["cg-delay0","cg-delay1","cg-delay2","cg-delay3","cg-delay4","cg-delay5"];
 
+// Tiny light-gray SVG used as a blur placeholder while the real image loads.
+// Eliminates the blank-image flash without needing a per-image LQIP fetch.
+const BLUR_DATA_URL = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmMGYyZjUiLz48L3N2Zz4=";
+
 // ─── CategoryCard — pure CSS hover effects, no Framer Motion ─────────────────
 // All hover animations (lift, image scale, shine sweep, glass panel slide,
 // name peek fade) are driven by CSS transitions + :hover selectors in
@@ -45,9 +49,10 @@ interface CardProps {
   image?: string | null;
   Icon?: React.ComponentType<{ className?: string }>;
   animClass?: string;
+  priority?: boolean;
 }
 
-function CategoryCard({ href, name, desc, image, Icon, animClass = "" }: CardProps) {
+function CategoryCard({ href, name, desc, image, Icon, animClass = "", priority = false }: CardProps) {
   return (
     <div className={`cg-item ${animClass}`}>
       <Link href={href} className="block" aria-label={`Shop ${name}`}>
@@ -63,8 +68,11 @@ function CategoryCard({ href, name, desc, image, Icon, animClass = "" }: CardPro
                   fill
                   className="object-cover"
                   sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-                  loading="lazy"
+                  priority={priority}
+                  loading={priority ? "eager" : "lazy"}
                   quality={80}
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
                   unoptimized={/^https?:\/\//i.test(image)}
                 />
               </div>
@@ -237,6 +245,7 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
                   desc={c.desc}
                   image={c.image}
                   Icon={c.Icon}
+                  priority={i < 2}
                   animClass={visible ? `cg-show ${CG_DELAY_CLASSES[i] ?? "cg-delay5"}` : (CG_DELAY_CLASSES[i] ?? "cg-delay5")}
                 />
               </div>
@@ -254,6 +263,7 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
               desc={c.desc}
               image={c.image}
               Icon={c.Icon}
+              priority={i < 2}
               animClass={visible ? `cg-show ${CG_DELAY_CLASSES[i] ?? "cg-delay5"}` : (CG_DELAY_CLASSES[i] ?? "cg-delay5")}
             />
           ))}

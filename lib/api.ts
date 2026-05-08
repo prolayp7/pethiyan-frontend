@@ -717,7 +717,7 @@ export async function getProducts(params?: Record<string, string>): Promise<Real
   try {
     const res = await fetch(`${API_BASE}/api/products${query}`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 60 },
+      next: { revalidate: 86400 },
     } as RequestInit);
     if (!res.ok) return [];
     const json = await res.json();
@@ -745,7 +745,7 @@ export async function getProductsPage(page = 1, perPage = 24): Promise<ProductsP
   try {
     const res = await fetch(
       `${API_BASE}/api/products?page=${page}&perPage=${perPage}`,
-      { headers: { Accept: "application/json" }, next: { revalidate: 60 } } as RequestInit,
+      { headers: { Accept: "application/json" }, next: { revalidate: 86400 } } as RequestInit,
     );
     if (!res.ok) return empty;
     const json = await res.json();
@@ -770,7 +770,7 @@ export async function getFeaturedProducts(): Promise<RealApiProduct[]> {
   try {
     const res = await fetch(`${API_BASE}/api/products/featured`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 60 },
+      next: { revalidate: 86400 },
     } as RequestInit);
     if (!res.ok) return [];
     const json = await res.json();
@@ -785,7 +785,7 @@ export async function getFeaturedProductsSection(): Promise<ApiFeaturedProductsS
   try {
     const res = await fetch(`${API_BASE}/api/settings/featured-products-section`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 60, tags: ["featured-products"] },
+      next: { revalidate: 86400, tags: ["featured-products"] },
     } as RequestInit);
 
     if (!res.ok) return null;
@@ -826,7 +826,7 @@ export async function getNewArrivals(days = 30, limit = 40): Promise<RealApiProd
       `${API_BASE}/api/products/new-arrivals?days=${days}&limit=${limit}`,
       {
         headers: { Accept: "application/json" },
-        next: { revalidate: 60 },
+        next: { revalidate: 86400 },
       } as RequestInit
     );
     if (!res.ok) return [];
@@ -1019,7 +1019,7 @@ export async function getCategories(params?: Record<string, string>): Promise<Ap
   try {
     const res = await fetch(`${API_BASE}/api/categories${query}`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 30 },
+      next: { revalidate: 86400 },
     } as RequestInit);
     if (!res.ok) return [];
     return extractCatArray(await res.json());
@@ -1032,7 +1032,7 @@ export async function getSubCategories(): Promise<ApiCategory[]> {
   try {
     const res = await fetch(`${API_BASE}/api/categories/sub-categories`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 30 },
+      next: { revalidate: 86400 },
     } as RequestInit);
     if (!res.ok) return [];
     return extractCatArray(await res.json());
@@ -2935,7 +2935,7 @@ export async function getProductsByCategory(categorySlug: string): Promise<RealA
       `${API_BASE}/api/products?categories=${encodeURIComponent(categorySlug)}&per_page=100&include_child_categories=1`,
       {
         headers: { Accept: "application/json" },
-        next: { revalidate: 60 },
+        next: { revalidate: 86400 },
       } as RequestInit
     );
     if (!res.ok) return [];

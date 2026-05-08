@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import type { Metadata } from "next";
+import { normalizeImageUrl } from "@/lib/image";
 import { cookies } from "next/headers";
 import { getCategories, getFeaturedProductsSection, getHeroSection, getNewsletterSection, getPromoBannerSection, getSocialProofSection, getVideoStorySection, getWebSettings, getWhyChooseUsSection, type HomeSectionPlacement } from "@/lib/api";
 import HeroSection10 from "@/components/hero/HeroSection10";
@@ -158,8 +159,20 @@ export default async function HomePage() {
     });
   };
 
+  // Preload the first hero slide image so the browser fetches it in parallel
+  // with parsing — eliminates the LCP delay caused by late image discovery.
+  const heroPreloadUrl = normalizeImageUrl(heroData?.slides?.[0]?.image ?? null);
+
   return (
     <>
+      {heroPreloadUrl && (
+        <link
+          rel="preload"
+          as="image"
+          href={heroPreloadUrl}
+          fetchPriority="high"
+        />
+      )}
       <HeroSection10
         slides={heroData?.slides}
         badges={heroData?.badges}

@@ -46,7 +46,9 @@ const QA_BTN =
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ShopProductCard({ product, view = 'grid' }: { product: RealApiProduct; view?: 'grid' | 'list' }) {
+const BLUR_DATA_URL = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmMGYyZjUiLz48L3N2Zz4=";
+
+export default function ShopProductCard({ product, view = 'grid', priority = false }: { product: RealApiProduct; view?: 'grid' | 'list'; priority?: boolean }) {
   const router = useRouter();
   const { addItem, openCart, updateQuantity } = useCart();
   const { isWishlisted, toggle } = useWishlist();
@@ -284,6 +286,10 @@ export default function ShopProductCard({ product, view = 'grid' }: { product: R
                   src={imgSrc}
                   alt={product.title}
                   fill
+                  priority={priority}
+                  loading={priority ? "eager" : "lazy"}
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
                   unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgSrc)}
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                   sizes="128px"
@@ -392,6 +398,10 @@ export default function ShopProductCard({ product, view = 'grid' }: { product: R
                 src={imgSrc}
                 alt={product.title}
                 fill
+                priority={priority}
+                loading={priority ? "eager" : "lazy"}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
                 unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgSrc)}
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
