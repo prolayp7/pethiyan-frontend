@@ -391,6 +391,10 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
                       priority={index === 0}
                       loading={index === 0 ? "eager" : "lazy"}
                       fetchPriority={index === 0 ? "high" : "auto"}
+                      // decoding="sync" on the LCP slide tells the browser to
+                      // render the image synchronously once downloaded instead
+                      // of deferring decode — eliminates ~500 ms element render delay.
+                      decoding={index === 0 ? "sync" : "async"}
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 48vw"
                       quality={75}
                       unoptimized={shouldBypassOptimizer(s.image)}
