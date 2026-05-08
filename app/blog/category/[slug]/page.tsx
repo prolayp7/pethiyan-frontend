@@ -25,7 +25,7 @@ interface ApiPost {
   featuredImage: string;
   isFeatured: boolean;
   publishedAt: string | null;
-  readingTime: string | null;
+  readingTime: string | number | null;
   tags: string[];
   category: { id: number; title: string; slug: string } | null;
   author: ApiAuthor;
@@ -67,7 +67,7 @@ function transformPost(post: ApiPost): BlogPost {
     excerpt: post.excerpt ?? "",
     featuredImage: post.featuredImage,
     publishedAt: post.publishedAt ? formatDate(post.publishedAt) : "",
-    readingTime: post.readingTime ?? "",
+    readingTime: post.readingTime != null ? `${post.readingTime} min read` : "",
     category: post.category?.slug ?? "",
     tags: post.tags ?? [],
     author: {
@@ -84,7 +84,7 @@ function transformPost(post: ApiPost): BlogPost {
 async function fetchCategoryData(slug: string, page: number): Promise<CategoryApiResponse | null> {
   try {
     const res = await fetch(
-      `${API_BASE}/api/categories/${encodeURIComponent(slug)}?page=${page}&per_page=${PER_PAGE}`,
+      `${API_BASE}/api/blog/categories/${encodeURIComponent(slug)}?page=${page}&per_page=${PER_PAGE}`,
       { next: { revalidate: 3600 } },
     );
     if (res.status === 404) return null;
