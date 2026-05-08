@@ -164,12 +164,16 @@ export default async function RootLayout({
     const heroFirstImage = heroSection?.slides?.filter((s) => s.image)?.[0]?.image;
     if (heroFirstImage) {
       const enc = encodeURIComponent(heroFirstImage);
-      preload(`/_next/image?url=${enc}&w=1080&q=75`, {
+      // Use the same widths Next.js <Image fill> uses in its auto-generated
+      // srcset so the browser's preload and the actual <img> request hit the
+      // same /_next/image cache entry — no double-fetch.
+      // 384 is critical: on a 375px mobile viewport (Lighthouse) the browser
+      // picks 384w (first breakpoint ≥ 375px). Without it the preload would
+      // fetch 640w and the <img> would fetch 384w — two separate requests.
+      preload(`/_next/image?url=${enc}&w=384&q=75`, {
         as: "image",
         fetchPriority: "high",
-        // imageSrcSet mirrors what <Image fill sizes="…"> generates so the
-        // preload and the actual <img> resolve from the same cache entry.
-        imageSrcSet: [640, 750, 828, 1080, 1200, 1920]
+        imageSrcSet: [384, 640, 750, 828, 1080, 1200, 1920]
           .map((w) => `/_next/image?url=${enc}&w=${w}&q=75 ${w}w`)
           .join(", "),
         imageSizes: "(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 48vw",

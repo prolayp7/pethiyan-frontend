@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
@@ -72,7 +72,13 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
   const badgeSpanWidth = `clamp(220px, 76vw, ${Math.max(300, Math.round(430 * heightScale))}px)`;
   const subheadingLineHeight = `${Math.max(1.12, Number((1.24 * heightScale).toFixed(2)))}`;
 
-  const autoplay = Autoplay({ delay: autoplayDelay, stopOnInteraction: false });
+  // Memoize the plugin so it isn't recreated on every render (activeIndex
+  // state changes would otherwise re-instantiate Autoplay and force Embla
+  // to re-read slide dimensions — the main source of forced reflows).
+  const autoplay = useMemo(
+    () => Autoplay({ delay: autoplayDelay, stopOnInteraction: false }),
+    [autoplayDelay]
+  );
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, duration: 40 },
@@ -382,9 +388,11 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
               clipPath: "polygon(9% 0%, 100% 0%, 100% 100%, 0% 100%)",
             }}
           >
-            {/* Embla viewport */}
-            <div ref={emblaRef} className="absolute inset-0 overflow-hidden">
-              <div className="flex h-full">
+            {/* Embla viewport — will-change-transform creates a compositing
+                layer so Embla's translate3d scroll doesn't invalidate the
+                main-thread layout, reducing forced-reflow overhead */}
+            <div ref={emblaRef} className="absolute inset-0 overflow-hidden will-change-transform">
+              <div className="flex h-full will-change-transform">
                 {activeSlides.map((s, index) => (
                   <div
                     key={s.id}
