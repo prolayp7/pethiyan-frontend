@@ -127,9 +127,15 @@ export default async function BlogPage() {
     return true;
   });
 
-  const transformedFeatured = featuredPosts.length > 0
-    ? featuredPosts.map(transformPost)
-    : latestPosts.slice(0, 3).map(transformPost);
+  // Ensure at least 3 posts in the featured grid. If fewer are marked featured,
+  // pad with latest posts (skipping slugs already in the featured list).
+  const featuredSlugs = new Set(featuredPosts.map((p) => p.slug));
+  const paddingPosts = latestPosts.filter((p) => !featuredSlugs.has(p.slug));
+  const paddedFeatured = [
+    ...featuredPosts,
+    ...paddingPosts,
+  ].slice(0, 3);
+  const transformedFeatured = paddedFeatured.map(transformPost);
 
   return (
     <BlogHomeClient
