@@ -35,42 +35,78 @@ function shouldBypassOptimizer(src?: string | null): boolean {
 
 /* ─── Component ──────────────────────────────────────────────── */
 
+// Layout constants that never change — defined outside the component so they
+// are never recreated and never trigger inline-style mutations on re-renders.
+const CONTENT_PANE_WIDTH  = "clamp(170px, 44vw, 46%)";
+const IMAGE_PANE_MIN_WIDTH = "max(180px, 46vw)";
+
 export default function HeroSection10({ slides: apiSlides, badges: apiBadges, settings }: Props) {
   const activeSlides = (apiSlides ?? []).filter((s) => s.image);
   const hasSlides = activeSlides.length > 0;
   const activeBadges = apiBadges ?? [];
   const autoplayDelay = Number(settings?.autoplayDelay ?? 5000) || 5000;
   const heroHeight = Number(settings?.heroHeight ?? 620) || 620;
-  const heroMinHeight = `clamp(280px, min(52vw, 70vh), ${heroHeight}px)`;
-  const heightScale = Math.max(0.72, Math.min(heroHeight / 620, 1));
-  // All fluid values use min(vw, vh) so they scale with whichever dimension is
-  // smaller — this ensures content fits inside the admin-controlled hero height.
-  const headingMin = (0.85 * heightScale).toFixed(2);
-  const headingMax = (4.8 * heightScale).toFixed(2);
-  const headingFontSize = `clamp(${headingMin}rem, min(${(3.2 * heightScale).toFixed(2)}vw, ${(6.2 * heightScale).toFixed(2)}vh), ${headingMax}rem)`;
-  const contentTopPadding    = `clamp(6px,  min(2.2vw, 3.5vh), ${Math.round(40 * heightScale)}px)`;
-  const contentBottomPadding = `clamp(6px,  min(1.8vw, 2.8vh), ${Math.round(28 * heightScale)}px)`;
-  const contentSidePadding   = `clamp(8px,  min(2.4vw, 3.2vh), ${Math.round(44 * heightScale)}px)`;
-  const contentGapHeading    = `clamp(3px,  min(0.9vw, 1.4vh), ${Math.round(13 * heightScale)}px)`;
-  const contentGapDescription= `clamp(5px,  min(1.2vw, 1.8vh), ${Math.round(18 * heightScale)}px)`;
-  const contentGapCta        = `clamp(5px,  min(1.4vw, 2.0vh), ${Math.round(20 * heightScale)}px)`;
-  const buttonPadX  = `clamp(8px,  min(1.5vw, 2.2vh), ${Math.round(26 * heightScale)}px)`;
-  const buttonPadY  = `clamp(4px,  min(0.7vw, 1.2vh), ${Math.round(12 * heightScale)}px)`;
-  const buttonFontSize = `clamp(8px, min(1.3vw, 2.0vh), ${Math.max(13, Math.round(16 * heightScale))}px)`;
-  const navSize        = `clamp(12px, min(2.4vw, 3.8vh), ${Math.max(24, Math.round(36 * heightScale))}px)`;
-  const navBottomMargin= `clamp(0px,  min(0.8vw, 1.0vh), ${Math.round(8  * heightScale)}px)`;
-  const badgeTopOffset  = `${Math.max(8,  Math.round(16 * heightScale))}px`;
-  const badgeRightOffset= `${Math.max(8,  Math.round(16 * heightScale))}px`;
-  const eyebrowFontSize = `clamp(8px,  min(1.0vw, 1.5vh), ${Math.max(11, Math.round(14 * heightScale))}px)`;
-  const descFontSize    = `clamp(9px,  min(1.4vw, 2.4vh), ${Math.max(13, Math.round(18 * heightScale))}px)`;
-  const badgeWrapMargin = `clamp(3px,  min(0.9vw, 1.3vh), ${Math.round(12 * heightScale)}px)`;
-  const navNumberFontSize=`clamp(5px,  min(0.9vw, 1.4vh), ${Math.max(9,  Math.round(12 * heightScale))}px)`;
-  const contentPaneWidth = "clamp(170px, 44vw, 46%)";
-  const imagePaneMinWidth = "max(180px, 46vw)";
-  const headingSpanWidth = `clamp(240px, 74vw, ${Math.max(420, Math.round(620 * heightScale))}px)`;
-  const descriptionSpanWidth = `clamp(210px, 58vw, ${Math.max(280, Math.round(400 * heightScale))}px)`;
-  const badgeSpanWidth = `clamp(220px, 76vw, ${Math.max(300, Math.round(430 * heightScale))}px)`;
-  const subheadingLineHeight = `${Math.max(1.12, Number((1.24 * heightScale).toFixed(2)))}`;
+
+  // All fluid style values are pure functions of heroHeight (via heightScale).
+  // Memoising them prevents the 23 string interpolations from re-running on
+  // every activeIndex state change (i.e. every slide transition), which was
+  // the primary source of Style & Layout main-thread work.
+  const {
+    heroMinHeight,
+    heightScale,
+    headingFontSize,
+    contentTopPadding,
+    contentBottomPadding,
+    contentSidePadding,
+    contentGapHeading,
+    contentGapDescription,
+    contentGapCta,
+    buttonPadX,
+    buttonPadY,
+    buttonFontSize,
+    navSize,
+    navBottomMargin,
+    badgeTopOffset,
+    badgeRightOffset,
+    eyebrowFontSize,
+    descFontSize,
+    badgeWrapMargin,
+    navNumberFontSize,
+    headingSpanWidth,
+    descriptionSpanWidth,
+    badgeSpanWidth,
+    subheadingLineHeight,
+  } = useMemo(() => {
+    const hs = Math.max(0.72, Math.min(heroHeight / 620, 1));
+    const headingMin = (0.85 * hs).toFixed(2);
+    const headingMax = (4.8 * hs).toFixed(2);
+    return {
+      heroMinHeight:          `clamp(280px, min(52vw, 70vh), ${heroHeight}px)`,
+      heightScale:            hs,
+      headingFontSize:        `clamp(${headingMin}rem, min(${(3.2 * hs).toFixed(2)}vw, ${(6.2 * hs).toFixed(2)}vh), ${headingMax}rem)`,
+      contentTopPadding:      `clamp(6px,  min(2.2vw, 3.5vh), ${Math.round(40 * hs)}px)`,
+      contentBottomPadding:   `clamp(6px,  min(1.8vw, 2.8vh), ${Math.round(28 * hs)}px)`,
+      contentSidePadding:     `clamp(8px,  min(2.4vw, 3.2vh), ${Math.round(44 * hs)}px)`,
+      contentGapHeading:      `clamp(3px,  min(0.9vw, 1.4vh), ${Math.round(13 * hs)}px)`,
+      contentGapDescription:  `clamp(5px,  min(1.2vw, 1.8vh), ${Math.round(18 * hs)}px)`,
+      contentGapCta:          `clamp(5px,  min(1.4vw, 2.0vh), ${Math.round(20 * hs)}px)`,
+      buttonPadX:             `clamp(8px,  min(1.5vw, 2.2vh), ${Math.round(26 * hs)}px)`,
+      buttonPadY:             `clamp(4px,  min(0.7vw, 1.2vh), ${Math.round(12 * hs)}px)`,
+      buttonFontSize:         `clamp(8px,  min(1.3vw, 2.0vh), ${Math.max(13, Math.round(16 * hs))}px)`,
+      navSize:                `clamp(12px, min(2.4vw, 3.8vh), ${Math.max(24, Math.round(36 * hs))}px)`,
+      navBottomMargin:        `clamp(0px,  min(0.8vw, 1.0vh), ${Math.round(8  * hs)}px)`,
+      badgeTopOffset:         `${Math.max(8,  Math.round(16 * hs))}px`,
+      badgeRightOffset:       `${Math.max(8,  Math.round(16 * hs))}px`,
+      eyebrowFontSize:        `clamp(8px,  min(1.0vw, 1.5vh), ${Math.max(11, Math.round(14 * hs))}px)`,
+      descFontSize:           `clamp(9px,  min(1.4vw, 2.4vh), ${Math.max(13, Math.round(18 * hs))}px)`,
+      badgeWrapMargin:        `clamp(3px,  min(0.9vw, 1.3vh), ${Math.round(12 * hs)}px)`,
+      navNumberFontSize:      `clamp(5px,  min(0.9vw, 1.4vh), ${Math.max(9,  Math.round(12 * hs))}px)`,
+      headingSpanWidth:       `clamp(240px, 74vw, ${Math.max(420, Math.round(620 * hs))}px)`,
+      descriptionSpanWidth:   `clamp(210px, 58vw, ${Math.max(280, Math.round(400 * hs))}px)`,
+      badgeSpanWidth:         `clamp(220px, 76vw, ${Math.max(300, Math.round(430 * hs))}px)`,
+      subheadingLineHeight:   `${Math.max(1.12, Number((1.24 * hs).toFixed(2)))}`,
+    };
+  }, [heroHeight]);
 
   // Memoize the plugin so it isn't recreated on every render (activeIndex
   // state changes would otherwise re-instantiate Autoplay and force Embla
@@ -149,7 +185,7 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
         ════════════════════════════════════════ */}
         <div
           className="relative z-20 flex h-full shrink-0 items-center overflow-visible sm:overflow-hidden"
-          style={{ width: contentPaneWidth, maxWidth: "46%" }}
+          style={{ width: CONTENT_PANE_WIDTH, maxWidth: "46%" }}
         >
           {/* Inner wrapper — CSS-centered to avoid post-render layout shifts */}
           <div
@@ -386,7 +422,7 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
         ════════════════════════════════════════ */}
         <div
           className="relative min-w-0 flex-1 h-full"
-          style={{ minWidth: imagePaneMinWidth }}
+          style={{ minWidth: IMAGE_PANE_MIN_WIDTH }}
         >
           {/* Image panel — diagonal clip for premium angled separation */}
           <div

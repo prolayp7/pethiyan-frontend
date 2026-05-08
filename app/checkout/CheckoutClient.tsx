@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import LoginModal from "@/components/auth/LoginModal";
+import dynamic from "next/dynamic";
+const LoginModal = dynamic(() => import("@/components/auth/LoginModal"), { ssr: false });
 import {
   getAddresses, getShippingRates, applyCoupon,
   createAddressDetailed, updateAddressDetailed,

@@ -12,7 +12,8 @@ import {
 import { trackOrder, type ApiOrder, type ApiTrackingStep } from "@/lib/api";
 import { shouldBypassOptimizer } from "@/lib/image";
 import { useAuth } from "@/context/AuthContext";
-import LoginModal from "@/components/auth/LoginModal";
+import dynamic from "next/dynamic";
+const LoginModal = dynamic(() => import("@/components/auth/LoginModal"), { ssr: false });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

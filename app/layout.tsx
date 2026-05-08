@@ -176,7 +176,7 @@ export default async function RootLayout({
         imageSrcSet: [384, 640, 750, 828, 1080, 1200, 1920]
           .map((w) => `/_next/image?url=${enc}&w=${w}&q=75 ${w}w`)
           .join(", "),
-        imageSizes: "(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 48vw",
+        imageSizes: "(max-width: 640px) 100vw, (max-width: 1024px) 62vw, 55vw",
       });
     }
   }

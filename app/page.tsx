@@ -1,6 +1,5 @@
 import { Fragment } from "react";
 import type { Metadata } from "next";
-import { normalizeImageUrl } from "@/lib/image";
 import { cookies } from "next/headers";
 import { getCategories, getFeaturedProductsSection, getHeroSection, getNewsletterSection, getPromoBannerSection, getSocialProofSection, getVideoStorySection, getWebSettings, getWhyChooseUsSection, type HomeSectionPlacement } from "@/lib/api";
 import HeroSection10 from "@/components/hero/HeroSection10";
@@ -159,32 +158,8 @@ export default async function HomePage() {
     });
   };
 
-  // Preload the hero LCP image using the exact /_next/image URLs that the
-  // <Image> srcset will request. Preloading the raw backend URL (track.pethiyan.com)
-  // is wrong — the browser fetches a different resource than the <img srcset> needs,
-  // wasting bandwidth and delaying the real LCP fetch.
-  // Widths match Next.js deviceSizes for the sizes "(max-width:640px) 100vw, 62vw, 55vw":
-  //   mobile 640px → 640w | tablet ~770px → 828w | desktop 1440px ~792px → 828w → 1080w
-  const heroPreloadUrl = normalizeImageUrl(heroData?.slides?.[0]?.image ?? null);
-  const heroImageSrcSet = heroPreloadUrl
-    ? [640, 828, 1080, 1200, 1920]
-        .map((w) => `/_next/image?url=${encodeURIComponent(heroPreloadUrl)}&w=${w}&q=75 ${w}w`)
-        .join(", ")
-    : null;
-
   return (
     <>
-      {heroPreloadUrl && heroImageSrcSet && (
-        <link
-          rel="preload"
-          as="image"
-          // imageSrcSet / imageSizes tell the browser which srcset entry to
-          // prefetch for the current viewport — must match the <Image> sizes prop.
-          imageSrcSet={heroImageSrcSet}
-          imageSizes="(max-width: 640px) 100vw, (max-width: 1024px) 62vw, 55vw"
-          fetchPriority="high"
-        />
-      )}
       <HeroSection10
         slides={heroData?.slides}
         badges={heroData?.badges}
