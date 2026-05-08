@@ -436,7 +436,7 @@ img {
 .cat-section { background: #ffffff; }
 
 /* ── Heading ── */
-.cat-eyebrow-text { color: #4caf50; }
+.cat-eyebrow-text { color: #15803d; } /* was #4caf50 — darkened to 5:1 on white (WCAG AA) */
 .cat-heading-gradient {
   /* Solid fallback for any browser that doesn't support gradient-clip text */
   color: #1a4f83;
@@ -606,7 +606,7 @@ img {
    a separate CSS chunk that created a chained network request.)
    ============================================= */
 .fp-eyebrow {
-  color: #4ea85f;
+  color: #15803d; /* was #4ea85f — darkened to 5:1 on white (WCAG AA) */
   font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.08em;

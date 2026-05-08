@@ -58,7 +58,7 @@ export default function FeaturedProducts({ section }: FeaturedProductsProps) {
           </div>
           <Link
             href={viewAllLink}
-            className="hidden items-center gap-1.5 text-sm font-semibold text-[#6ea8d8] transition-all hover:gap-2.5 sm:flex"
+            className="hidden items-center gap-1.5 text-sm font-semibold text-[#1a4f83] transition-all hover:gap-2.5 sm:flex"
           >
             View All
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
