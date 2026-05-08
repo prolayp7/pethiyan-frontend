@@ -1,13 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  motion,
-  useAnimation,
-  type Variants,
-} from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -35,22 +31,7 @@ const staticCategories = [
 
 const fallbackIcons = [Archive, Box, Truck, Package, Wrench, Layers, Palette, Leaf, ShoppingBag];
 
-// ─── Animation variants ───────────────────────────────────────────────────────
-
-const sectionVariants: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.10 } },
-};
-
-const headingVariants: Variants = {
-  hidden:  { opacity: 0, y: 22 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] } },
-};
-
-const cardVariants: Variants = {
-  hidden:  { opacity: 0, y: 36 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] } },
-};
+const CG_DELAY_CLASSES = ["cg-delay0","cg-delay1","cg-delay2","cg-delay3","cg-delay4","cg-delay5"];
 
 // ─── CategoryCard ─────────────────────────────────────────────────────────────
 
@@ -60,15 +41,15 @@ interface CardProps {
   desc?: string | null;
   image?: string | null;
   Icon?: React.ComponentType<{ className?: string }>;
+  animClass?: string;
 }
 
-function CategoryCard({ href, name, desc, image, Icon }: CardProps) {
+function CategoryCard({ href, name, desc, image, Icon, animClass = "" }: CardProps) {
   const [hovered, setHovered] = useState(false);
   const shineControls = useAnimation();
 
   const handleHoverStart = async () => {
     setHovered(true);
-    // Shine sweeps once across the card on each hover entry
     await shineControls.start({
       x: "240%",
       transition: { duration: 0.75, ease: "easeOut" },
@@ -79,8 +60,9 @@ function CategoryCard({ href, name, desc, image, Icon }: CardProps) {
   const handleHoverEnd = () => setHovered(false);
 
   return (
-    <motion.div variants={cardVariants}>
-      {/* Link wraps the whole card; glass panel "button" is a span (no nested <a>) */}
+    // Entry animation handled by CSS class from parent — no whileInView here
+    // (whileInView triggered forced reflows on initial load via Framer layout reads)
+    <div className={`cg-item ${animClass}`}>
       <Link href={href} className="block" aria-label={`Shop ${name}`}>
         <motion.div
           className="cat-hv-card relative"
@@ -123,14 +105,14 @@ function CategoryCard({ href, name, desc, image, Icon }: CardProps) {
 
             {/* Base gradient overlay — darkens on hover */}
             <motion.div
-              className="cat-hv-overlay absolute inset-0 z-[1]"
+              className="cat-hv-overlay absolute inset-0 z-1"
               animate={{ opacity: hovered ? 1.3 : 1 }}
               transition={{ duration: 0.45 }}
             />
 
             {/* Extra dark veil — fades in on hover for more contrast behind glass */}
             <motion.div
-              className="absolute inset-0 z-[2] bg-black"
+              className="absolute inset-0 z-2 bg-black"
               initial={{ opacity: 0 }}
               animate={{ opacity: hovered ? 0.22 : 0 }}
               transition={{ duration: 0.45 }}
@@ -138,14 +120,14 @@ function CategoryCard({ href, name, desc, image, Icon }: CardProps) {
 
             {/* Shine sweep (one-shot on hover entry) */}
             <motion.div
-              className="cat-hv-shine absolute inset-0 z-[3] pointer-events-none"
+              className="cat-hv-shine absolute inset-0 z-3 pointer-events-none"
               initial={{ x: "-130%" }}
               animate={shineControls}
             />
 
             {/* Always-visible name peek — fades out when glass panel appears */}
             <motion.div
-              className="absolute bottom-0 inset-x-0 z-[4] px-6 pb-5"
+              className="absolute bottom-0 inset-x-0 z-4 px-6 pb-5"
               animate={{ opacity: hovered ? 0 : 1, y: hovered ? 6 : 0 }}
               transition={{ duration: 0.22 }}
             >
@@ -156,7 +138,7 @@ function CategoryCard({ href, name, desc, image, Icon }: CardProps) {
 
             {/* ── Glass reveal panel — slides up from below ── */}
             <motion.div
-              className="cat-hv-glass z-[5]"
+              className="cat-hv-glass z-5"
               initial={{ y: "100%" }}
               animate={{ y: hovered ? "0%" : "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 34 }}
@@ -183,7 +165,7 @@ function CategoryCard({ href, name, desc, image, Icon }: CardProps) {
           </div>{/* /cat-hv-body */}
         </motion.div>
       </Link>
-    </motion.div>
+    </div>
   );
 }
 
@@ -216,7 +198,6 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
     count <= 4 ? "sm:grid-cols-2 lg:grid-cols-4" :
                  "sm:grid-cols-2 md:grid-cols-3";
 
-  // Unified card props for both mobile slider and desktop grid
   const cards = hasApiData
     ? apiParents.map((cat, i) => ({
         key: String(cat.id),
@@ -236,6 +217,20 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
       }));
 
   const sliderRef = useRef<HTMLDivElement | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  // CSS IntersectionObserver — replaces whileInView Framer Motion triggers.
+  // whileInView caused forced reflows on initial load because Framer Motion
+  // reads layout metrics before starting the staggered entry animations.
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.1 }
+    );
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   function scrollCatSlider(dir: "prev" | "next") {
     const el = sliderRef.current;
@@ -247,17 +242,11 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
   }
 
   return (
-    <section className="cat-section pt-12 pb-6 lg:pt-16 lg:pb-8" aria-labelledby="category-heading">
+    <section ref={sectionRef} className="cat-section pt-12 pb-6 lg:pt-16 lg:pb-8" aria-labelledby="category-heading">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* ── Heading ── */}
-        <motion.div
-          className="mb-10 min-h-[110px] sm:min-h-[128px]"
-          initial={{ opacity: 0, y: 22 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-        >
+        {/* ── Heading — CSS fadeUp animation ── */}
+        <div className={`cg-item cg-delay0 ${visible ? "cg-show" : ""} mb-10 min-h-27.5 sm:min-h-32`}>
           <p className="cat-eyebrow-text text-sm font-semibold uppercase tracking-wider mb-2">
             Browse Range
           </p>
@@ -270,7 +259,7 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
           <p className="cat-subheading mt-3 text-sm">
             Find the perfect packaging for every product and every brand story
           </p>
-        </motion.div>
+        </div>
 
         {/* ── Mobile horizontal slider (hidden on sm+) ── */}
         <div className="relative sm:hidden">
@@ -294,7 +283,7 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
             ref={sliderRef}
             className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-10 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {cards.map((c) => (
+            {cards.map((c, i) => (
               <div
                 key={c.key}
                 data-cat-slide
@@ -306,6 +295,7 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
                   desc={c.desc}
                   image={c.image}
                   Icon={c.Icon}
+                  animClass={visible ? `cg-show ${CG_DELAY_CLASSES[i] ?? "cg-delay5"}` : (CG_DELAY_CLASSES[i] ?? "cg-delay5")}
                 />
               </div>
             ))}
@@ -313,14 +303,8 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
         </div>
 
         {/* ── Desktop / tablet grid (hidden below sm) ── */}
-        <motion.div
-          className={`hidden sm:grid ${gridCols} gap-6 lg:gap-8`}
-          variants={sectionVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-        >
-          {cards.map((c) => (
+        <div className={`hidden sm:grid ${gridCols} gap-6 lg:gap-8`}>
+          {cards.map((c, i) => (
             <CategoryCard
               key={c.key}
               href={c.href}
@@ -328,9 +312,10 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
               desc={c.desc}
               image={c.image}
               Icon={c.Icon}
+              animClass={visible ? `cg-show ${CG_DELAY_CLASSES[i] ?? "cg-delay5"}` : (CG_DELAY_CLASSES[i] ?? "cg-delay5")}
             />
           ))}
-        </motion.div>
+        </div>
 
       </div>
     </section>
