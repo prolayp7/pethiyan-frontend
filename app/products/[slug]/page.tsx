@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import {
   getProduct,
   getProductReviews,
@@ -94,6 +95,12 @@ export default async function ProductPage({
 }) {
   const { slug } = await params;
 
+  const cookieStore = await cookies();
+  const rvCookieStr = cookieStore.get("recently_viewed_ids")?.value;
+  const initialRecentlyViewedIds = rvCookieStr
+    ? decodeURIComponent(rvCookieStr).split(",").map(Number).filter((n) => Number.isInteger(n) && n > 0).slice(0, 10)
+    : [];
+
   // All fetches in parallel
   const [product, reviewsResult, faqs] = await Promise.all([
     getProduct(slug),
@@ -177,6 +184,7 @@ export default async function ProductPage({
         eyebrow="Keep shopping"
         description="A quick way to revisit the packaging products you explored before this one."
         viewAllLabel="See all products"
+        initialIds={initialRecentlyViewedIds}
       />
 
       <BrowsingHistory excludeSlug={product.slug} />

@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getCategories, getFeaturedProductsSection, getHeroSection, getNewsletterSection, getPromoBannerSection, getSocialProofSection, getVideoStorySection, getWebSettings, getWhyChooseUsSection, type HomeSectionPlacement } from "@/lib/api";
 import HeroSection10 from "@/components/hero/HeroSection10";
 import CategoryGrid from "@/components/sections/CategoryGrid";
@@ -85,6 +86,14 @@ function withTimeout<T>(p: Promise<T>, fallback: T, ms = 5000): Promise<T> {
 }
 
 export default async function HomePage() {
+  // Read recently-viewed cookie server-side so the RecentlyViewedProducts component
+  // renders identically on SSR and client hydration — eliminates the 0.216 footer CLS.
+  const cookieStore = await cookies();
+  const rvCookieStr = cookieStore.get("recently_viewed_ids")?.value;
+  const initialRecentlyViewedIds = rvCookieStr
+    ? decodeURIComponent(rvCookieStr).split(",").map(Number).filter((n) => Number.isInteger(n) && n > 0).slice(0, 10)
+    : [];
+
   // Fetch data in parallel — both calls are independent
   // withTimeout ensures a slow/unreachable backend never hangs the page
   const [featuredProductsSection, categories, heroData, videoStorySection, whyChooseUsSection, promoBannerSection, socialProofSection, newsletterSection] = await Promise.all([
@@ -167,6 +176,7 @@ export default async function HomePage() {
         eyebrow="Your recent views"
         description="The products you checked out most recently are waiting here for a faster return."
         viewAllLabel="Explore catalog"
+        initialIds={initialRecentlyViewedIds}
       />
       {renderSectionsAfter("recently_viewed")}
 

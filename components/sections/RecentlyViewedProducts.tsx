@@ -60,6 +60,8 @@ interface RecentlyViewedProductsProps {
   viewAllHref?: string;
   viewAllLabel?: string;
   showClearAction?: boolean;
+  /** Pre-read server-side cookie IDs — ensures SSR/CSR output matches, preventing footer CLS. */
+  initialIds?: number[];
 }
 
 export default function RecentlyViewedProducts({
@@ -71,20 +73,18 @@ export default function RecentlyViewedProducts({
   viewAllHref = "/shop",
   viewAllLabel = "Browse all",
   showClearAction = true,
+  initialIds,
 }: RecentlyViewedProductsProps) {
   const [products, setProducts] = useState<RealApiProduct[]>([]);
   const [loaded, setLoaded] = useState(false);
   const mobileSliderRef = useRef<HTMLDivElement | null>(null);
 
-  // Read cookie synchronously on first render to decide whether to reserve
-  // layout space. If there are no IDs (PageSpeed bot / fresh visitor),
-  // we skip the skeleton entirely — no space reserved, no shift.
-  const [hasIds] = useState(() => {
-    if (typeof document === "undefined") return false;
-    return readRecentlyViewedIds()
-      .filter((id) => id !== excludeProductId)
-      .length > 0;
-  });
+  // Derive initial hasIds from server-provided initialIds so SSR and client
+  // hydration produce identical output — eliminates the footer layout shift
+  // that occurred when the useState initializer ran with cookie data on client
+  // but returned false on the server (document undefined).
+  const initialHasIds = (initialIds ?? []).filter((id) => id !== excludeProductId).length > 0;
+  const [hasIds] = useState(initialHasIds);
 
   function scrollSlider(direction: "prev" | "next") {
     const el = mobileSliderRef.current;
