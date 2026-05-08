@@ -127,9 +127,13 @@ export default async function BlogPage() {
     return true;
   });
 
+  const transformedFeatured = featuredPosts.length > 0
+    ? featuredPosts.map(transformPost)
+    : latestPosts.slice(0, 3).map(transformPost);
+
   return (
     <BlogHomeClient
-      featuredPosts={featuredPosts.map(transformPost)}
+      featuredPosts={transformedFeatured}
       latestPosts={latestPosts.map(transformPost)}
       allPosts={uniquePosts}
       categories={categories.map(transformCategory)}
