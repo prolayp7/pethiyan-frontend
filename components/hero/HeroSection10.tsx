@@ -294,10 +294,10 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
           </div>
 
           {/* ── Numbered circular nav + arrows (unique to HS10) ── */}
+          {/* Outer wrapper: plain flex — no role, so prev/next arrows are
+              not constrained by tablist's required-children rule.          */}
           <div
             className="flex items-center gap-1 sm:gap-1.5"
-            role="tablist"
-            aria-label="Slide navigation"
             style={{ marginBottom: navBottomMargin }}
           >
             <button
@@ -314,33 +314,41 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
               <ChevronLeft className="h-3 w-3" aria-hidden="true" />
             </button>
 
-            {activeSlides.map((_, i) => (
-              <button
-                key={i}
-                role="tab"
-                aria-selected={i === activeIndex}
-                aria-label={`Go to slide ${i + 1}`}
-                onClick={() => emblaApi?.scrollTo(i)}
-                className="rounded-full flex items-center justify-center transition-all duration-400 font-bold tabular-nums"
-                style={{
-                  border: i === activeIndex
-                    ? "1.5px solid #4ea85f"
-                    : "1px solid rgba(255,255,255,0.12)",
-                  color: "#ffffff",
-                  background: i === activeIndex
-                    ? "rgba(78,168,95,0.1)"
-                    : "transparent",
-                  boxShadow: i === activeIndex
-                    ? "0 0 10px rgba(78,168,95,0.2)"
-                    : "none",
-                  width: navSize,
-                  height: navSize,
-                  fontSize: navNumberFontSize,
-                }}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </button>
-            ))}
+            {/* tablist contains ONLY role="tab" children — satisfies ARIA spec */}
+            <div
+              role="tablist"
+              aria-label="Slide navigation"
+              className="flex items-center gap-1 sm:gap-1.5"
+            >
+              {activeSlides.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === activeIndex ? "true" : "false"}
+                  aria-label={`Go to slide ${i + 1}`}
+                  onClick={() => emblaApi?.scrollTo(i)}
+                  className="rounded-full flex items-center justify-center transition-all duration-400 font-bold tabular-nums"
+                  style={{
+                    border: i === activeIndex
+                      ? "1.5px solid #4ea85f"
+                      : "1px solid rgba(255,255,255,0.12)",
+                    color: "#ffffff",
+                    background: i === activeIndex
+                      ? "rgba(78,168,95,0.1)"
+                      : "transparent",
+                    boxShadow: i === activeIndex
+                      ? "0 0 10px rgba(78,168,95,0.2)"
+                      : "none",
+                    width: navSize,
+                    height: navSize,
+                    fontSize: navNumberFontSize,
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </button>
+              ))}
+            </div>
 
             <button
               onClick={scrollNext}
