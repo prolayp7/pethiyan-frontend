@@ -38,8 +38,8 @@ const PAYMENT_STATUS_MAP: Record<string, { label: string; cls: string }> = {
 };
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
-  pending:                  { label: "Pending",               cls: "bg-amber-100 text-amber-700"   },
-  awaiting_store_response:  { label: "Awaiting Store Response", cls: "bg-yellow-100 text-yellow-700" },
+  pending:                  { label: "Order Accepted",        cls: "bg-blue-100 text-blue-700"     },
+  awaiting_store_response:  { label: "Order Accepted",        cls: "bg-blue-100 text-blue-700"     },
   partially_accepted:       { label: "Partially Accepted",    cls: "bg-orange-100 text-orange-700" },
   accepted_by_seller:       { label: "Order Accepted",        cls: "bg-blue-100 text-blue-700"     },
   ready_for_pickup:         { label: "Order Packing Done",    cls: "bg-indigo-100 text-indigo-700" },

@@ -37,8 +37,8 @@ function fmtDateTime(dateStr: string) {
 }
 
 const STATUS_MAP: Record<string, { label: string; cls: string; bg: string }> = {
-  pending:                 { label: "Order Placed",           cls: "text-amber-700",  bg: "bg-amber-100"  },
-  awaiting_store_response: { label: "Awaiting Confirmation",  cls: "text-yellow-700", bg: "bg-yellow-100" },
+  pending:                 { label: "Order Accepted",         cls: "text-blue-700",   bg: "bg-blue-100"   },
+  awaiting_store_response: { label: "Order Accepted",         cls: "text-blue-700",   bg: "bg-blue-100"   },
   partially_accepted:      { label: "Partially Accepted",     cls: "text-orange-700", bg: "bg-orange-100" },
   accepted_by_seller:      { label: "Order Accepted",         cls: "text-blue-700",   bg: "bg-blue-100"   },
   ready_for_pickup:        { label: "Order Packing Done",     cls: "text-indigo-700", bg: "bg-indigo-100" },
