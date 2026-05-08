@@ -459,9 +459,10 @@ img {
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 4px 28px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05);
-  transition: box-shadow 400ms ease;
+  transition: box-shadow 400ms ease, transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .cat-hv-card:hover {
+  transform: translateY(-10px);
   box-shadow: 0 24px 56px rgba(0,0,0,0.17), 0 6px 16px rgba(0,0,0,0.09);
 }
 
@@ -475,6 +476,10 @@ img {
 /* ── Icon fallback background ── */
 .cat-hv-icon-bg {
   background: linear-gradient(155deg, #07203d 0%, #0d3560 48%, #0c4a44 100%);
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cat-hv-card:hover .cat-hv-icon-bg {
+  transform: scale(1.04);
 }
 
 /* ── Base gradient overlay (always present) ── */
@@ -487,7 +492,24 @@ img {
   );
 }
 
-/* ── Shine sweep (triggered by Framer Motion on hover start) ── */
+/* ── Image wrapper — scales on hover ── */
+.cat-hv-image-wrap {
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cat-hv-card:hover .cat-hv-image-wrap {
+  transform: scale(1.07);
+}
+
+/* ── Dark veil — fades in on hover ── */
+.cat-hv-dark-veil {
+  opacity: 0;
+  transition: opacity 450ms;
+}
+.cat-hv-card:hover .cat-hv-dark-veil {
+  opacity: 0.22;
+}
+
+/* ── Shine sweep — CSS one-shot animation on each hover entry ── */
 .cat-hv-shine {
   background: linear-gradient(
     105deg,
@@ -495,11 +517,38 @@ img {
     rgba(255,255,255,0.11) 50%,
     transparent 75%
   );
+  transform: translateX(-130%);
   will-change: transform;
 }
+.cat-hv-card:hover .cat-hv-shine {
+  animation: cat-shine-once 750ms ease-out;
+}
+@keyframes cat-shine-once {
+  from { transform: translateX(-130%); }
+  to   { transform: translateX(240%); }
+}
 
-/* ── Glass reveal panel ── */
-/* Framer Motion animates translateY from 100% → 0 on hover */
+/* ── Name peek — hides when glass panel appears ── */
+.cat-hv-name-peek {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 220ms, transform 220ms;
+}
+.cat-hv-card:hover .cat-hv-name-peek {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* ── Arrow nudge right on hover ── */
+.cat-hv-arrow {
+  display: inline-flex;
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cat-hv-card:hover .cat-hv-arrow {
+  transform: translateX(3px);
+}
+
+/* ── Glass reveal panel — slides up from below on hover ── */
 .cat-hv-glass {
   position: absolute;
   bottom: 0;
@@ -510,6 +559,12 @@ img {
   background: linear-gradient(135deg, rgba(26, 56, 112, 0.92) 0%, rgba(43, 110, 150, 0.90) 52%, rgba(39, 160, 122, 0.88) 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.13);
   padding: 20px 22px 24px;
+  transform: translateY(100%);
+  transition: transform 300ms cubic-bezier(0.34, 1.46, 0.64, 1);
+  will-change: transform;
+}
+.cat-hv-card:hover .cat-hv-glass {
+  transform: translateY(0%);
 }
 
 /* ── Shop Now pill button inside glass panel — matches .btn-brand ── */

@@ -3,7 +3,6 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useAnimation } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -33,7 +32,11 @@ const fallbackIcons = [Archive, Box, Truck, Package, Wrench, Layers, Palette, Le
 
 const CG_DELAY_CLASSES = ["cg-delay0","cg-delay1","cg-delay2","cg-delay3","cg-delay4","cg-delay5"];
 
-// ─── CategoryCard ─────────────────────────────────────────────────────────────
+// ─── CategoryCard — pure CSS hover effects, no Framer Motion ─────────────────
+// All hover animations (lift, image scale, shine sweep, glass panel slide,
+// name peek fade) are driven by CSS transitions + :hover selectors in
+// globals.css — no JS animation library needed, eliminating the
+// framer-motion chunk from the homepage bundle.
 
 interface CardProps {
   href: string;
@@ -45,42 +48,15 @@ interface CardProps {
 }
 
 function CategoryCard({ href, name, desc, image, Icon, animClass = "" }: CardProps) {
-  const [hovered, setHovered] = useState(false);
-  const shineControls = useAnimation();
-
-  const handleHoverStart = async () => {
-    setHovered(true);
-    await shineControls.start({
-      x: "240%",
-      transition: { duration: 0.75, ease: "easeOut" },
-    });
-    shineControls.set({ x: "-130%" });
-  };
-
-  const handleHoverEnd = () => setHovered(false);
-
   return (
-    // Entry animation handled by CSS class from parent — no whileInView here
-    // (whileInView triggered forced reflows on initial load via Framer layout reads)
     <div className={`cg-item ${animClass}`}>
       <Link href={href} className="block" aria-label={`Shop ${name}`}>
-        <motion.div
-          className="cat-hv-card relative"
-          onHoverStart={handleHoverStart}
-          onHoverEnd={handleHoverEnd}
-          animate={{ y: hovered ? -10 : 0 }}
-          transition={{ type: "spring", stiffness: 280, damping: 26 }}
-        >
-          {/* ── Card body (3:4 portrait) ─────────────────────── */}
+        <div className="cat-hv-card">
           <div className="cat-hv-body">
 
             {/* Image or icon background */}
             {image ? (
-              <motion.div
-                className="absolute inset-0"
-                animate={{ scale: hovered ? 1.07 : 1 }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              >
+              <div className="cat-hv-image-wrap absolute inset-0">
                 <Image
                   src={image}
                   alt={name}
@@ -91,58 +67,34 @@ function CategoryCard({ href, name, desc, image, Icon, animClass = "" }: CardPro
                   quality={80}
                   unoptimized={/^https?:\/\//i.test(image)}
                 />
-              </motion.div>
+              </div>
             ) : (
-              <motion.div
+              <div
                 className="cat-hv-icon-bg absolute inset-0 flex items-center justify-center"
-                animate={{ scale: hovered ? 1.04 : 1 }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 aria-hidden="true"
               >
                 {Icon && <Icon className="w-20 h-20 text-white/20" />}
-              </motion.div>
+              </div>
             )}
 
-            {/* Base gradient overlay — darkens on hover */}
-            <motion.div
-              className="cat-hv-overlay absolute inset-0 z-1"
-              animate={{ opacity: hovered ? 1.3 : 1 }}
-              transition={{ duration: 0.45 }}
-            />
+            {/* Base gradient overlay */}
+            <div className="cat-hv-overlay absolute inset-0 z-1" />
 
-            {/* Extra dark veil — fades in on hover for more contrast behind glass */}
-            <motion.div
-              className="absolute inset-0 z-2 bg-black"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: hovered ? 0.22 : 0 }}
-              transition={{ duration: 0.45 }}
-            />
+            {/* Dark veil — fades in on hover via CSS */}
+            <div className="cat-hv-dark-veil absolute inset-0 z-2 bg-black" />
 
-            {/* Shine sweep (one-shot on hover entry) */}
-            <motion.div
-              className="cat-hv-shine absolute inset-0 z-3 pointer-events-none"
-              initial={{ x: "-130%" }}
-              animate={shineControls}
-            />
+            {/* Shine sweep — CSS one-shot animation */}
+            <div className="cat-hv-shine absolute inset-0 z-3 pointer-events-none" />
 
-            {/* Always-visible name peek — fades out when glass panel appears */}
-            <motion.div
-              className="absolute bottom-0 inset-x-0 z-4 px-6 pb-5"
-              animate={{ opacity: hovered ? 0 : 1, y: hovered ? 6 : 0 }}
-              transition={{ duration: 0.22 }}
-            >
+            {/* Name peek — fades out when glass appears */}
+            <div className="cat-hv-name-peek absolute bottom-0 inset-x-0 z-4 px-6 pb-5">
               <p className="text-white/80 text-xs font-bold uppercase tracking-[0.18em]">
                 {name}
               </p>
-            </motion.div>
+            </div>
 
-            {/* ── Glass reveal panel — slides up from below ── */}
-            <motion.div
-              className="cat-hv-glass z-5"
-              initial={{ y: "100%" }}
-              animate={{ y: hovered ? "0%" : "100%" }}
-              transition={{ type: "spring", stiffness: 320, damping: 34 }}
-            >
+            {/* Glass reveal panel — slides up from below via CSS */}
+            <div className="cat-hv-glass z-5">
               <h3 className="text-white text-xl font-black leading-tight mb-2">
                 {name}
               </h3>
@@ -153,17 +105,14 @@ function CategoryCard({ href, name, desc, image, Icon, animClass = "" }: CardPro
               )}
               <span className="cat-hv-btn font-bold">
                 Shop Now
-                <motion.span
-                  animate={{ x: hovered ? 3 : 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                >
+                <span className="cat-hv-arrow">
                   <ArrowRight className="w-3.5 h-3.5" />
-                </motion.span>
+                </span>
               </span>
-            </motion.div>
+            </div>
 
-          </div>{/* /cat-hv-body */}
-        </motion.div>
+          </div>
+        </div>
       </Link>
     </div>
   );
@@ -179,11 +128,7 @@ function sortCategoriesByAdminOrder(categories: ApiCategory[]): ApiCategory[] {
   return [...categories].sort((left, right) => {
     const leftOrder = typeof left.sort_order === "number" ? left.sort_order : Number.MAX_SAFE_INTEGER;
     const rightOrder = typeof right.sort_order === "number" ? right.sort_order : Number.MAX_SAFE_INTEGER;
-
-    if (leftOrder !== rightOrder) {
-      return leftOrder - rightOrder;
-    }
-
+    if (leftOrder !== rightOrder) return leftOrder - rightOrder;
     return left.name.localeCompare(right.name);
   });
 }
@@ -220,9 +165,6 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [visible, setVisible] = useState(false);
 
-  // CSS IntersectionObserver — replaces whileInView Framer Motion triggers.
-  // whileInView caused forced reflows on initial load because Framer Motion
-  // reads layout metrics before starting the staggered entry animations.
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setVisible(true); },
@@ -245,7 +187,7 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
     <section ref={sectionRef} className="cat-section pt-12 pb-6 lg:pt-16 lg:pb-8" aria-labelledby="category-heading">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* ── Heading — CSS fadeUp animation ── */}
+        {/* ── Heading ── */}
         <div className={`cg-item cg-delay0 ${visible ? "cg-show" : ""} mb-10 min-h-27.5 sm:min-h-32`}>
           <p className="cat-eyebrow-text text-sm font-semibold uppercase tracking-wider mb-2">
             Browse Range
@@ -261,7 +203,7 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
           </p>
         </div>
 
-        {/* ── Mobile horizontal slider (hidden on sm+) ── */}
+        {/* ── Mobile horizontal slider ── */}
         <div className="relative sm:hidden">
           <button
             type="button"
@@ -302,7 +244,7 @@ export default function CategoryGrid({ categories = [] }: CategoryGridProps) {
           </div>
         </div>
 
-        {/* ── Desktop / tablet grid (hidden below sm) ── */}
+        {/* ── Desktop / tablet grid ── */}
         <div className={`hidden sm:grid ${gridCols} gap-6 lg:gap-8`}>
           {cards.map((c, i) => (
             <CategoryCard
