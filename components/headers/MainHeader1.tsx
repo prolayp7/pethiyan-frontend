@@ -54,7 +54,9 @@ export default function MainHeader({ mobileNavItems }: MainHeaderProps) {
           <div className="relative flex items-center justify-between py-3">
 
             {/* ── LEFT: Logo + mobile hamburger ── */}
-            <div className="flex items-center gap-2 shrink-0 z-10">
+            {/* bg-white + pr-4 create a solid zone that visually blocks the
+                absolutely-centred search bar from bleeding into the logo area. */}
+            <div className="flex items-center gap-2 shrink-0 z-10 bg-white pr-4">
               <button
                 className="lg:hidden p-2 -ml-1 rounded-full hover:bg-gray-100 transition-colors"
                 onClick={() => setMobileMenuOpen(true)}
@@ -70,15 +72,20 @@ export default function MainHeader({ mobileNavItems }: MainHeaderProps) {
                 aria-label={`${appName} — Home`}
               >
                 {logo ? (
-                  <Image
-                    src={logo}
-                    alt={appName}
-                    width={160}
-                    height={40}
-                    className="h-10 w-auto max-w-40 object-contain"
-                    unoptimized={shouldBypassOptimizer(logo)}
-                    priority
-                  />
+                  // fill + explicit container gives deterministic 40×160 px display
+                  // regardless of the logo image's natural dimensions.
+                  // object-left aligns the contained image to the left edge.
+                  <div className="relative h-10 w-40 shrink-0">
+                    <Image
+                      src={logo}
+                      alt={appName}
+                      fill
+                      className="object-contain object-left"
+                      unoptimized={shouldBypassOptimizer(logo)}
+                      priority
+                      sizes="160px"
+                    />
+                  </div>
                 ) : (
                   <span className="text-xl font-extrabold text-(--color-secondary)">{appName}</span>
                 )}
@@ -93,7 +100,7 @@ export default function MainHeader({ mobileNavItems }: MainHeaderProps) {
             </div>
 
             {/* ── RIGHT: Action icons ── */}
-            <div className="flex items-center gap-1 shrink-0 z-10">
+            <div className="flex items-center gap-1 shrink-0 z-10 bg-white pl-4">
               {/* Search / Close icon — mobile only */}
               <button
                 className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"

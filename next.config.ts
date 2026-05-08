@@ -23,6 +23,18 @@ const nextConfig: NextConfig = {
   // "webpack config present but no turbopack config" warning from next-pwa.
   turbopack: {},
 
+  // ── Legacy JS polyfill elimination ─────────────────────────────────────────
+  // By default SWC injects core-js polyfills conservatively without checking
+  // the project's browserslist. Setting this to true makes SWC read the
+  // "browserslist" field from package.json and skip polyfills for any method
+  // that is natively supported by every browser in that list.
+  // Our list (chrome>=95, safari>=15.4, firefox>=94 …) supports Array.at,
+  // Array.flat/flatMap, Object.fromEntries, Object.hasOwn, String.trim*
+  // natively — eliminating ~14 KiB of wasted bytes flagged by Lighthouse.
+  experimental: {
+    browsersListForSwc: true,
+  },
+
   // ── Images ─────────────────────────────────────────────────────────────────
   images: {
     // In development all images come from localhost (private IP) which Next.js
