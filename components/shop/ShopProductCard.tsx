@@ -18,7 +18,7 @@ import {
   API_BASE, getProduct, addToWishlist, getWishlistItems, removeWishlistItem,
   type RealApiProduct, type RealApiVariant,
 } from "@/lib/api";
-import { normalizeImageUrl } from "@/lib/image";
+import { normalizeImageUrl, shouldBypassOptimizer } from "@/lib/image";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import AttributePills, { AttributePillsWithVariants } from "@/components/product/AttributePills";
 
@@ -290,7 +290,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                   loading={priority ? "eager" : "lazy"}
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
-                  unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgSrc)}
+                  unoptimized={shouldBypassOptimizer(imgSrc)}
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                   sizes="128px"
                 />
@@ -402,7 +402,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                 loading={priority ? "eager" : "lazy"}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
-                unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgSrc)}
+                unoptimized={shouldBypassOptimizer(imgSrc)}
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               />
@@ -653,7 +653,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                         src={modalImages[Math.min(activeImageIndex, modalImages.length - 1)]}
                         alt={quickViewProduct.title}
                         fill
-                        unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(modalImages[Math.min(activeImageIndex, modalImages.length - 1)] || "")}
+                        unoptimized={shouldBypassOptimizer(modalImages[Math.min(activeImageIndex, modalImages.length - 1)])}
                         className="object-contain"
                         sizes="(max-width: 1024px) 100vw, 50vw"
                       />
@@ -684,7 +684,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                           aria-label={`View image ${idx + 1}`}
                         >
                           <Image src={img} alt="" fill className="object-cover"
-                            unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(img)} sizes="52px" />
+                            unoptimized={shouldBypassOptimizer(img)} sizes="52px" />
                         </button>
                       ))}
                     </div>
@@ -781,7 +781,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                                   {imgUrl ? (
                                     <Image src={imgUrl} alt={v.title || ""} fill
                                       className="object-contain p-1.5" sizes="100px"
-                                      unoptimized={/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(imgUrl)} />
+                                      unoptimized={shouldBypassOptimizer(imgUrl)} />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center">
                                       <Package className={`h-6 w-6 ${isSelected ? "text-white/60" : "text-gray-300"}`} />

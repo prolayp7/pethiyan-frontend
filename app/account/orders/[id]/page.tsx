@@ -9,6 +9,7 @@ import {
   FileDown,
 } from "lucide-react";
 import { getOrder, downloadOrderInvoice, type ApiOrder, type ApiTrackingStep, type ApiOrderManagementHistory } from "@/lib/api";
+import { shouldBypassOptimizer } from "@/lib/image";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -24,10 +25,6 @@ function fmtDate(dateStr: string) {
   });
 }
 
-function shouldBypassOptimizer(src?: string | null): boolean {
-  if (!src) return false;
-  return /^https?:\/\//i.test(src);
-}
 
 const PAYMENT_STATUS_MAP: Record<string, { label: string; cls: string }> = {
   paid:        { label: "Paid",       cls: "bg-green-100 text-green-700"   },

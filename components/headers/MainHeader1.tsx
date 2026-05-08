@@ -15,6 +15,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import type { ApiMenuItem } from "@/lib/api";
+import { shouldBypassOptimizer } from "@/lib/image";
 
 const MobileMenu = dynamic(() => import("./MobileMenu"), { ssr: false });
 const LoginModal = dynamic(() => import("@/components/auth/LoginModal"), { ssr: false });
@@ -69,12 +70,14 @@ export default function MainHeader({ mobileNavItems }: MainHeaderProps) {
                 aria-label={`${appName} — Home`}
               >
                 {logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    suppressHydrationWarning
+                  <Image
                     src={logo}
                     alt={appName}
-                    style={{ height: 40, width: "auto", maxWidth: 160, objectFit: "contain", display: "block" }}
+                    width={160}
+                    height={40}
+                    className="h-10 w-auto max-w-40 object-contain"
+                    unoptimized={shouldBypassOptimizer(logo)}
+                    priority
                   />
                 ) : (
                   <span className="text-xl font-extrabold text-(--color-secondary)">{appName}</span>

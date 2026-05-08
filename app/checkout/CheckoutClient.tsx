@@ -18,6 +18,7 @@ import {
   type ApiAddress, type ApiShippingRate, type ApiCouponResult,
 } from "@/lib/api";
 import { trackBeginCheckout, storePurchaseEvent } from "@/lib/analytics";
+import { shouldBypassOptimizer } from "@/lib/image";
 import { readLastPincodeFromCookie, writeLastPincodeCookie } from "@/lib/location-preferences";
 
 // ─── Razorpay types ───────────────────────────────────────────────────────────
@@ -67,11 +68,6 @@ function formatItemTotalWeight(weight?: number, weightUnit?: string, quantity = 
   const totalG = unitG * quantity;
 
   return `Total weight: ${fmtWeight(totalG)} (${fmtWeight(unitG)} x ${quantity})`;
-}
-
-function shouldBypassOptimizer(src?: string | null): boolean {
-  if (!src) return false;
-  return /^https?:\/\//i.test(src);
 }
 
 function loadRazorpayScript(): Promise<boolean> {

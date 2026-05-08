@@ -17,6 +17,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import type { ApiCategory } from "@/lib/api";
+import { shouldBypassOptimizer } from "@/lib/image";
 
 // ─── Static fallback data ─────────────────────────────────────────────────────
 const staticCategories = [
@@ -73,7 +74,7 @@ function CategoryCard({ href, name, desc, image, Icon, animClass = "", priority 
                   quality={80}
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
-                  unoptimized={/^https?:\/\//i.test(image)}
+                  unoptimized={shouldBypassOptimizer(image)}
                 />
               </div>
             ) : (

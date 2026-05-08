@@ -11,6 +11,7 @@ import {
   ChevronLeft, ChevronRight, type LucideIcon,
 } from "lucide-react";
 import type { ApiHeroSlide, ApiHeroBadge } from "@/lib/api";
+import { shouldBypassOptimizer } from "@/lib/image";
 
 /* ─── Icon name → Lucide component map ──────────────────────────── */
 
@@ -292,7 +293,7 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
                       src={s.image}
                       alt={s.heading.replace("\n", " ")}
                       fill
-                      unoptimized
+                      unoptimized={shouldBypassOptimizer(s.image)}
                       className="object-cover"
                       priority={s.id === 1}
                       sizes="(max-width: 1024px) 100vw, 54vw"
