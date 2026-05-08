@@ -7,12 +7,20 @@ import BlogHero from "@/components/blog/BlogHero";
 import CategoryCard from "@/components/blog/CategoryCard";
 import SearchAndFilterBar from "@/components/blog/SearchAndFilterBar";
 import Container from "@/components/layout/Container";
-import { blogCategories, type BlogPost } from "@/lib/blog-data";
+import { type BlogCategory, type BlogPost } from "@/lib/blog-data";
+
+interface HeroSettings {
+  eyebrow: string;
+  heading: string;
+  subheading: string;
+}
 
 interface BlogHomeClientProps {
   featuredPosts: BlogPost[];
   latestPosts: BlogPost[];
   allPosts: BlogPost[];
+  categories: BlogCategory[];
+  heroSettings: HeroSettings;
 }
 
 /** Shared arrow button styles — matches home page blog slider */
@@ -35,7 +43,7 @@ function scrollSlider(
   slides[nextIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
 }
 
-export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }: BlogHomeClientProps) {
+export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts, categories, heroSettings }: BlogHomeClientProps) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
   const featuredSliderRef = useRef<HTMLDivElement | null>(null);
@@ -60,11 +68,11 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
   }, [activeCategory, latestPosts, search]);
 
   const categoryCounts = useMemo(() => {
-    return blogCategories.reduce<Record<string, number>>((acc, category) => {
+    return categories.reduce<Record<string, number>>((acc, category) => {
       acc[category.slug] = allPosts.filter((post) => post.category === category.slug).length;
       return acc;
     }, {});
-  }, [allPosts]);
+  }, [allPosts, categories]);
 
   const heroPost = featuredPosts[0] ?? latestPosts[0];
 
@@ -75,9 +83,9 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
   return (
     <div className="bg-[linear-gradient(180deg,#f7fafc_0%,#ffffff_12%,#f8fafc_100%)]">
       <BlogHero
-        eyebrow="Editorial Journal"
-        title="Ideas, systems, and stories for better packaging"
-        description="A modern editorial space for packaging strategy, launch planning, fulfillment clarity, and the details that make ecommerce brands feel more intentional."
+        eyebrow={heroSettings.eyebrow}
+        title={heroSettings.heading}
+        description={heroSettings.subheading}
         featuredPost={heroPost}
       />
 
@@ -85,7 +93,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
         <SearchAndFilterBar
           search={search}
           onSearchChange={setSearch}
-          categories={blogCategories}
+          categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
         />
@@ -175,7 +183,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
               className="blog-slider-scroll flex snap-x snap-mandatory gap-6 overflow-x-auto px-12 pb-2 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
               aria-label="Blog categories slider"
             >
-              {blogCategories.map((category) => (
+              {categories.map((category) => (
                 <div
                   key={category.slug}
                   data-blog-slide
@@ -192,7 +200,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts }:
 
           {/* Desktop / tablet grid — hidden below sm */}
           <div className="hidden sm:grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {blogCategories.map((category) => (
+            {categories.map((category) => (
               <CategoryCard
                 key={category.slug}
                 category={category}
