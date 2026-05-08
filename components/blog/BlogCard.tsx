@@ -62,6 +62,9 @@ export default function BlogCard({ post, variant = "default" }: BlogCardProps) {
             <div>
               <p className="text-sm font-semibold text-slate-900">{post.author.name}</p>
               <p className="text-xs text-slate-500">{post.author.role}</p>
+              {post.author.bio && (
+                <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-400">{post.author.bio}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-1 text-xs font-medium text-slate-500">
