@@ -5,7 +5,9 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { SiteSettingsProvider } from "@/context/SiteSettingsContext";
-import { getAnnouncementBar, getHeaderMenu, getSystemSettings, getWebSettings } from "@/lib/api";
+import { preload } from "react-dom";
+import { headers } from "next/headers";
+import { getAnnouncementBar, getHeaderMenu, getHeroSection, getSystemSettings, getWebSettings } from "@/lib/api";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { GTMScript, GTMNoScript } from "@/components/analytics/GoogleTagManager";
 import FacebookPixel from "@/components/analytics/FacebookPixel";
@@ -132,7 +134,15 @@ export default async function RootLayout({
 }>) {
   const orgSchema = organizationSchema();
   const siteSchema = websiteSchema();
-  const [siteSettings, webSettings, headerMenu, announcementBar] = await Promise.all([
+
+  // Check if this is the homepage so we can preload the LCP hero image.
+  // getHeroSection uses next: { revalidate: 300 }, so within the same request
+  // this call is memoized — the page component's call costs zero extra I/O.
+  const reqHeaders = await headers();
+  const pathname = reqHeaders.get("x-pathname") ?? "/";
+  const isHomepage = pathname === "/";
+
+  const [siteSettings, webSettings, headerMenu, announcementBar, heroSection] = await Promise.all([
     getSystemSettings().then(s => s ?? {
       appName: "Pethiyan", logo: null, favicon: null,
       smsOtpEnabled: false, emailOtpEnabled: false,
@@ -142,7 +152,30 @@ export default async function RootLayout({
     getWebSettings(),
     getHeaderMenu(),
     getAnnouncementBar(),
+    // Only fetch hero data on the homepage — this resolves in parallel with
+    // the other fetches above and adds no serial latency.
+    isHomepage ? getHeroSection() : Promise.resolve(null),
   ]);
+
+  // Inject <link rel="preload"> for the LCP hero image directly into <head>.
+  // The layout renders the <head> before any page body is streamed, so the
+  // browser discovers the image URL at ~0 ms instead of after body parsing.
+  if (isHomepage) {
+    const heroFirstImage = heroSection?.slides?.filter((s) => s.image)?.[0]?.image;
+    if (heroFirstImage) {
+      const enc = encodeURIComponent(heroFirstImage);
+      preload(`/_next/image?url=${enc}&w=1080&q=75`, {
+        as: "image",
+        fetchPriority: "high",
+        // imageSrcSet mirrors what <Image fill sizes="…"> generates so the
+        // preload and the actual <img> resolve from the same cache entry.
+        imageSrcSet: [640, 750, 828, 1080, 1200, 1920]
+          .map((w) => `/_next/image?url=${enc}&w=${w}&q=75 ${w}w`)
+          .join(", "),
+        imageSizes: "(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 48vw",
+      });
+    }
+  }
 
   const DEFAULT_TICKER = [
     "🚚 Free Shipping on Orders Above $50",

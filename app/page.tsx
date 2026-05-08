@@ -1,7 +1,6 @@
 import { Fragment } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { preload } from "react-dom";
 import { getCategories, getFeaturedProductsSection, getHeroSection, getNewsletterSection, getPromoBannerSection, getSocialProofSection, getVideoStorySection, getWebSettings, getWhyChooseUsSection, type HomeSectionPlacement } from "@/lib/api";
 import HeroSection10 from "@/components/hero/HeroSection10";
 import CategoryGrid from "@/components/sections/CategoryGrid";
@@ -95,47 +94,19 @@ export default async function HomePage() {
     ? decodeURIComponent(rvCookieStr).split(",").map(Number).filter((n) => Number.isInteger(n) && n > 0).slice(0, 10)
     : [];
 
-  // Kick off ALL fetches in parallel immediately so nothing waits serially.
-  // We await heroData first (separately) only to inject the LCP preload hint
-  // as early as possible — all other fetches are already running in the background.
-  const heroDataPromise          = withTimeout(getHeroSection(), null);
-  const featuredPromise          = withTimeout(getFeaturedProductsSection(), null);
-  const categoriesPromise        = withTimeout(getCategories(), []);
-  const videoStoryPromise        = withTimeout(getVideoStorySection(), null);
-  const whyChooseUsPromise       = withTimeout(getWhyChooseUsSection(), null);
-  const promoBannerPromise       = withTimeout(getPromoBannerSection(), null);
-  const socialProofPromise       = withTimeout(getSocialProofSection(), null);
-  const newsletterPromise        = withTimeout(getNewsletterSection(), null);
-
-  // Resolve hero data first so we can preload the LCP image into <head>
-  // before the rest of the page body is rendered. This moves the image
-  // fetch from 1,700 ms (body parse) to ~0 ms (head parse), improving LCP.
-  const heroData = await heroDataPromise;
-  const heroFirstImage = heroData?.slides?.filter((s) => s.image)?.[0]?.image;
-  if (heroFirstImage) {
-    const enc = encodeURIComponent(heroFirstImage);
-    preload(`/_next/image?url=${enc}&w=1080&q=75`, {
-      as: "image",
-      fetchPriority: "high",
-      // imageSrcSet mirrors what <Image fill sizes="…"> generates so the
-      // browser's preload and the actual <img> request resolve from the same
-      // cache entry — no double-fetch.
-      imageSrcSet: [640, 750, 828, 1080, 1200, 1920]
-        .map((w) => `/_next/image?url=${enc}&w=${w}&q=75 ${w}w`)
-        .join(", "),
-      imageSizes: "(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 48vw",
-    });
-  }
-
-  // Wait for all remaining fetches (already in flight since the top of the fn)
-  const [featuredProductsSection, categories, videoStorySection, whyChooseUsSection, promoBannerSection, socialProofSection, newsletterSection] = await Promise.all([
-    featuredPromise,
-    categoriesPromise,
-    videoStoryPromise,
-    whyChooseUsPromise,
-    promoBannerPromise,
-    socialProofPromise,
-    newsletterPromise,
+  // Fetch data in parallel — all calls are independent.
+  // withTimeout ensures a slow/unreachable backend never hangs the page.
+  // getHeroSection is memoized per-request (next: revalidate: 300) so the
+  // layout's concurrent call costs zero extra I/O.
+  const [featuredProductsSection, categories, heroData, videoStorySection, whyChooseUsSection, promoBannerSection, socialProofSection, newsletterSection] = await Promise.all([
+    withTimeout(getFeaturedProductsSection(), null),
+    withTimeout(getCategories(), []),
+    withTimeout(getHeroSection(), null),
+    withTimeout(getVideoStorySection(), null),
+    withTimeout(getWhyChooseUsSection(), null),
+    withTimeout(getPromoBannerSection(), null),
+    withTimeout(getSocialProofSection(), null),
+    withTimeout(getNewsletterSection(), null),
   ]);
 
   const sectionPlacements: Record<MovableSectionId, HomeSectionPlacement> = {
