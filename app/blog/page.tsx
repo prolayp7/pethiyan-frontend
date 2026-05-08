@@ -86,6 +86,7 @@ function transformCategory(cat: ApiCategory): BlogCategory {
     slug: cat.slug,
     title: cat.title,
     description: cat.description ?? "",
+    coverImage: cat.coverImage,
   };
 }
 
