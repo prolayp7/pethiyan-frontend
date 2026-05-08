@@ -159,17 +159,29 @@ export default async function HomePage() {
     });
   };
 
-  // Preload the first hero slide image so the browser fetches it in parallel
-  // with parsing — eliminates the LCP delay caused by late image discovery.
+  // Preload the hero LCP image using the exact /_next/image URLs that the
+  // <Image> srcset will request. Preloading the raw backend URL (track.pethiyan.com)
+  // is wrong — the browser fetches a different resource than the <img srcset> needs,
+  // wasting bandwidth and delaying the real LCP fetch.
+  // Widths match Next.js deviceSizes for the sizes "(max-width:640px) 100vw, 62vw, 55vw":
+  //   mobile 640px → 640w | tablet ~770px → 828w | desktop 1440px ~792px → 828w → 1080w
   const heroPreloadUrl = normalizeImageUrl(heroData?.slides?.[0]?.image ?? null);
+  const heroImageSrcSet = heroPreloadUrl
+    ? [640, 828, 1080, 1200, 1920]
+        .map((w) => `/_next/image?url=${encodeURIComponent(heroPreloadUrl)}&w=${w}&q=75 ${w}w`)
+        .join(", ")
+    : null;
 
   return (
     <>
-      {heroPreloadUrl && (
+      {heroPreloadUrl && heroImageSrcSet && (
         <link
           rel="preload"
           as="image"
-          href={heroPreloadUrl}
+          // imageSrcSet / imageSizes tell the browser which srcset entry to
+          // prefetch for the current viewport — must match the <Image> sizes prop.
+          imageSrcSet={heroImageSrcSet}
+          imageSizes="(max-width: 640px) 100vw, (max-width: 1024px) 62vw, 55vw"
           fetchPriority="high"
         />
       )}

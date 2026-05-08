@@ -81,7 +81,14 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
   );
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, duration: 40 },
+    {
+      loop: true,
+      duration: 40,
+      // Prevent Embla from re-reading slide dimensions on every window resize.
+      // The hero is always full-width so resize remeasurement is unnecessary
+      // and each measurement triggers a forced reflow on the main thread.
+      watchResize: false,
+    },
     [autoplay]
   );
 
@@ -411,7 +418,7 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
                       // render the image synchronously once downloaded instead
                       // of deferring decode — eliminates ~500 ms element render delay.
                       decoding={index === 0 ? "sync" : "async"}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 48vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 62vw, 55vw"
                       quality={75}
                       unoptimized={shouldBypassOptimizer(s.image)}
                     />
