@@ -204,7 +204,7 @@ export default async function RootLayout({
         {webSettings?.googleAnalyticsId  && <GoogleAnalytics id={webSettings.googleAnalyticsId} />}
         {webSettings?.googleTagManagerId && <GTMScript      id={webSettings.googleTagManagerId} />}
         {webSettings?.googleAdsId && (
-          <GoogleAds id={webSettings.googleAdsId} beginCheckoutLabel={webSettings.googleAdsBeginCheckoutLabel} />
+          <GoogleAds id={webSettings.googleAdsId} beginCheckoutEvent={webSettings.googleAdsBeginCheckoutLabel} />
         )}
       </head>
       <body className="antialiased bg-background text-foreground font-sans">

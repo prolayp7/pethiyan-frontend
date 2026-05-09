@@ -10,7 +10,7 @@ declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
     fbq?:  (...args: unknown[]) => void;
-    __GADS__?: { id: string; beginCheckoutLabel: string };
+    __GADS__?: { id: string; beginCheckoutEvent: string };
   }
 }
 
@@ -112,13 +112,10 @@ export function trackBeginCheckout(params: {
     num_items: items.reduce((sum, i) => sum + i.quantity, 0),
   });
 
-  // Google Ads conversion — fires when AW-ID and begin-checkout label are configured
-  if (typeof window !== "undefined" && window.__GADS__?.id && window.__GADS__?.beginCheckoutLabel) {
-    ga("event", "conversion", {
-      send_to: `${window.__GADS__.id}/${window.__GADS__.beginCheckoutLabel}`,
-      value,
-      currency,
-    });
+  // Google Ads conversion — fires the exact event name from your Google Ads conversion action
+  // e.g. gtag('event', 'ads_conversion_Begin_checkout_1', {...})
+  if (typeof window !== "undefined" && window.__GADS__?.beginCheckoutEvent) {
+    ga("event", window.__GADS__.beginCheckoutEvent, { value, currency });
   }
 }
 

@@ -2,14 +2,14 @@ import Script from "next/script";
 
 export default function GoogleAds({
   id,
-  beginCheckoutLabel,
+  beginCheckoutEvent,
 }: {
   id: string;
-  beginCheckoutLabel?: string;
+  beginCheckoutEvent?: string;
 }) {
   if (!id) return null;
 
-  const config = JSON.stringify({ id, beginCheckoutLabel: beginCheckoutLabel ?? "" });
+  const config = JSON.stringify({ id, beginCheckoutEvent: beginCheckoutEvent ?? "" });
 
   return (
     <Script id="gads-config" strategy="lazyOnload">
