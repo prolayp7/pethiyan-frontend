@@ -44,7 +44,6 @@ function scrollSlider(
 }
 
 export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts, categories, heroSettings }: BlogHomeClientProps) {
-  const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
   const featuredSliderRef = useRef<HTMLDivElement | null>(null);
   const latestSliderRef = useRef<HTMLDivElement | null>(null);
@@ -54,18 +53,10 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts, c
   const categoryIndexRef = useRef(0);
 
   const filteredPosts = useMemo(() => {
-    const normalized = search.trim().toLowerCase();
-    return latestPosts.filter((post) => {
-      const matchesCategory = activeCategory === "" || post.category === activeCategory;
-      const matchesSearch =
-        normalized === "" ||
-        post.title.toLowerCase().includes(normalized) ||
-        post.excerpt.toLowerCase().includes(normalized) ||
-        post.tags.some((tag) => tag.toLowerCase().includes(normalized));
-
-      return matchesCategory && matchesSearch;
-    });
-  }, [activeCategory, latestPosts, search]);
+    return latestPosts.filter((post) =>
+      activeCategory === "" || post.category === activeCategory
+    );
+  }, [activeCategory, latestPosts]);
 
   const categoryCounts = useMemo(() => {
     return categories.reduce<Record<string, number>>((acc, category) => {
@@ -91,8 +82,6 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts, c
 
       <Container className="relative z-10 -mt-8 pb-16 sm:-mt-10 sm:pb-20">
         <SearchAndFilterBar
-          search={search}
-          onSearchChange={setSearch}
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
@@ -216,7 +205,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts, c
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600">Latest Posts</p>
               <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950">
-                {search || activeCategory ? "Filtered results" : "Fresh thinking from the journal"}
+                {activeCategory ? "Filtered results" : "Fresh thinking from the journal"}
               </h2>
             </div>
             <p className="text-sm text-slate-500">{filteredPosts.length} articles</p>
