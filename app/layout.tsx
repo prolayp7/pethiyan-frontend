@@ -11,6 +11,7 @@ import { getAnnouncementBar, getHeaderMenu, getHeroSection, getSystemSettings, g
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { GTMScript, GTMNoScript } from "@/components/analytics/GoogleTagManager";
 import FacebookPixel from "@/components/analytics/FacebookPixel";
+import GoogleAds from "@/components/analytics/GoogleAds";
 import CartPushLayout from "@/components/layout/CartPushLayout";
 import TopAnnouncementBar from "@/components/headers/TopAnnouncementBar";
 import OfferTickerClient from "@/components/headers/OfferTickerClient";
@@ -202,6 +203,9 @@ export default async function RootLayout({
         <script {...jsonLd(siteSchema)} key="site-schema" />
         {webSettings?.googleAnalyticsId  && <GoogleAnalytics id={webSettings.googleAnalyticsId} />}
         {webSettings?.googleTagManagerId && <GTMScript      id={webSettings.googleTagManagerId} />}
+        {webSettings?.googleAdsId && (
+          <GoogleAds id={webSettings.googleAdsId} beginCheckoutLabel={webSettings.googleAdsBeginCheckoutLabel} />
+        )}
       </head>
       <body className="antialiased bg-background text-foreground font-sans">
         {webSettings?.googleTagManagerId && <GTMNoScript   id={webSettings.googleTagManagerId} />}

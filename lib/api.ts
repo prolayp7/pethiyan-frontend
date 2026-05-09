@@ -340,6 +340,8 @@ export interface ApiWebSettings {
   googleAnalyticsId: string;
   googleTagManagerId: string;
   facebookPixelId: string;
+  googleAdsId: string;
+  googleAdsBeginCheckoutLabel: string;
   metaTitle: string;
   metaDescription: string;
   metaKeywords: string;
@@ -1923,9 +1925,11 @@ export async function getWebSettings(): Promise<ApiWebSettings | null> {
   const str = (key: string) => (typeof s[key] === "string" ? (s[key] as string).trim() : "");
 
   return {
-    googleAnalyticsId:      str("googleAnalyticsId"),
-    googleTagManagerId:     str("googleTagManagerId"),
-    facebookPixelId:        str("facebookPixelId"),
+    googleAnalyticsId:           str("googleAnalyticsId"),
+    googleTagManagerId:          str("googleTagManagerId"),
+    facebookPixelId:             str("facebookPixelId"),
+    googleAdsId:                 str("googleAdsId"),
+    googleAdsBeginCheckoutLabel: str("googleAdsBeginCheckoutLabel"),
     metaTitle:              str("metaTitle"),
     metaDescription:        str("metaDescription"),
     metaKeywords:           str("metaKeywords"),
