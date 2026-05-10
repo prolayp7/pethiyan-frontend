@@ -112,7 +112,7 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
   // state changes would otherwise re-instantiate Autoplay and force Embla
   // to re-read slide dimensions — the main source of forced reflows).
   const autoplay = useMemo(
-    () => Autoplay({ delay: autoplayDelay, stopOnInteraction: false }),
+    () => Autoplay({ delay: autoplayDelay, stopOnInteraction: false, stopOnMouseEnter: true }),
     [autoplayDelay]
   );
 
@@ -157,8 +157,6 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
         background: "linear-gradient(320deg, #071023 0%, #0c1d38 50%, #0f2444 100%)",
       }}
       aria-label="Hero carousel"
-      onMouseEnter={() => autoplay.stop()}
-      onMouseLeave={() => autoplay.reset()}
     >
       {/* hero-mobile-heading / hero-mobile-subheading / hero-mobile-description
           styles live in globals.css — no runtime style injection */}
