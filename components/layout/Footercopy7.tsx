@@ -26,6 +26,13 @@ export default async function Footer() {
   const isHomepage = pathname === "/";
   const footerData = await getFooterData();
 
+  // Display Scope logic:
+  //   homepageOnly = true  → show ONLY on home page
+  //   homepageOnly = false → show on EVERY page
+  const seoEnabled      = footerData?.footerSeo?.enabled      ?? true;
+  const seoHomepageOnly = footerData?.footerSeo?.homepageOnly ?? false;
+  const shouldRenderFooterSeo = seoEnabled && (!seoHomepageOnly || isHomepage);
+
   const navColumns = [
     ...(footerData?.menus.navigation.map((menu) => ({
       title: menu.title,
@@ -52,8 +59,8 @@ export default async function Footer() {
           FOOTER SEO CONTENT — conditionally rendered per admin settings
       ══════════════════════════════════════════════════════════ */}
       <FooterSeoWrapper
-        shouldRender={Boolean((footerData?.footerSeo.enabled ?? true) && (!footerData?.footerSeo.homepageOnly || isHomepage))}
-        introHtml={footerData?.footerSeo.introHtml}
+        shouldRender={shouldRenderFooterSeo}
+        introHtml={footerData?.footerSeo?.introHtml}
       />
 
       {/* ══════════════════════════════════════════════════════════
