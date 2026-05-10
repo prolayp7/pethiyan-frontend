@@ -203,6 +203,7 @@ export default function ShopClient({
     return () => observer.disconnect();
   }, [fetchMore]);
 
+
   // ── Category tree ───────────────────────────────────────────────────────────
   const categoryTree = useMemo(() => {
     return initialCategories.map((cat) => ({
@@ -336,6 +337,17 @@ export default function ShopClient({
 
   const hasActiveFilters = selectedIds.size > 0 || selectedAttrs.size > 0 || selectedMinQtys.size > 0;
   const totalActiveCount = selectedIds.size + activeAttrCount + selectedMinQtys.size;
+
+  // ── Auto-load when active filters yield no results from loaded pages ─────────
+  // Products can be spread across multiple pages (e.g. Stand-Up Pouches only
+  // appear on pages 2-4). Without this, selecting such a category shows an
+  // empty state and the user never scrolls to trigger the normal infinite scroll.
+  const filteredCount = filtered.length;
+  useEffect(() => {
+    if (hasActiveFilters && filteredCount === 0 && hasMore && !loadingMore) {
+      fetchMore();
+    }
+  }, [hasActiveFilters, filteredCount, hasMore, loadingMore, fetchMore]);
 
   return (
     <div className="min-h-screen bg-(--background)">
