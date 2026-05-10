@@ -335,6 +335,16 @@ body {
 /* =============================================
    HERO CAROUSEL — progress bar
    ============================================= */
+/* =============================================
+   HERO SECTION 10 — section root styles
+   --hero-min-height is injected as a CSS variable by the component
+   so that the dynamic clamp() value stays out of inline styles.
+   ============================================= */
+.hero-section-10 {
+  height: var(--hero-min-height, 620px);
+  background: linear-gradient(320deg, #071023 0%, #0c1d38 50%, #0f2444 100%);
+}
+
 @keyframes progress-bar {
   from { width: 0%; }
   to   { width: 100%; }

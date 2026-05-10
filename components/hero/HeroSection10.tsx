@@ -53,7 +53,6 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
   // the primary source of Style & Layout main-thread work.
   const {
     heroMinHeight,
-    heightScale,
     headingFontSize,
     contentTopPadding,
     contentBottomPadding,
@@ -82,7 +81,6 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
     const headingMax = (4.8 * hs).toFixed(2);
     return {
       heroMinHeight:          `clamp(280px, min(52vw, 70vh), ${heroHeight}px)`,
-      heightScale:            hs,
       headingFontSize:        `clamp(${headingMin}rem, min(${(3.2 * hs).toFixed(2)}vw, ${(6.2 * hs).toFixed(2)}vh), ${headingMax}rem)`,
       contentTopPadding:      `clamp(6px,  min(2.2vw, 3.5vh), ${Math.round(40 * hs)}px)`,
       contentBottomPadding:   `clamp(6px,  min(1.8vw, 2.8vh), ${Math.round(28 * hs)}px)`,
@@ -151,11 +149,8 @@ export default function HeroSection10({ slides: apiSlides, badges: apiBadges, se
 
   return (
     <section
-      className="relative w-full overflow-hidden"
-      style={{
-        height: heroMinHeight,
-        background: "linear-gradient(320deg, #071023 0%, #0c1d38 50%, #0f2444 100%)",
-      }}
+      className="hero-section-10 relative w-full overflow-hidden"
+      style={{ "--hero-min-height": heroMinHeight } as React.CSSProperties}
       aria-label="Hero carousel"
     >
       {/* hero-mobile-heading / hero-mobile-subheading / hero-mobile-description
