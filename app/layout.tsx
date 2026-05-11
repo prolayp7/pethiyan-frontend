@@ -149,6 +149,7 @@ export default async function RootLayout({
       smsOtpEnabled: false, emailOtpEnabled: false,
       showVariantColorsInGrid: false, showGstInGrid: false,
       showCategoryNameInGrid: false, showMinQtyInGrid: false,
+      sellerSupportNumber: "",
     }),
     getWebSettings(),
     getHeaderMenu(),

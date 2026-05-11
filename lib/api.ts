@@ -334,6 +334,7 @@ export interface ApiSystemSettings {
   showGstInGrid:           boolean;
   showCategoryNameInGrid:  boolean;
   showMinQtyInGrid:        boolean;
+  sellerSupportNumber: string;
 }
 
 export interface ApiWebSettings {
@@ -1905,6 +1906,7 @@ export async function getSystemSettings(): Promise<ApiSystemSettings | null> {
     showGstInGrid:           setting.showGstInGrid           === true,
     showCategoryNameInGrid:  setting.showCategoryNameInGrid  !== false,
     showMinQtyInGrid:        setting.showMinQtyInGrid        === true,
+    sellerSupportNumber: typeof setting.sellerSupportNumber === "string" ? setting.sellerSupportNumber.trim() : "",
   };
 }
 
