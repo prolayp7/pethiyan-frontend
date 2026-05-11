@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+const LoginModal = dynamic(() => import("@/components/auth/LoginModal"), { ssr: false });
 import {
   Heart, ShoppingBag, Package, Tag, Trash2,
   Eye, X, ChevronLeft, ChevronRight, Minus, Plus,
@@ -60,6 +63,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
   } = useSiteSettings();
 
   const [wishlistBusy, setWishlistBusy]           = useState(false);
+  const [loginOpen, setLoginOpen]                 = useState(false);
   const [quickViewOpen, setQuickViewOpen]         = useState(false);
   const [quickViewLoading, setQuickViewLoading]   = useState(false);
   const [quickViewProduct, setQuickViewProduct]   = useState<RealApiProduct | null>(null);
@@ -185,7 +189,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
   const handleToggleWishlist = (e: React.MouseEvent) => {
     void (async () => {
       e.preventDefault();
-      if (!isLoggedIn) { toast.error("Please login to manage wishlist."); return; }
+      if (!isLoggedIn) { setLoginOpen(true); return; }
       if (wishlistBusy) return;
       setWishlistBusy(true);
       try {
@@ -877,6 +881,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
         </div>,
         document.body
       )}
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </>
   );
 }
