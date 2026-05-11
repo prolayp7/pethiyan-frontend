@@ -15,7 +15,7 @@ import {
   faqPageSchema,
   jsonLd,
 } from "@/lib/structured-data";
-import { getCustomJsonLdSchemas, resolveProductSeo } from "@/lib/seo";
+import { getCustomJsonLdSchemas, resolveProductSeo, resolveVariantSeo } from "@/lib/seo";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import RecentlyViewedProducts from "@/components/sections/RecentlyViewedProducts";
@@ -46,12 +46,12 @@ export async function generateMetadata({
 
   if (!product) return { title: "Product Not Found" };
 
-  const firstVariant = product.variants?.[0];
-  const firstStorePricing = selectPrimaryStorePricing(firstVariant?.store_pricing);
+  const defaultVariant = product.variants?.find((v) => v.is_default) ?? product.variants?.[0];
+  const firstStorePricing = selectPrimaryStorePricing(defaultVariant?.store_pricing);
   const price = resolveStorePricingDisplay(firstStorePricing).mainPrice;
   const rawTitle = product.title ?? "Product";
-  const seo = resolveProductSeo(product);
-  const inStock = firstVariant?.availability !== false;
+  const seo = defaultVariant ? resolveVariantSeo(product, defaultVariant) : resolveProductSeo(product);
+  const inStock = defaultVariant?.availability !== false;
 
   return {
     title: seo.title,

@@ -519,7 +519,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (selectedVariantId == null) return;
+    if (!selectedVariant) return;
 
     const nextUrl = new URL(selectedPath, window.location.origin);
     const currentPathWithQuery = `${window.location.pathname}${window.location.search}`;
