@@ -58,6 +58,9 @@ import { pushBrowsingHistory } from "@/lib/browsingHistory";
 import ReviewForm from "./ReviewForm";
 import { toDisplayTitleCase } from "@/lib/text";
 import { resolveProductSeo, resolveVariantSeo } from "@/lib/seo";
+import dynamic from "next/dynamic";
+
+const LoginModal = dynamic(() => import("@/components/auth/LoginModal"), { ssr: false });
 
 function formatCurrency(amount: number | null | undefined, symbol = "₹"): string {
   const value = toNum(amount);
@@ -391,6 +394,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [qty, setQty] = useState(Math.max(product.policies?.minimum_order_quantity ?? 1, 1));
   const [wishlistBusy, setWishlistBusy] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [activeTab, setActiveTab] = useState<"description" | "specs" | "reviews" | "faqs">("description");
   const [customerStateName, setCustomerStateName] = useState<string | null>(null);
@@ -733,11 +737,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
 
   const handleWishlist = async () => {
     if (!isLoggedIn) {
-      const redirectPath =
-        typeof window !== "undefined"
-          ? `${window.location.pathname}${window.location.search}`
-          : pathname || `/products/${product.slug}`;
-      router.push(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+      setLoginModalOpen(true);
       return;
     }
     if (wishlistBusy) return;
@@ -817,6 +817,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
   };
 
   return (
+    <>
     <Container>
       <div className="py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 md:items-start">
@@ -1219,5 +1220,12 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
         </div>
       </div>
     </Container>
+
+    <LoginModal
+      open={loginModalOpen}
+      onClose={() => setLoginModalOpen(false)}
+      onSuccess={handleWishlist}
+    />
+    </>
   );
 }
