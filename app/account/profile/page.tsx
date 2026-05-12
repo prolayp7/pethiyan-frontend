@@ -169,7 +169,7 @@ export default function ProfilePage() {
               <input
                 type="email"
                 value={email}
-                readOnly
+                disabled
                 title="Email address"
                 className={`${inputCls} pl-10 opacity-60 cursor-not-allowed`}
               />
