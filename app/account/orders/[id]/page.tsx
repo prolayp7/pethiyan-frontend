@@ -480,7 +480,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3">
                 <MapPin className="h-4 w-4 text-(--color-primary)" />
-                <h2 className="text-sm font-extrabold text-(--color-secondary)">Delivery Address</h2>
+                <h2 className="text-sm font-extrabold text-(--color-secondary)">Shipping Address</h2>
               </div>
               <div className="text-sm text-gray-600 space-y-0.5">
                 <p className="font-semibold text-(--color-secondary)">{order.address.name}</p>

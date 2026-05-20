@@ -43,3 +43,5 @@ next-env.d.ts
 # explicitly include public assets
 !/public/images/*
 !/public/product_video/*.mp4
+temp_auto_push.bat
+temp_interactive_push.bat
