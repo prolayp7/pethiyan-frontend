@@ -1614,6 +1614,25 @@ function normalizeOrder(raw: Record<string, unknown>): ApiOrder {
     };
   }) as ApiOrderItem[];
 
+  // Build structured address from flat shipping_* fields returned by the API
+  const shippingName  = (raw.shipping_name  as string | undefined)?.trim();
+  const shippingPhone = (raw.shipping_phone as string | undefined)?.trim();
+  const addressLine1  = (raw.shipping_address_1 as string | undefined)?.trim();
+  const address: ApiAddress | undefined =
+    shippingName || addressLine1
+      ? {
+          id: 0,
+          name: shippingName ?? "",
+          phone: shippingPhone ?? "",
+          address_line1: addressLine1 ?? "",
+          address_line2: (raw.shipping_address_2 as string | undefined)?.trim() || undefined,
+          city: (raw.shipping_city  as string | undefined)?.trim() ?? "",
+          state: (raw.shipping_state as string | undefined)?.trim() ?? "",
+          pincode: (raw.shipping_zip as string | undefined)?.trim() ?? "",
+          is_default: false,
+        }
+      : (raw.address as ApiAddress | undefined);
+
   return {
     ...(raw as object),
     uuid: (raw.uuid as string) ?? (raw.slug as string) ?? String(raw.id),
@@ -1628,6 +1647,7 @@ function normalizeOrder(raw: Record<string, unknown>): ApiOrder {
     promo_discount: parseFloat(String(raw.promo_discount ?? 0)),
     gift_card_discount: parseFloat(String(raw.gift_card_discount ?? 0)),
     invoice_downloadable: raw.invoice_downloadable === true,
+    address,
     items,
   } as ApiOrder;
 }

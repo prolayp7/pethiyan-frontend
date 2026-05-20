@@ -487,7 +487,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <p>{order.address.address_line1}</p>
                 {order.address.address_line2 && <p>{order.address.address_line2}</p>}
                 <p>{order.address.city}, {order.address.state} — {order.address.pincode}</p>
-                <p className="text-xs text-gray-400 pt-1">📞 +91 {order.address.phone}</p>
+                {order.address.phone && (
+                  <p className="text-xs text-gray-400 pt-1">
+                    📞 {/^\+/.test(order.address.phone) ? order.address.phone : `+91 ${order.address.phone}`}
+                  </p>
+                )}
               </div>
             </div>
           )}
