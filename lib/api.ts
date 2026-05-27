@@ -2961,7 +2961,7 @@ export async function getProductsByCategory(categorySlug: string): Promise<RealA
       `${API_BASE}/api/products?categories=${encodeURIComponent(categorySlug)}&per_page=100&include_child_categories=1`,
       {
         headers: { Accept: "application/json" },
-        next: { revalidate: 86400 },
+        next: { revalidate: 300 },
       } as RequestInit
     );
     if (!res.ok) return [];
