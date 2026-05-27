@@ -720,7 +720,7 @@ export async function getProducts(params?: Record<string, string>): Promise<Real
   try {
     const res = await fetch(`${API_BASE}/api/products${query}`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 86400 },
+      cache: "no-store",
     } as RequestInit);
     if (!res.ok) return [];
     const json = await res.json();
@@ -748,7 +748,7 @@ export async function getProductsPage(page = 1, perPage = 24): Promise<ProductsP
   try {
     const res = await fetch(
       `${API_BASE}/api/products?page=${page}&perPage=${perPage}`,
-      { headers: { Accept: "application/json" }, next: { revalidate: 86400 } } as RequestInit,
+      { headers: { Accept: "application/json" }, cache: "no-store" } as RequestInit,
     );
     if (!res.ok) return empty;
     const json = await res.json();
@@ -773,7 +773,7 @@ export async function getFeaturedProducts(): Promise<RealApiProduct[]> {
   try {
     const res = await fetch(`${API_BASE}/api/products/featured`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 86400 },
+      cache: "no-store",
     } as RequestInit);
     if (!res.ok) return [];
     const json = await res.json();
@@ -829,7 +829,7 @@ export async function getNewArrivals(days = 30, limit = 40): Promise<RealApiProd
       `${API_BASE}/api/products/new-arrivals?days=${days}&limit=${limit}`,
       {
         headers: { Accept: "application/json" },
-        next: { revalidate: 86400 },
+        cache: "no-store",
       } as RequestInit
     );
     if (!res.ok) return [];
@@ -2961,7 +2961,7 @@ export async function getProductsByCategory(categorySlug: string): Promise<RealA
       `${API_BASE}/api/products?categories=${encodeURIComponent(categorySlug)}&per_page=100&include_child_categories=1`,
       {
         headers: { Accept: "application/json" },
-        next: { revalidate: 300 },
+        cache: "no-store",
       } as RequestInit
     );
     if (!res.ok) return [];
