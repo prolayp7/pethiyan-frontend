@@ -18,9 +18,7 @@ export default function CartDrawer() {
   const { isOpen, closeCart, items, total, totalGst, updateQuantity, removeItem } = useCart();
   const router = useRouter();
 
-  // Navigate after the 300ms close animation completes to avoid a React DOM
-  // reconciliation error (removeChild on null parentNode) that occurs when the
-  // Radix Dialog portal is still animating closed during a Next.js navigation.
+  // Close the drawer first, then navigate after the 300ms CSS transition finishes.
   const navigateAndClose = useCallback((href: string) => {
     closeCart();
     setTimeout(() => router.push(href), 320);
@@ -36,8 +34,10 @@ export default function CartDrawer() {
     <Sheet open={isOpen} onOpenChange={(open) => !open && closeCart()}>
       <SheetContent
         side="right"
-        className="z-[10001] flex h-full w-full max-w-sm flex-col p-0"
+        className="z-[10001] w-full max-w-sm p-0"
         overlayClassName="z-[10000] bg-black/45"
+        open={isOpen}
+        onClose={closeCart}
       >
         {/* Header */}
         <SheetHeader className="px-6 py-4 border-b border-gray-100">
