@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import {
   Sheet,
@@ -15,6 +16,15 @@ import { shouldBypassOptimizer } from "@/lib/image";
 
 export default function CartDrawer() {
   const { isOpen, closeCart, items, total, totalGst, updateQuantity, removeItem } = useCart();
+  const router = useRouter();
+
+  // Navigate after the 300ms close animation completes to avoid a React DOM
+  // reconciliation error (removeChild on null parentNode) that occurs when the
+  // Radix Dialog portal is still animating closed during a Next.js navigation.
+  const navigateAndClose = useCallback((href: string) => {
+    closeCart();
+    setTimeout(() => router.push(href), 320);
+  }, [closeCart, router]);
 
   // Pick currency symbol from the first cart item, fall back to ₹
   const currencySymbol = items[0]?.currencySymbol ?? "₹";
@@ -59,10 +69,9 @@ export default function CartDrawer() {
                 variant="default"
                 size="sm"
                 className="mt-2"
-                onClick={closeCart}
-                asChild
+                onClick={() => navigateAndClose("/shop")}
               >
-                <Link href="/shop">Shop Now</Link>
+                Shop Now
               </Button>
             </div>
           ) : (
@@ -155,15 +164,11 @@ export default function CartDrawer() {
 
             {/* CTA Buttons */}
             <div className="space-y-2">
-              <Button className="w-full" size="lg" asChild>
-                <Link href="/checkout" onClick={closeCart}>
-                  Checkout
-                </Link>
+              <Button className="w-full" size="lg" onClick={() => navigateAndClose("/checkout")}>
+                Checkout
               </Button>
-              <Button variant="outline" className="w-full" size="default" asChild>
-                <Link href="/cart" onClick={closeCart}>
-                  View Cart
-                </Link>
+              <Button variant="outline" className="w-full" size="default" onClick={() => navigateAndClose("/cart")}>
+                View Cart
               </Button>
             </div>
 
