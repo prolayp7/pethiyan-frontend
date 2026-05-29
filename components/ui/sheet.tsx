@@ -40,7 +40,6 @@ const SheetContent = React.forwardRef<
     {!hideOverlay && <SheetOverlay className={overlayClassName} />}
     <DialogPrimitive.Content
       ref={ref}
-      forceMount={forceMount}
       className={cn(
         "fixed z-50 gap-4 bg-white shadow-xl transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:pointer-events-none",
         side === "right" &&
