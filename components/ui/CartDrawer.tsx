@@ -36,7 +36,6 @@ export default function CartDrawer() {
     <Sheet open={isOpen} onOpenChange={(open) => !open && closeCart()}>
       <SheetContent
         side="right"
-        forceMount
         className="z-[10001] flex h-full w-full max-w-sm flex-col p-0"
         overlayClassName="z-[10000] bg-black/45"
       >
