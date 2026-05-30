@@ -11,11 +11,12 @@ const navItems = [
   { label: "Account", href: "/account", icon: User },
   { label: "Shop", href: "/shop", icon: Store },
   { label: "Wishlist", href: "/wishlist", icon: Heart },
+  { label: "Cart", href: "/cart", icon: ShoppingBag },
 ];
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
-  const { itemCount, openCart } = useCart();
+  const { itemCount } = useCart();
 
   return (
     <nav
@@ -25,6 +26,7 @@ export default function MobileBottomNav() {
       <ul className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {navItems.map((item) => {
           const Icon = item.icon;
+          const isCart = item.href === "/cart";
           const isActive = item.href === "/"
             ? pathname === "/"
             : pathname === item.href || pathname.startsWith(item.href + "/");
@@ -38,40 +40,27 @@ export default function MobileBottomNav() {
                     ? "text-(--color-primary)"
                     : "text-gray-400 hover:text-gray-600"
                 )}
-                aria-label={item.label}
+                aria-label={isCart ? `Cart with ${itemCount} items` : item.label}
                 aria-current={isActive ? "page" : undefined}
               >
-                <Icon
-                  className={cn(
-                    "h-5 w-5 transition-transform",
-                    isActive && "scale-110"
+                <div className="relative">
+                  <Icon
+                    className={cn(
+                      "h-5 w-5 transition-transform",
+                      isActive && "scale-110"
+                    )}
+                  />
+                  {isCart && itemCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-primary) text-[9px] font-bold text-white">
+                      {itemCount > 9 ? "9+" : itemCount}
+                    </span>
                   )}
-                />
+                </div>
                 <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             </li>
           );
         })}
-
-        {/* Cart Button */}
-        <li className="flex-1">
-          <button
-            type="button"
-            onClick={openCart}
-            className="flex flex-col items-center gap-0.5 py-2 px-2 rounded-xl text-gray-400 hover:text-gray-600 transition-colors w-full relative"
-            aria-label={`Cart with ${itemCount} items`}
-          >
-            <div className="relative">
-              <ShoppingBag className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-primary) text-[9px] font-bold text-white">
-                  {itemCount > 9 ? "9+" : itemCount}
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] font-medium">Cart</span>
-          </button>
-        </li>
       </ul>
     </nav>
   );
