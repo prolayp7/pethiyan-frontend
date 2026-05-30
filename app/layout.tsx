@@ -118,9 +118,6 @@ export async function generateMetadata(): Promise<Metadata> {
       apple: faviconUrl,
     },
     verification: {
-      ...(webSettings?.googleSiteVerification
-        ? { google: webSettings.googleSiteVerification }
-        : {}),
       ...(webSettings?.bingSiteVerification
         ? { other: { "msvalidate.01": webSettings.bingSiteVerification } }
         : {}),
@@ -202,6 +199,9 @@ export default async function RootLayout({
         {API_ORIGIN ? <link rel="preconnect" href={API_ORIGIN} crossOrigin="anonymous" /> : null}
         <script {...jsonLd(orgSchema)} key="org-schema" />
         <script {...jsonLd(siteSchema)} key="site-schema" />
+        {webSettings?.googleSiteVerification && (
+          <meta name="google-site-verification" content={webSettings.googleSiteVerification} />
+        )}
         {webSettings?.googleBusinessProfile && (
           <meta name="google-site-verification" content={webSettings.googleBusinessProfile} />
         )}
