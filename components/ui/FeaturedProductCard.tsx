@@ -475,9 +475,17 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
           aria-label="Quick product view"
         >
           <div
-            className="w-full max-w-6xl max-h-[92vh] overflow-auto rounded-3xl bg-white shadow-2xl"
+            className="w-full max-w-6xl max-h-[92vh] rounded-3xl bg-white shadow-2xl relative flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
+            <button
+              className="absolute right-4 top-4 z-10 h-9 w-9 rounded-full bg-white/90 hover:bg-gray-200 shadow flex items-center justify-center text-[#0f2444]"
+              onClick={closeQuickView}
+              aria-label="Close quick view"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="overflow-auto flex-1 rounded-3xl">
             {quickViewLoading ? (
               <div className="p-10 text-center text-gray-500">Loading product details...</div>
             ) : quickViewProduct ? (
@@ -518,14 +526,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
                   )}
                 </div>
 
-                <div className="p-6 lg:p-8 xl:p-10">
-                  <button
-                    className="ml-auto mb-2 hidden lg:flex h-9 w-9 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center text-[#0f2444]"
-                    onClick={closeQuickView}
-                    aria-label="Close quick view"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+                <div className="p-6 lg:p-8 xl:p-10 pt-12">
                   <h3 className="text-4xl leading-tight font-extrabold text-[#0f2444]">{quickViewProduct.title}</h3>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <span className="text-4xl font-black text-[#0f4d9a]">₹{Number(priceNow).toFixed(2)}</span>
@@ -625,6 +626,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
             ) : (
               <div className="p-10 text-center text-gray-500">Unable to load product details.</div>
             )}
+            </div>
           </div>
         </div>
       , document.body)}
