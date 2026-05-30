@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const LoginModal = dynamic(() => import("@/components/auth/LoginModal"), { ssr: false });
 import { createPortal } from "react-dom";
-import { Tag, Package, ShoppingBag, Heart, Eye, X, ChevronLeft, ChevronRight, Minus, Plus, Trash2, Check } from "lucide-react";
+import { Tag, Package, ShoppingBag, Heart, Eye, X, ChevronLeft, ChevronRight, Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
@@ -93,7 +93,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [qty, setQty] = useState(Math.max(1, p.minQty || 1));
-  const [cartStatus, setCartStatus] = useState<"idle" | "loading" | "added">("idle");
+  const [cartLoading, setCartLoading] = useState(false);
 
   const discount = p.originalPrice
     ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
@@ -207,35 +207,32 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
     e.preventDefault();
     e.stopPropagation();
     if (!quickViewProduct || !selectedVariant || !selectedPricing) return;
-    if (cartStatus !== "idle") return;
+    if (cartLoading) return;
 
-    setCartStatus("loading");
+    setCartLoading(true);
+
+    const key = `${quickViewProduct.id}-v${selectedVariant.id}-s${selectedPricing.store_id}`;
+    addItem({
+      id: key,
+      productId: quickViewProduct.id,
+      name: quickViewProduct.title,
+      price: Number(priceNow || 0),
+      taxPerUnit: selectedPricing.gst?.total_tax_amount ?? 0,
+      image: selectedVariant.image || quickViewProduct.images.main_image || null,
+      slug: quickViewProduct.slug,
+      variantId: selectedVariant.id,
+      variantLabel: selectedVariant.title,
+      minQty: qty,
+      storeId: selectedPricing.store_id,
+      currencySymbol: quickViewProduct.currency?.symbol || "₹",
+      weight: selectedVariant.weight ?? undefined,
+      weightUnit: selectedVariant.weight_unit ?? undefined,
+    });
+    toast.success("Product added to cart");
 
     setTimeout(() => {
-      const key = `${quickViewProduct.id}-v${selectedVariant.id}-s${selectedPricing.store_id}`;
-      addItem({
-        id: key,
-        productId: quickViewProduct.id,
-        name: quickViewProduct.title,
-        price: Number(priceNow || 0),
-        taxPerUnit: selectedPricing.gst?.total_tax_amount ?? 0,
-        image: selectedVariant.image || quickViewProduct.images.main_image || null,
-        slug: quickViewProduct.slug,
-        variantId: selectedVariant.id,
-        variantLabel: selectedVariant.title,
-        minQty: qty,
-        storeId: selectedPricing.store_id,
-        currencySymbol: quickViewProduct.currency?.symbol || "₹",
-        weight: selectedVariant.weight ?? undefined,
-        weightUnit: selectedVariant.weight_unit ?? undefined,
-      });
-      setCartStatus("added");
-      setTimeout(() => {
-        openCart();
-        closeQuickView();
-        setCartStatus("idle");
-      }, 1000);
-    }, 700);
+      setCartLoading(false);
+    }, 1500);
   };
 
   const buyNow = (e: React.MouseEvent<HTMLElement>) => {
@@ -628,40 +625,24 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
 
                     <button
                       onClick={addSelectedToCart}
-                      disabled={cartStatus !== "idle"}
-                      className={`relative h-12 rounded-full px-10 text-white text-lg font-semibold overflow-hidden transition-all duration-300 min-w-[160px] ${
-                        cartStatus === "added"
-                          ? "bg-green-500 shadow-lg shadow-green-200/60"
-                          : cartStatus === "loading"
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "btn-brand hover:opacity-95 active:scale-95"
+                      disabled={cartLoading}
+                      className={`h-12 rounded-full px-10 text-white text-lg font-semibold transition-opacity duration-200 min-w-[160px] flex items-center justify-center gap-2 btn-brand ${
+                        cartLoading ? "opacity-70 cursor-not-allowed" : "hover:opacity-95 active:scale-95"
                       }`}
                     >
-                      {/* idle */}
-                      {cartStatus === "idle" && (
-                        <span className="flex items-center justify-center gap-2">
-                          <ShoppingBag className="h-5 w-5" />
-                          Add to cart
-                        </span>
-                      )}
-
-                      {/* loading spinner */}
-                      {cartStatus === "loading" && (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                      {cartLoading ? (
+                        <>
+                          <svg className="h-5 w-5 animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                           </svg>
                           Adding...
-                        </span>
-                      )}
-
-                      {/* success */}
-                      {cartStatus === "added" && (
-                        <span className="flex items-center justify-center gap-2">
-                          <Check className="h-5 w-5" strokeWidth={3} />
-                          Added to Cart!
-                        </span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag className="h-5 w-5 shrink-0" />
+                          Add to cart
+                        </>
                       )}
                     </button>
 
