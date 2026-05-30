@@ -470,10 +470,14 @@ export default function CheckoutClient() {
   // When syncing/removing items during checkout we temporarily suppress the "empty cart -> redirect" guard
   const suppressEmptyCartRedirectRef = useRef(false);
 
-  // Redirect if cart empty — skip when we just completed an order
+  // Redirect if cart empty — skip when we just completed an order or when auth hasn't
+  // resolved yet (cart items start as [] before localStorage hydration; firing this
+  // effect before hydration would incorrectly redirect a logged-out user who arrived
+  // at checkout with items, causing the login modal to auto-close).
   useEffect(() => {
+    if (authLoading || !isLoggedIn) return;
     if (items.length === 0 && !orderSuccessRef.current && !suppressEmptyCartRedirectRef.current) router.replace("/cart");
-  }, [items.length, router]);
+  }, [items.length, router, authLoading, isLoggedIn]);
 
   useEffect(() => {
     setLastPincode(readLastPincodeFromCookie());
