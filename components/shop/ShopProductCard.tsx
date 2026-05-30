@@ -70,7 +70,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex]   = useState(0);
   const [qty, setQty] = useState(product.policies?.minimum_order_quantity ?? 1);
-  const [cartLoading, setCartLoading]             = useState(false);
+  const [cartState, setCartState]                 = useState<"idle" | "loading" | "added">("idle");
 
   // ── Derived card values ──────────────────────────────────────────────────
   const { variant: defaultVariant, pricing: defaultPricing } = getDefaultPricing(product);
@@ -252,9 +252,9 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
   const addSelectedToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!quickViewProduct || !selectedVariant || !selectedPricing) return;
-    if (cartLoading) return;
+    if (cartState !== "idle") return;
 
-    setCartLoading(true);
+    setCartState("loading");
 
     const itemId = `${quickViewProduct.id}-v${selectedVariant.id}-s${selectedPricing.store_id}`;
     addItem({
@@ -280,8 +280,9 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
     toast.success("Product added to cart");
 
     setTimeout(() => {
-      setCartLoading(false);
-    }, 1500);
+      setCartState("added");
+      setTimeout(() => setCartState("idle"), 1500);
+    }, 800);
   };
 
 
@@ -838,14 +839,18 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                       </div>
                       <button
                         onClick={addSelectedToCart}
-                        disabled={!qvInStock || cartLoading}
-                        className={`w-full lg:flex-1 h-10 rounded-full text-white text-sm font-semibold transition-all flex items-center justify-center gap-1.5 bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] ${
-                          cartLoading || !qvInStock
-                            ? "opacity-70 cursor-not-allowed"
-                            : "hover:opacity-90 active:scale-95"
+                        disabled={!qvInStock || cartState !== "idle"}
+                        className={`w-full lg:flex-1 h-10 rounded-full text-white text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                          cartState === "added"
+                            ? "bg-green-500 cursor-default"
+                            : cartState === "loading"
+                            ? "opacity-70 cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]"
+                            : !qvInStock
+                            ? "opacity-40 cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)]"
+                            : "bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] hover:opacity-90 active:scale-95"
                         }`}
                       >
-                        {cartLoading ? (
+                        {cartState === "loading" && (
                           <>
                             <svg className="h-4 w-4 animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
                               <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -853,7 +858,16 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                             </svg>
                             Adding...
                           </>
-                        ) : (
+                        )}
+                        {cartState === "added" && (
+                          <>
+                            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Added to Cart
+                          </>
+                        )}
+                        {cartState === "idle" && (
                           <>
                             <ShoppingBag className="h-4 w-4" />
                             Add to Cart

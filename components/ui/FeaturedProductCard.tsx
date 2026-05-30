@@ -93,7 +93,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [qty, setQty] = useState(Math.max(1, p.minQty || 1));
-  const [cartLoading, setCartLoading] = useState(false);
+  const [cartState, setCartState] = useState<"idle" | "loading" | "added">("idle");
 
   const discount = p.originalPrice
     ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
@@ -207,9 +207,9 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
     e.preventDefault();
     e.stopPropagation();
     if (!quickViewProduct || !selectedVariant || !selectedPricing) return;
-    if (cartLoading) return;
+    if (cartState !== "idle") return;
 
-    setCartLoading(true);
+    setCartState("loading");
 
     const key = `${quickViewProduct.id}-v${selectedVariant.id}-s${selectedPricing.store_id}`;
     addItem({
@@ -231,8 +231,9 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
     toast.success("Product added to cart");
 
     setTimeout(() => {
-      setCartLoading(false);
-    }, 1500);
+      setCartState("added");
+      setTimeout(() => setCartState("idle"), 1500);
+    }, 800);
   };
 
   const buyNow = (e: React.MouseEvent<HTMLElement>) => {
@@ -625,12 +626,16 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
 
                     <button
                       onClick={addSelectedToCart}
-                      disabled={cartLoading}
-                      className={`h-12 rounded-full px-10 text-white text-lg font-semibold transition-opacity duration-200 min-w-[160px] flex items-center justify-center gap-2 btn-brand ${
-                        cartLoading ? "opacity-70 cursor-not-allowed" : "hover:opacity-95 active:scale-95"
+                      disabled={cartState !== "idle"}
+                      className={`h-12 rounded-full px-10 text-white text-lg font-semibold transition-all duration-300 min-w-[160px] flex items-center justify-center gap-2 ${
+                        cartState === "added"
+                          ? "bg-green-500 cursor-default"
+                          : cartState === "loading"
+                          ? "btn-brand opacity-70 cursor-not-allowed"
+                          : "btn-brand hover:opacity-95 active:scale-95"
                       }`}
                     >
-                      {cartLoading ? (
+                      {cartState === "loading" && (
                         <>
                           <svg className="h-5 w-5 animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
                             <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -638,7 +643,16 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
                           </svg>
                           Adding...
                         </>
-                      ) : (
+                      )}
+                      {cartState === "added" && (
+                        <>
+                          <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          Added to Cart
+                        </>
+                      )}
+                      {cartState === "idle" && (
                         <>
                           <ShoppingBag className="h-5 w-5 shrink-0" />
                           Add to cart
