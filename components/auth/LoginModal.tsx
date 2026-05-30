@@ -708,7 +708,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
 
           {/* Mobile logo strip */}
           <div
-            className="md:hidden px-6 pt-3 pb-2 text-center"
+            className="md:hidden pl-6 pr-16 pt-3 pb-2 text-center"
             style={{ background: "linear-gradient(135deg,#0f2f5f 0%,#17396f 60%,#2a7a4e 100%)" }}
           >
             {logo ? (
