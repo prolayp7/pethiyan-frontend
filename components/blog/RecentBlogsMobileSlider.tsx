@@ -45,7 +45,7 @@ export default function RecentBlogsMobileSlider({ posts }: Props) {
 
       <div
         ref={sliderRef}
-        className="blog-slider-scroll flex snap-x snap-mandatory gap-6 overflow-x-auto px-12 pb-0 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="blog-slider-scroll flex items-stretch snap-x snap-mandatory gap-6 overflow-x-auto px-12 pb-0 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         aria-label="Recent blog posts slider"
       >
         {posts.map((post) => (
