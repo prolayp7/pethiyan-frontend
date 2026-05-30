@@ -99,9 +99,18 @@ export default function CartDrawer() {
 
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 leading-snug">
-                      {item.name}
-                    </p>
+                    {item.slug ? (
+                      <a
+                        href={`/products/${item.slug}`}
+                        className="text-sm font-medium text-gray-900 leading-snug hover:text-(--color-primary) transition-colors"
+                      >
+                        {item.name}
+                      </a>
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 leading-snug">
+                        {item.name}
+                      </p>
+                    )}
                     <p className="text-sm text-(--color-primary) font-semibold mt-0.5">
                       {fmt(item.price * item.quantity)}
                     </p>
