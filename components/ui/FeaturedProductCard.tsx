@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const LoginModal = dynamic(() => import("@/components/auth/LoginModal"), { ssr: false });
 import { createPortal } from "react-dom";
-import { Tag, Package, ShoppingBag, Heart, Eye, X, ChevronLeft, ChevronRight, Minus, Plus, Trash2 } from "lucide-react";
+import { Tag, Package, ShoppingBag, Heart, Eye, X, ChevronLeft, ChevronRight, Minus, Plus, Trash2, Check } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
@@ -93,6 +93,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [qty, setQty] = useState(Math.max(1, p.minQty || 1));
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const discount = p.originalPrice
     ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
@@ -206,6 +207,7 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
     e.preventDefault();
     e.stopPropagation();
     if (!quickViewProduct || !selectedVariant || !selectedPricing) return;
+    if (addedToCart) return;
 
     const key = `${quickViewProduct.id}-v${selectedVariant.id}-s${selectedPricing.store_id}`;
     addItem({
@@ -224,9 +226,12 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
       weight: selectedVariant.weight ?? undefined,
       weightUnit: selectedVariant.weight_unit ?? undefined,
     });
-    toast.success("Product added to cart");
-    openCart();
-    closeQuickView();
+    setAddedToCart(true);
+    setTimeout(() => {
+      openCart();
+      closeQuickView();
+      setAddedToCart(false);
+    }, 1200);
   };
 
   const buyNow = (e: React.MouseEvent<HTMLElement>) => {
@@ -599,9 +604,21 @@ export default function FeaturedProductCard({ p }: { p: FallbackProduct }) {
 
                     <button
                       onClick={addSelectedToCart}
-                      className="btn-brand h-12 rounded-full px-10 text-white text-lg font-semibold hover:opacity-95"
+                      disabled={addedToCart}
+                      className={`relative h-12 rounded-full px-10 text-white text-lg font-semibold overflow-hidden transition-all duration-300 ${
+                        addedToCart
+                          ? "bg-green-500 scale-95 shadow-lg shadow-green-200"
+                          : "btn-brand hover:opacity-95 active:scale-95"
+                      }`}
                     >
-                      Add to cart
+                      <span className={`flex items-center justify-center gap-2 transition-all duration-300 ${addedToCart ? "opacity-0 -translate-y-6" : "opacity-100 translate-y-0"}`}>
+                        <ShoppingBag className="h-5 w-5" />
+                        Add to cart
+                      </span>
+                      <span className={`absolute inset-0 flex items-center justify-center gap-2 transition-all duration-300 ${addedToCart ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+                        <Check className="h-5 w-5 animate-bounce" />
+                        Added!
+                      </span>
                     </button>
 
                     <button
