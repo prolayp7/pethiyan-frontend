@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import {
@@ -16,13 +15,15 @@ import { shouldBypassOptimizer } from "@/lib/image";
 
 export default function CartDrawer() {
   const { isOpen, closeCart, items, total, totalGst, updateQuantity, removeItem } = useCart();
-  const router = useRouter();
 
-  // Close the drawer first, then navigate after the 300ms CSS transition finishes.
+  // Use a hard navigation (not router.push) to avoid a React 19 concurrent-mode
+  // bug where metadata hoistables (<link rel="canonical">, hreflang) rendered by
+  // the product page have parentNode=null when React tries to remove them during
+  // soft navigation, causing "removeChild on null parentNode" console errors.
   const navigateAndClose = useCallback((href: string) => {
     closeCart();
-    setTimeout(() => router.push(href), 320);
-  }, [closeCart, router]);
+    setTimeout(() => { window.location.href = href; }, 310);
+  }, [closeCart]);
 
   // Pick currency symbol from the first cart item, fall back to ₹
   const currencySymbol = items[0]?.currencySymbol ?? "₹";
