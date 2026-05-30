@@ -708,15 +708,14 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
 
           {/* Mobile logo strip */}
           <div
-            className="md:hidden px-6 pt-6 pb-4 text-center"
+            className="md:hidden px-6 pt-3 pb-2 text-center"
             style={{ background: "linear-gradient(135deg,#0f2f5f 0%,#17396f 60%,#2a7a4e 100%)" }}
           >
             {logo ? (
-              <Image src={logo} alt={appName} width={120} height={44} className="mx-auto h-10 w-auto object-contain brightness-0 invert" unoptimized />
+              <Image src={logo} alt={appName} width={90} height={32} className="mx-auto h-7 w-auto object-contain brightness-0 invert" unoptimized />
             ) : (
-              <span className="text-xl font-extrabold text-white">{appName}</span>
+              <span className="text-base font-extrabold text-white">{appName}</span>
             )}
-            <p className="mt-1 text-xs text-blue-200/70">The Power of Perfect Packaging</p>
           </div>
 
           {/* Close button */}
