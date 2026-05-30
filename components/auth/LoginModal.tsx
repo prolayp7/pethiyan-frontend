@@ -721,11 +721,10 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-20 flex items-center justify-center w-10 h-10 rounded-full transition-all hover:scale-110 active:scale-95"
-            style={{ background: "rgba(255,255,255,0.22)", border: "1.5px solid rgba(255,255,255,0.45)" }}
+            className="absolute top-4 right-4 z-20 flex items-center justify-center w-10 h-10 rounded-full transition-all hover:scale-110 active:scale-95 bg-white/20 border border-white/40 md:bg-gray-100 md:border-gray-200 md:hover:bg-gray-200"
             aria-label="Close"
           >
-            <X className="h-5 w-5 text-white" />
+            <X className="h-5 w-5 text-white md:text-gray-600" />
           </button>
 
           {/* Tabs */}
