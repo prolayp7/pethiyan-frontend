@@ -1,9 +1,10 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
 import {
   CheckCircle2, Package, ArrowRight, Home, ShoppingBag,
   MapPin, CreditCard, Clock, Truck,
@@ -90,12 +91,22 @@ function OrderConfirmedDetailsSkeleton() {
 
 function OrderConfirmedInner() {
   const searchParams = useSearchParams();
+  const router       = useRouter();
+  const { isLoggedIn, isLoading: authLoading } = useAuth();
+
   const orderNumber  = searchParams.get("order_number") ?? "";
   const orderId      = searchParams.get("order_id")     ?? "";
   const orderSlug    = searchParams.get("order_slug")   ?? "";
 
   const [order,   setOrder]   = useState<ApiOrder | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isLoggedIn || !orderId) {
+      router.replace("/shop");
+    }
+  }, [authLoading, isLoggedIn, orderId, router]);
 
   useEffect(() => { flushPurchaseEvent(); }, []);
 
