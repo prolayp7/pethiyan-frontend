@@ -70,6 +70,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex]   = useState(0);
   const [qty, setQty] = useState(product.policies?.minimum_order_quantity ?? 1);
+  const [cartLoading, setCartLoading]             = useState(false);
 
   // ── Derived card values ──────────────────────────────────────────────────
   const { variant: defaultVariant, pricing: defaultPricing } = getDefaultPricing(product);
@@ -251,6 +252,10 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
   const addSelectedToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!quickViewProduct || !selectedVariant || !selectedPricing) return;
+    if (cartLoading) return;
+
+    setCartLoading(true);
+
     const itemId = `${quickViewProduct.id}-v${selectedVariant.id}-s${selectedPricing.store_id}`;
     addItem({
       id: itemId,
@@ -273,7 +278,10 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
     });
     setTimeout(() => updateQuantity(itemId, qty), 0);
     toast.success("Product added to cart");
-    openCart();
+
+    setTimeout(() => {
+      setCartLoading(false);
+    }, 1500);
   };
 
 
@@ -828,10 +836,29 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                           </span>
                         )}
                       </div>
-                      <button onClick={addSelectedToCart} disabled={!qvInStock}
-                        className="w-full lg:flex-1 h-10 rounded-full text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] flex items-center justify-center gap-1.5">
-                        <ShoppingBag className="h-4 w-4" />
-                        Add to Cart
+                      <button
+                        onClick={addSelectedToCart}
+                        disabled={!qvInStock || cartLoading}
+                        className={`w-full lg:flex-1 h-10 rounded-full text-white text-sm font-semibold transition-all flex items-center justify-center gap-1.5 bg-[linear-gradient(135deg,#17396f_0%,#2f6f9f_52%,#49ad57_100%)] ${
+                          cartLoading || !qvInStock
+                            ? "opacity-70 cursor-not-allowed"
+                            : "hover:opacity-90 active:scale-95"
+                        }`}
+                      >
+                        {cartLoading ? (
+                          <>
+                            <svg className="h-4 w-4 animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                            </svg>
+                            Adding...
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingBag className="h-4 w-4" />
+                            Add to Cart
+                          </>
+                        )}
                       </button>
                     </div>
 
