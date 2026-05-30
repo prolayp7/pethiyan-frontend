@@ -231,7 +231,7 @@ function Gallery({
             <button
               key={`${thumb.type}-${thumb.src}-${i}`}
               onClick={() => setActive(i)}
-              className={`relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${
+              className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 transition-all ${
                 active === i
                   ? "border-(--color-primary) shadow-md"
                   : "border-(--color-border) hover:border-(--color-primary)/50"
@@ -239,20 +239,22 @@ function Gallery({
               aria-label={thumb.type === "video" ? "Product video" : `Image ${i + 1}`}
               aria-pressed={active === i}
             >
-              {thumb.type === "video" ? (
-                <div className="absolute inset-0 bg-black flex items-center justify-center">
-                  <Play className="h-5 w-5 text-white" aria-hidden="true" />
-                </div>
-              ) : (
-                <Image
-                  src={thumb.src}
-                  alt={`${name} thumbnail ${i + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="64px"
-                  unoptimized={shouldBypassOptimizer(thumb.src)}
-                />
-              )}
+              <div className="relative w-full h-full overflow-hidden rounded-[10px]">
+                {thumb.type === "video" ? (
+                  <div className="absolute inset-0 bg-black flex items-center justify-center">
+                    <Play className="h-5 w-5 text-white" aria-hidden="true" />
+                  </div>
+                ) : (
+                  <Image
+                    src={thumb.src}
+                    alt={`${name} thumbnail ${i + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                    unoptimized={shouldBypassOptimizer(thumb.src)}
+                  />
+                )}
+              </div>
             </button>
           ))}
         </div>
@@ -832,7 +834,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
             {variantList.length > 1 && (
               <div className="mt-4">
                 <p className="text-sm font-semibold text-(--color-secondary) mb-2">Variants</p>
-                <div className="grid grid-cols-5 gap-2 max-h-[220px] overflow-y-auto">
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[220px] overflow-y-auto">
                   {displayVariantList.map((variant) => {
                     const selected = selectedVariant?.id === variant.id;
                     const attrLabel = Object.entries(variant.attributes ?? {}).map(([k, v]) => `${k}: ${v}`).join(" | ");
@@ -863,29 +865,29 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
                         onClick={() => navigateToVariant(variant)}
                         aria-pressed={selected}
                         title={attrLabel}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all text-center min-w-[56px] ${
+                        className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl transition-all text-center w-full overflow-hidden ${
                           selected
                             ? "btn-brand border-2 border-(--color-primary) shadow-md"
                             : "bg-white text-(--color-secondary) border border-(--color-border) hover:shadow-sm"
                         }`}
                       >
                         {variantImage ? (
-                          <div className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 ${selected ? "ring-2 ring-(--color-primary)" : ""}`}>
+                          <div className={`relative w-10 h-10 rounded-lg overflow-hidden shrink-0 ${selected ? "ring-2 ring-(--color-primary)" : ""}`}>
                             <Image
                               src={variantImage}
                               alt={variant.title}
                               fill
                               className="object-cover"
-                              sizes="48px"
+                              sizes="40px"
                               unoptimized={shouldBypassOptimizer(variantImage)}
                             />
                           </div>
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                            <Package className="h-5 w-5 text-gray-300" aria-hidden="true" />
+                          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                            <Package className="h-4 w-4 text-gray-300" aria-hidden="true" />
                           </div>
                         )}
-                        <div className={`text-xs font-semibold leading-snug line-clamp-2 w-14 ${selected ? "text-white" : "text-(--color-secondary)"}`}>{toDisplayTitleCase(variant.title)}</div>
+                        <div className={`text-xs font-semibold leading-snug line-clamp-2 w-full ${selected ? "text-white" : "text-(--color-secondary)"}`}>{toDisplayTitleCase(variant.title)}</div>
                         {variantSize ? <div className={`text-[10px] ${selected ? "text-white/80" : "text-gray-400"}`}>{variantSize}</div> : null}
                       </button>
                     );
