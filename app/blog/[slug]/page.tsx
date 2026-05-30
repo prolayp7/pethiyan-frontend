@@ -211,14 +211,14 @@ export default async function BlogPostPage({
                   </div>
                 </header>
 
-                <div className="relative mt-8 overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+                <div className="mt-8 overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
                   <Image
                     src={post.featuredImage}
                     alt={post.title}
                     width={1280}
                     height={720}
                     sizes="(min-width: 1280px) 960px, (min-width: 768px) 92vw, 100vw"
-                    className="aspect-[16/9] w-full object-cover"
+                    className="w-full h-auto"
                   />
                 </div>
 
