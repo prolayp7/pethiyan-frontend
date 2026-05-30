@@ -122,6 +122,14 @@ export async function generateMetadata(): Promise<Metadata> {
         ? { other: { "msvalidate.01": webSettings.bingSiteVerification } }
         : {}),
     },
+    other: (() => {
+      const googleTokens = [
+        webSettings?.googleSiteVerification,
+        webSettings?.googleBusinessProfile,
+      ].filter((t): t is string => Boolean(t));
+      if (googleTokens.length === 0) return undefined;
+      return { "google-site-verification": googleTokens } as Record<string, string[]>;
+    })(),
   };
 }
 
@@ -199,12 +207,6 @@ export default async function RootLayout({
         {API_ORIGIN ? <link rel="preconnect" href={API_ORIGIN} crossOrigin="anonymous" /> : null}
         <script {...jsonLd(orgSchema)} key="org-schema" />
         <script {...jsonLd(siteSchema)} key="site-schema" />
-        {webSettings?.googleSiteVerification && (
-          <meta name="google-site-verification" content={webSettings.googleSiteVerification} />
-        )}
-        {webSettings?.googleBusinessProfile && (
-          <meta name="google-site-verification" content={webSettings.googleBusinessProfile} />
-        )}
         {webSettings?.googleAnalyticsId  && <GoogleAnalytics id={webSettings.googleAnalyticsId} />}
         {webSettings?.googleTagManagerId && <GTMScript      id={webSettings.googleTagManagerId} />}
         {webSettings?.googleAdsId && (
