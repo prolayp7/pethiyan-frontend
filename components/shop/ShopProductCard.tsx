@@ -650,8 +650,8 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
             ) : quickViewProduct ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 min-h-0 flex-1 overflow-hidden">
                 {/* ── Image panel ── */}
-                <div className="bg-[#f3f6fa] rounded-t-3xl lg:rounded-l-3xl lg:rounded-tr-none flex flex-col min-h-0">
-                  <div className="relative flex-1 min-h-[280px] lg:min-h-0">
+                <div className="bg-[#f3f6fa] rounded-t-3xl lg:rounded-l-3xl lg:rounded-tr-none flex flex-col shrink-0 lg:shrink">
+                  <div className="relative h-[260px] lg:flex-1 lg:h-auto lg:min-h-0">
                     {/* Mobile-only close button — fixed at top-right of image, never scrolls */}
                     <button
                       type="button"
@@ -690,14 +690,16 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                   </div>
                   {/* Thumbnail strip */}
                   {modalImages.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none shrink-0">
+                    <div className="flex gap-2 overflow-x-auto px-4 py-2.5 scrollbar-none shrink-0 bg-[#f3f6fa]">
                       {modalImages.map((img, idx) => (
                         <button key={idx} onClick={() => setActiveImageIndex(idx)}
-                          className={`relative flex-shrink-0 w-13 h-13 rounded-lg overflow-hidden border-2 transition-all ${activeImageIndex === idx ? "border-[#0f4d9a] shadow-sm" : "border-transparent hover:border-gray-300"}`}
+                          className={`flex-shrink-0 w-13 h-13 rounded-lg border-2 transition-all ${activeImageIndex === idx ? "border-[#0f4d9a] shadow-sm" : "border-transparent hover:border-gray-300"}`}
                           aria-label={`View image ${idx + 1}`}
                         >
-                          <Image src={img} alt="" fill className="object-cover"
-                            unoptimized={shouldBypassOptimizer(img)} sizes="52px" />
+                          <div className="relative w-full h-full overflow-hidden rounded-[6px]">
+                            <Image src={img} alt="" fill className="object-cover"
+                              unoptimized={shouldBypassOptimizer(img)} sizes="52px" />
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -705,7 +707,7 @@ export default function ShopProductCard({ product, view = 'grid', priority = fal
                 </div>
 
                 {/* ── Detail panel ── */}
-                <div className="overflow-y-auto max-h-[92vh] lg:max-h-none">
+                <div className="overflow-y-auto flex-1 min-h-0">
                   <div className="p-5 lg:p-7">
                     {/* Top bar */}
                     <div className="flex items-start justify-between gap-2 mb-3">
