@@ -351,6 +351,7 @@ export interface ApiWebSettings {
   metaAuthor: string;
   metaPublisher: string;
   googleSiteVerification: string;
+  googleBusinessProfile: string;
   bingSiteVerification: string;
   ogTitle: string;
   ogDescription: string;
@@ -1960,6 +1961,7 @@ export async function getWebSettings(): Promise<ApiWebSettings | null> {
     metaAuthor:             str("metaAuthor"),
     metaPublisher:          str("metaPublisher"),
     googleSiteVerification: str("googleSiteVerification"),
+    googleBusinessProfile:  str("googleBusinessProfile"),
     bingSiteVerification:   str("bingSiteVerification"),
     ogTitle:                str("ogTitle"),
     ogDescription:          str("ogDescription"),

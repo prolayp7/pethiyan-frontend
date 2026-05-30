@@ -118,9 +118,13 @@ export async function generateMetadata(): Promise<Metadata> {
       apple: faviconUrl,
     },
     verification: {
-      ...(webSettings?.googleSiteVerification
-        ? { google: webSettings.googleSiteVerification }
-        : {}),
+      ...(() => {
+        const googleTokens = [
+          webSettings?.googleSiteVerification,
+          webSettings?.googleBusinessProfile,
+        ].filter(Boolean) as string[];
+        return googleTokens.length > 0 ? { google: googleTokens } : {};
+      })(),
       ...(webSettings?.bingSiteVerification
         ? { other: { "msvalidate.01": webSettings.bingSiteVerification } }
         : {}),
