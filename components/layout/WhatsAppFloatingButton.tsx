@@ -19,11 +19,11 @@ export default function WhatsAppFloatingButton() {
     >
       {/* Pulse rings */}
       <span
-        className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-40"
+        className="pointer-events-none absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-40"
         aria-hidden="true"
       />
       <span
-        className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-25"
+        className="pointer-events-none absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-25"
         style={{ animationDelay: "0.6s" }}
         aria-hidden="true"
       />

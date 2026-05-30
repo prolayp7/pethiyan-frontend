@@ -107,6 +107,8 @@ const SheetContent = React.forwardRef<
           // @ts-expect-error — inert is a valid HTML attribute in modern browsers
           inert={open ? undefined : ""}
           aria-modal="true"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
           className={cn(
             "fixed z-50 flex flex-col bg-white shadow-xl",
             "transition-transform duration-300 ease-in-out",
