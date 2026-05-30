@@ -691,7 +691,9 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
       step: stepSize,
       totalAllowed: product.policies?.total_allowed_quantity ?? null,
       stock: selectedStorePricing?.stock ?? undefined,
-      name: selectedVariant.title ? `${productName} - ${selectedVariant.title}` : productName,
+      name: (product.type === "variant" && selectedVariant.title)
+        ? `${productName} - ${selectedVariant.title}`
+        : productName,
       price: effectivePrice,
       taxPerUnit: selectedStorePricing?.gst?.total_tax_amount ?? 0,
       image: selectedVariant.image || product.images?.main_image || null,
@@ -709,7 +711,9 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
 
     trackAddToCart({
       item_id:      String(product.id),
-      item_name:    selectedVariant.title ? `${productName} - ${selectedVariant.title}` : productName,
+      item_name:    (product.type === "variant" && selectedVariant.title)
+        ? `${productName} - ${selectedVariant.title}`
+        : productName,
       item_variant: selectedVariant.title,
       item_category: (product as unknown as { category?: { title: string } | null }).category?.title,
       price:        effectivePrice,
