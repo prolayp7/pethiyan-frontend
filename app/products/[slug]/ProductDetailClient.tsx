@@ -397,7 +397,7 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
   const [qty, setQty] = useState(Math.max(product.policies?.minimum_order_quantity ?? 1, 1));
   const [wishlistBusy, setWishlistBusy] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [addedToCart, setAddedToCart] = useState(false);
+  const [cartState, setCartState] = useState<"idle" | "loading" | "added">("idle");
   const [activeTab, setActiveTab] = useState<"description" | "specs" | "reviews" | "faqs">("description");
   const [customerStateName, setCustomerStateName] = useState<string | null>(null);
 
@@ -675,10 +675,12 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
 
   const handleAddToCart = () => {
     if (!selectedVariant || !selectedStorePricing || !inStock) return;
+    if (cartState !== "idle") return;
+
+    setCartState("loading");
 
     const itemId = `${product.id}-${selectedVariant.id}-${selectedStorePricing.store_id}`;
     const safeQty = qtySafe;
-    const existsInCart = items.some((item) => item.id === itemId);
     // Add once, then set the desired total quantity explicitly. The previous
     // approach called addItem in a loop which repeatedly incremented by the
     // step causing large incorrect totals (e.g. 1000). Instead add a single
@@ -719,9 +721,12 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
     });
 
     toast.success("Product added to cart");
-    setAddedToCart(true);
     openCart();
-    setTimeout(() => setAddedToCart(false), 2500);
+
+    setTimeout(() => {
+      setCartState("added");
+      setTimeout(() => setCartState("idle"), 1500);
+    }, 800);
   };
 
   const tabs = [
@@ -1067,18 +1072,41 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
 
               <button
                 onClick={handleAddToCart}
-                disabled={!inStock || !selectedVariant || !selectedStorePricing}
+                disabled={!inStock || !selectedVariant || !selectedStorePricing || cartState !== "idle"}
                 className={`flex-1 min-w-[160px] h-12 px-6 flex items-center justify-center gap-2 rounded-full text-base font-semibold transition-all duration-300 ${
-                  addedToCart
-                    ? "bg-green-500 text-white scale-95"
+                  cartState === "added"
+                    ? "bg-green-500 text-white cursor-default"
+                    : cartState === "loading"
+                    ? "btn-brand opacity-70 cursor-not-allowed"
                     : !inStock
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : "btn-brand hover:opacity-95 hover:-translate-y-0.5 active:translate-y-0"
                 }`}
-                aria-label={addedToCart ? "Added to cart" : `Add ${productName} to cart`}
+                aria-label={cartState === "added" ? "Added to cart" : `Add ${productName} to cart`}
               >
-                <ShoppingCart className="h-4 w-4" aria-hidden="true" />
-                {addedToCart ? "Added to Cart!" : "Add to Cart"}
+                {cartState === "loading" && (
+                  <>
+                    <svg className="h-4 w-4 animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    Adding...
+                  </>
+                )}
+                {cartState === "added" && (
+                  <>
+                    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Added to Cart
+                  </>
+                )}
+                {cartState === "idle" && (
+                  <>
+                    <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+                    Add to Cart
+                  </>
+                )}
               </button>
 
               <button
