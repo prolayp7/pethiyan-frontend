@@ -169,7 +169,6 @@ export default async function RootLayout({
     telephone:     siteSettings?.sellerSupportNumber || webSettings?.supportNumber,
     email:         webSettings?.supportEmail,
     description:   webSettings?.shortDescription || webSettings?.metaDescription,
-    streetAddress: webSettings?.address,
     logoUrl:       siteSettings?.favicon ?? undefined,
     imageUrl:      webSettings?.ogImage          || undefined,
     sameAs:        orgSameAs,

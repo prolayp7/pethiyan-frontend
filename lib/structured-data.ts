@@ -29,7 +29,6 @@ export interface OrgSchemaOverrides {
   telephone?: string;
   email?: string;
   description?: string;
-  streetAddress?: string;
   logoUrl?: string;
   imageUrl?: string;
   sameAs?: string[];
@@ -56,11 +55,6 @@ export function organizationSchema(overrides: OrgSchemaOverrides = {}) {
     },
     image: imageUrl,
     description,
-    address: {
-      "@type": "PostalAddress",
-      ...(overrides.streetAddress ? { streetAddress: overrides.streetAddress } : {}),
-      addressCountry: "IN",
-    },
     contactPoint: [
       {
         "@type": "ContactPoint",
