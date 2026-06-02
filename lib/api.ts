@@ -326,6 +326,7 @@ export interface ApiSystemSettings {
   appName: string;
   logo: string | null;
   favicon: string | null;
+  squareLogo: string | null;
   // OTP channel toggles (from /api/settings/auth-config)
   smsOtpEnabled:   boolean;
   emailOtpEnabled: boolean;
@@ -1925,6 +1926,7 @@ export async function getSystemSettings(): Promise<ApiSystemSettings | null> {
   const appName = typeof setting.appName === "string" ? setting.appName.trim() : "";
   const logoRaw = typeof setting.logo === "string" ? setting.logo.trim() : "";
   const faviconRaw = typeof setting.favicon === "string" ? setting.favicon.trim() : "";
+  const squareLogoRaw = typeof setting.squareLogo === "string" ? setting.squareLogo.trim() : "";
 
   const authData = (authRes?.success && authRes.data) ? authRes.data : {};
 
@@ -1932,6 +1934,7 @@ export async function getSystemSettings(): Promise<ApiSystemSettings | null> {
     appName: appName || "Pethiyan",
     logo: normalizeMediaUrl(logoRaw),
     favicon: normalizeMediaUrl(faviconRaw),
+    squareLogo: normalizeMediaUrl(squareLogoRaw),
     smsOtpEnabled:   authData.sms_otp_enabled   === true,
     emailOtpEnabled: authData.email_otp_enabled  === true,
     showVariantColorsInGrid: setting.showVariantColorsInGrid !== false,

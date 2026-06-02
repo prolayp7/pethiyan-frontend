@@ -143,7 +143,7 @@ export default async function RootLayout({
 
   const [siteSettings, webSettings, headerMenu, announcementBar, heroSection] = await Promise.all([
     getSystemSettings().then(s => s ?? {
-      appName: "Pethiyan", logo: null, favicon: null,
+      appName: "Pethiyan", logo: null, favicon: null, squareLogo: null,
       smsOtpEnabled: false, emailOtpEnabled: false,
       showVariantColorsInGrid: false, showGstInGrid: false,
       showCategoryNameInGrid: false, showMinQtyInGrid: false,
@@ -169,7 +169,7 @@ export default async function RootLayout({
     telephone:     siteSettings?.sellerSupportNumber || webSettings?.supportNumber,
     email:         webSettings?.supportEmail,
     description:   webSettings?.shortDescription || webSettings?.metaDescription,
-    logoUrl:       siteSettings?.favicon ?? undefined,
+    logoUrl:       siteSettings?.squareLogo ?? undefined,
     imageUrl:      webSettings?.ogImage          || undefined,
     sameAs:        orgSameAs,
   });

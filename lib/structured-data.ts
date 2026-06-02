@@ -50,8 +50,8 @@ export function organizationSchema(overrides: OrgSchemaOverrides = {}) {
     logo: {
       "@type": "ImageObject",
       url: logoUrl,
-      width: 160,
-      height: 70,
+      width: 512,
+      height: 512,
     },
     image: imageUrl,
     description,
