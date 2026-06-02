@@ -170,7 +170,7 @@ export default async function RootLayout({
     email:         webSettings?.supportEmail,
     description:   webSettings?.shortDescription || webSettings?.metaDescription,
     streetAddress: webSettings?.address,
-    logoUrl:       siteSettings?.logo ?? undefined,
+    logoUrl:       siteSettings?.favicon ?? undefined,
     imageUrl:      webSettings?.ogImage          || undefined,
     sameAs:        orgSameAs,
   });
