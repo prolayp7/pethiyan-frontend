@@ -363,6 +363,17 @@ export interface ApiWebSettings {
   twitterDescription: string;
   twitterImage: string;
   seoSchemaJson: string;
+  // Organisation / brand fields (used in JSON-LD schema)
+  siteName: string;
+  supportNumber: string;
+  supportEmail: string;
+  address: string;
+  shortDescription: string;
+  siteHeaderLogo: string;
+  facebookLink: string;
+  instagramLink: string;
+  xLink: string;
+  youtubeLink: string;
 }
 
 export interface ApiFooterLink {
@@ -1973,6 +1984,16 @@ export async function getWebSettings(): Promise<ApiWebSettings | null> {
     twitterDescription:     str("twitterDescription"),
     twitterImage:           str("twitterImage"),
     seoSchemaJson:          str("seoSchemaJson"),
+    siteName:               str("siteName"),
+    supportNumber:          str("supportNumber"),
+    supportEmail:           str("supportEmail"),
+    address:                str("address"),
+    shortDescription:       str("shortDescription"),
+    siteHeaderLogo:         str("siteHeaderLogo"),
+    facebookLink:           str("facebookLink"),
+    instagramLink:          str("instagramLink"),
+    xLink:                  str("xLink"),
+    youtubeLink:            str("youtubeLink"),
   };
 }
 

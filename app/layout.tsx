@@ -134,9 +134,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const orgSchema = organizationSchema();
-  const siteSchema = websiteSchema();
-
   // Check if this is the homepage so we can preload the LCP hero image.
   // getHeroSection uses next: { revalidate: 300 }, so within the same request
   // this call is memoized — the page component's call costs zero extra I/O.
@@ -159,6 +156,25 @@ export default async function RootLayout({
     // the other fetches above and adds no serial latency.
     isHomepage ? getHeroSection() : Promise.resolve(null),
   ]);
+
+  const orgSameAs = [
+    webSettings?.facebookLink,
+    webSettings?.instagramLink,
+    webSettings?.xLink,
+    webSettings?.youtubeLink,
+  ].filter((u): u is string => Boolean(u));
+
+  const orgSchema = organizationSchema({
+    siteName:      webSettings?.siteName       || siteSettings?.appName,
+    telephone:     siteSettings?.sellerSupportNumber || webSettings?.supportNumber,
+    email:         webSettings?.supportEmail,
+    description:   webSettings?.shortDescription || webSettings?.metaDescription,
+    streetAddress: webSettings?.address,
+    logoUrl:       siteSettings?.logo ?? undefined,
+    imageUrl:      webSettings?.ogImage          || undefined,
+    sameAs:        orgSameAs,
+  });
+  const siteSchema = websiteSchema();
 
   // Inject <link rel="preload"> for the LCP hero image directly into <head>.
   // The layout renders the <head> before any page body is streamed, so the

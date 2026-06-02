@@ -24,37 +24,54 @@ const SHIPPING_TRANSIT_MAX_DAYS = 7;
 
 // ─── Organization ─────────────────────────────────────────────────────────────
 
-export function organizationSchema() {
+export interface OrgSchemaOverrides {
+  siteName?: string;
+  telephone?: string;
+  email?: string;
+  description?: string;
+  streetAddress?: string;
+  logoUrl?: string;
+  imageUrl?: string;
+  sameAs?: string[];
+}
+
+export function organizationSchema(overrides: OrgSchemaOverrides = {}) {
+  const name        = overrides.siteName   || SITE_NAME;
+  const description = overrides.description || SITE_DESCRIPTION;
+  const telephone   = overrides.telephone  || null;
+  const logoUrl     = overrides.logoUrl    || `${SITE_URL}/pethiyan-logo.png`;
+  const imageUrl    = overrides.imageUrl   || `${SITE_URL}/opengraph-image.png`;
+  const sameAs      = (overrides.sameAs ?? []).filter(Boolean);
+
   return {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: SITE_NAME,
+    "@type": "Store",
+    name,
     url: SITE_URL,
     logo: {
       "@type": "ImageObject",
-      url: `${SITE_URL}/pethiyan-logo.png`,
+      url: logoUrl,
       width: 160,
       height: 70,
     },
-    image: `${SITE_URL}/opengraph-image.png`,
-    description: SITE_DESCRIPTION,
+    image: imageUrl,
+    description,
     address: {
       "@type": "PostalAddress",
-      addressLocality: "Mumbai",
-      addressRegion: "Maharashtra",
-      postalCode: "400001",
+      ...(overrides.streetAddress ? { streetAddress: overrides.streetAddress } : {}),
       addressCountry: "IN",
     },
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: "+91-98765-43210",
+        ...(telephone ? { telephone } : {}),
+        ...(overrides.email ? { email: overrides.email } : {}),
         contactType: "customer service",
         areaServed: "IN",
         availableLanguage: ["English", "Hindi"],
       },
     ],
-    sameAs: [],
+    sameAs,
   };
 }
 
