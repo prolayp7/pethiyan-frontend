@@ -7,6 +7,7 @@ const DEFAULTS: ApiSystemSettings = {
   appName: "Pethiyan",
   logo: null,
   favicon: null,
+  squareLogo: null,
   smsOtpEnabled:   false,
   emailOtpEnabled: false,
   showVariantColorsInGrid: true,
