@@ -39,7 +39,7 @@ const PAYMENT_STATUS_MAP: Record<string, { label: string; cls: string }> = {
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   pending:                  { label: "Order Accepted",        cls: "bg-blue-100 text-blue-700"     },
-  awaiting_store_response:  { label: "Order Accepted",        cls: "bg-blue-100 text-blue-700"     },
+  awaiting_store_response:  { label: "Processing",             cls: "bg-blue-100 text-blue-700"     },
   partially_accepted:       { label: "Partially Accepted",    cls: "bg-orange-100 text-orange-700" },
   accepted_by_seller:       { label: "Order Accepted",        cls: "bg-blue-100 text-blue-700"     },
   ready_for_pickup:         { label: "Order Packing Done",    cls: "bg-indigo-100 text-indigo-700" },
@@ -49,6 +49,7 @@ const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   out_for_delivery:         { label: "Out for Delivery",      cls: "bg-indigo-100 text-indigo-700" },
   processing:               { label: "Processing",            cls: "bg-blue-100 text-blue-700"     },
   shipped:                  { label: "Shipped",               cls: "bg-indigo-100 text-indigo-700" },
+  order_dispatched:         { label: "Order Dispatched",      cls: "bg-indigo-100 text-indigo-700" },
   delivered:                { label: "Order Dispatched",      cls: "bg-green-100 text-green-700"   },
   cancelled:                { label: "Order Cancelled",       cls: "bg-red-100 text-red-700"       },
   failed:                   { label: "Order Failed",          cls: "bg-red-100 text-red-700"       },
@@ -65,14 +66,12 @@ function buildDefaultTracking(status: string, createdAt: string): ApiTrackingSte
     ];
   }
 
-  // Map detailed backend statuses → 3 simplified frontend steps
-  const CONFIRMED_STATUSES  = ["awaiting_store_response", "partially_accepted", "accepted_by_seller", "ready_for_pickup", "assigned", "preparing", "collected", "out_for_delivery", "processing", "shipped", "delivered"];
-  const DISPATCHED_STATUSES = ["out_for_delivery", "shipped", "delivered"];
+  // Map detailed backend statuses → 2 simplified frontend steps
+  const DISPATCHED_STATUSES = ["out_for_delivery", "shipped", "order_dispatched", "delivered"];
 
   const steps: ApiTrackingStep[] = [
-    { status: "pending",          label: "Order Placed",    description: "Your order has been placed successfully.", completed: true,                               timestamp: createdAt },
-    { status: "confirmed",        label: "Order Confirmed", description: "We're preparing your items for dispatch.", completed: CONFIRMED_STATUSES.includes(status)  },
-    { status: "out_for_delivery", label: "Dispatched",      description: "",                                         completed: DISPATCHED_STATUSES.includes(status) },
+    { status: "pending",          label: "Order Placed", description: "Your order has been placed successfully.", completed: true,                               timestamp: createdAt },
+    { status: "out_for_delivery", label: "Dispatched",   description: "",                                         completed: DISPATCHED_STATUSES.includes(status) },
   ];
 
   return steps;

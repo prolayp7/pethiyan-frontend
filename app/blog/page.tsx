@@ -87,6 +87,7 @@ function transformCategory(cat: ApiCategory): BlogCategory {
     title: cat.title,
     description: cat.description ?? "",
     coverImage: cat.coverImage,
+    postsCount: cat.postsCount,
   };
 }
 
@@ -115,18 +116,6 @@ export default async function BlogPage() {
 
   const { settings, featuredPosts, latestPosts, categories } = data;
 
-  const allPosts = [
-    ...featuredPosts.map(transformPost),
-    ...latestPosts.map(transformPost),
-  ];
-  // deduplicate by slug (featuredPosts may overlap latestPosts)
-  const seen = new Set<string>();
-  const uniquePosts = allPosts.filter((p) => {
-    if (seen.has(p.slug)) return false;
-    seen.add(p.slug);
-    return true;
-  });
-
   // Ensure at least 3 posts in the featured grid. If fewer are marked featured,
   // pad with latest posts (skipping slugs already in the featured list).
   const featuredSlugs = new Set(featuredPosts.map((p) => p.slug));
@@ -141,7 +130,6 @@ export default async function BlogPage() {
     <BlogHomeClient
       featuredPosts={transformedFeatured}
       latestPosts={latestPosts.map(transformPost)}
-      allPosts={uniquePosts}
       categories={categories.map(transformCategory)}
       heroSettings={{
         eyebrow: settings.eyebrow,

@@ -38,7 +38,7 @@ function fmtDateTime(dateStr: string) {
 
 const STATUS_MAP: Record<string, { label: string; cls: string; bg: string }> = {
   pending:                 { label: "Order Accepted",         cls: "text-blue-700",   bg: "bg-blue-100"   },
-  awaiting_store_response: { label: "Order Accepted",         cls: "text-blue-700",   bg: "bg-blue-100"   },
+  awaiting_store_response: { label: "Processing",             cls: "text-blue-700",   bg: "bg-blue-100"   },
   partially_accepted:      { label: "Partially Accepted",     cls: "text-orange-700", bg: "bg-orange-100" },
   accepted_by_seller:      { label: "Order Accepted",         cls: "text-blue-700",   bg: "bg-blue-100"   },
   ready_for_pickup:        { label: "Order Packing Done",     cls: "text-indigo-700", bg: "bg-indigo-100" },
@@ -48,6 +48,7 @@ const STATUS_MAP: Record<string, { label: string; cls: string; bg: string }> = {
   out_for_delivery:        { label: "Out for Delivery",       cls: "text-indigo-700", bg: "bg-indigo-100" },
   processing:              { label: "Processing",             cls: "text-blue-700",   bg: "bg-blue-100"   },
   shipped:                 { label: "Shipped",                cls: "text-indigo-700", bg: "bg-indigo-100" },
+  order_dispatched:        { label: "Dispatched",              cls: "text-indigo-700", bg: "bg-indigo-100" },
   delivered:               { label: "Delivered",              cls: "text-green-700",  bg: "bg-green-100"  },
   cancelled:               { label: "Cancelled",              cls: "text-red-700",    bg: "bg-red-100"    },
   failed:                  { label: "Order Failed",           cls: "text-red-700",    bg: "bg-red-100"    },
@@ -64,13 +65,11 @@ function buildTracking(status: string, createdAt: string): ApiTrackingStep[] {
     ];
   }
 
-  const CONFIRMED_STATUSES  = ["awaiting_store_response", "partially_accepted", "accepted_by_seller", "ready_for_pickup", "assigned", "preparing", "collected", "out_for_delivery", "processing", "shipped", "delivered"];
-  const DISPATCHED_STATUSES = ["out_for_delivery", "shipped", "delivered"];
+  const DISPATCHED_STATUSES = ["out_for_delivery", "shipped", "order_dispatched", "delivered"];
 
   return [
-    { status: "pending",          label: "Order Placed",    description: "Your order has been received.",            completed: true,                               timestamp: createdAt },
-    { status: "confirmed",        label: "Order Confirmed", description: "We're preparing your items for dispatch.", completed: CONFIRMED_STATUSES.includes(status)  },
-    { status: "out_for_delivery", label: "Dispatched",      description: "Your package is on its way.",              completed: DISPATCHED_STATUSES.includes(status) },
+    { status: "pending",          label: "Order Placed", description: "Your order has been received.", completed: true,                               timestamp: createdAt },
+    { status: "out_for_delivery", label: "Dispatched",   description: "Your package is on its way.",    completed: DISPATCHED_STATUSES.includes(status) },
   ];
 }
 

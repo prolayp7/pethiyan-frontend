@@ -18,7 +18,6 @@ interface HeroSettings {
 interface BlogHomeClientProps {
   featuredPosts: BlogPost[];
   latestPosts: BlogPost[];
-  allPosts: BlogPost[];
   categories: BlogCategory[];
   heroSettings: HeroSettings;
 }
@@ -43,7 +42,7 @@ function scrollSlider(
   slides[nextIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
 }
 
-export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts, categories, heroSettings }: BlogHomeClientProps) {
+export default function BlogHomeClient({ featuredPosts, latestPosts, categories, heroSettings }: BlogHomeClientProps) {
   const [activeCategory, setActiveCategory] = useState("");
   const featuredSliderRef = useRef<HTMLDivElement | null>(null);
   const latestSliderRef = useRef<HTMLDivElement | null>(null);
@@ -57,13 +56,6 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts, c
       activeCategory === "" || post.category === activeCategory
     );
   }, [activeCategory, latestPosts]);
-
-  const categoryCounts = useMemo(() => {
-    return categories.reduce<Record<string, number>>((acc, category) => {
-      acc[category.slug] = allPosts.filter((post) => post.category === category.slug).length;
-      return acc;
-    }, {});
-  }, [allPosts, categories]);
 
   const heroPost = featuredPosts[0] ?? latestPosts[0];
 
@@ -180,7 +172,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts, c
                 >
                   <CategoryCard
                     category={category}
-                    postCount={categoryCounts[category.slug] ?? 0}
+                    postCount={category.postsCount ?? 0}
                   />
                 </div>
               ))}
@@ -193,7 +185,7 @@ export default function BlogHomeClient({ featuredPosts, latestPosts, allPosts, c
               <CategoryCard
                 key={category.slug}
                 category={category}
-                postCount={categoryCounts[category.slug] ?? 0}
+                postCount={category.postsCount ?? 0}
               />
             ))}
           </div>

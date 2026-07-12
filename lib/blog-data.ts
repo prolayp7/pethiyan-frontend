@@ -4,6 +4,7 @@ export interface BlogCategory {
   description: string;
   coverImage?: string | null;
   accent?: string;
+  postsCount?: number;
 }
 
 export interface BlogSection {
