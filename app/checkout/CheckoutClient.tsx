@@ -58,7 +58,7 @@ function makeFmt(symbol: string) {
 function fmtWeight(weightG: number): string {
   return weightG >= 1000
     ? `${(weightG / 1000).toFixed(2).replace(/\.?0+$/, "")} kg`
-    : `${weightG} g`;
+    : `${weightG.toFixed(2).replace(/\.?0+$/, "")} g`;
 }
 
 function formatItemTotalWeight(weight?: number, weightUnit?: string, quantity = 1): string | null {
