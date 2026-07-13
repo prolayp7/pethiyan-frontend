@@ -1780,7 +1780,7 @@ export async function getShippingRates(
   weightGrams?: number
 ): Promise<ApiShippingRate[]> {
   const body: Record<string, unknown> = { pincode, cart_total: cartTotal };
-  if (weightGrams != null && weightGrams > 0) body.weight = String(weightGrams);
+  if (weightGrams != null && weightGrams > 0) body.weight = String(Math.round(weightGrams));
   const res = await apiFetch<ApiResponse<Record<string, unknown>> | ApiShippingRate[]>(
     "/api/shipping/rates",
     {
