@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import Container from "@/components/layout/Container";
 import OtherCategories from "./OtherCategories";
+import CategorySeoContent from "./CategorySeoContent";
 import CategoryProductsFetcher from "./CategoryProductsFetcher";
 import {
   breadcrumbSchema,
@@ -155,7 +156,8 @@ export default async function CategoryPage({
               <div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">{category.name}</h1>
                 <p className="mt-0.5 text-gray-500 text-sm">
-                  Premium {category.name.toLowerCase()} packaging solutions with GST invoice
+                  {category.description?.trim() ||
+                    `Premium ${category.name.toLowerCase()} packaging solutions with GST invoice`}
                 </p>
               </div>
             </div>
@@ -178,6 +180,9 @@ export default async function CategoryPage({
         currentCategory={category}
         categories={categories}
       />
+
+      {/* ── On-page SEO content — renders instantly, collapsed by default ── */}
+      <CategorySeoContent html={category.page_content} />
 
       {/* ── Product grid — streams in; only this area skeletons ── */}
       <Suspense fallback={<ProductGridSkeleton />}>
