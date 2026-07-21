@@ -354,19 +354,6 @@ export default function ShopClient({
       <div className="bg-white border-b border-(--color-border) py-5">
         <Container>
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span
-                className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0 bg-brand"
-              >
-                <Layers className="h-5 w-5 text-white" />
-              </span>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">All Products</h1>
-                <p className="mt-0.5 text-gray-500 text-sm">
-                  {filtered.length} product{filtered.length !== 1 ? "s" : ""} found
-                </p>
-              </div>
-            </div>
             <nav className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 shrink-0" aria-label="Breadcrumb">
               <Link href="/" className="flex items-center gap-1 hover:text-(--color-primary) transition-colors">
                 <Home className="h-3.5 w-3.5" aria-hidden="true" />
@@ -375,6 +362,33 @@ export default function ShopClient({
               <ChevronRight className="h-3.5 w-3.5 text-gray-300" aria-hidden="true" />
               <span className="text-(--color-secondary) font-medium">Shop</span>
             </nav>
+            <div className="relative ml-auto sm:ml-0">
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as typeof sort)}
+                className="appearance-none pl-4 pr-9 py-2.5 text-sm bg-white border border-(--color-border) rounded-xl focus:outline-none focus:ring-2 focus:ring-(--color-primary)/30 focus:border-(--color-primary) transition cursor-pointer"
+                aria-label="Sort products"
+              >
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mt-4">
+            <span
+              className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0 bg-brand"
+            >
+              <Layers className="h-5 w-5 text-white" />
+            </span>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">All Products</h1>
+              <p className="mt-0.5 text-gray-500 text-sm">
+                {filtered.length} product{filtered.length !== 1 ? "s" : ""} found
+              </p>
+            </div>
           </div>
         </Container>
       </div>
@@ -605,11 +619,11 @@ export default function ShopClient({
 
           {/* ── Main ── */}
           <div className="flex-1 min-w-0">
-            {/* Sort / filter toolbar */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            {/* Mobile filter toggle */}
+            <div className="lg:hidden mb-6">
               <button
                 onClick={() => setFiltersOpen(true)}
-                className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-white border border-(--color-border) rounded-xl text-sm font-medium text-gray-700 hover:border-(--color-primary) transition"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-(--color-border) rounded-xl text-sm font-medium text-gray-700 hover:border-(--color-primary) transition"
               >
                 <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                 Filters
@@ -619,20 +633,6 @@ export default function ShopClient({
                   </span>
                 )}
               </button>
-
-              <div className="relative sm:ml-auto">
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as typeof sort)}
-                  className="appearance-none pl-4 pr-9 py-2.5 text-sm bg-white border border-(--color-border) rounded-xl focus:outline-none focus:ring-2 focus:ring-(--color-primary)/30 focus:border-(--color-primary) transition cursor-pointer"
-                  aria-label="Sort products"
-                >
-                  {SORT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
-              </div>
             </div>
 
             {/* Active attribute filter chips */}
