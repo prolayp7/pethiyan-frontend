@@ -12,6 +12,8 @@ import Container from "@/components/layout/Container";
 import OtherCategories from "./OtherCategories";
 import CategorySeoContent from "./CategorySeoContent";
 import CategoryProductsFetcher from "./CategoryProductsFetcher";
+import { SortProvider } from "./SortContext";
+import SortDropdown from "./SortDropdown";
 import {
   breadcrumbSchema,
   collectionPageSchema,
@@ -142,11 +144,27 @@ export default async function CategoryPage({
         <script {...jsonLd(schema as Record<string, unknown>)} key={`category-custom-schema-${index}`} />
       ))}
 
-      {/* ── Page header — renders instantly, never skeletons ── */}
-      <div className="bg-white border-b border-(--color-border) py-5">
-        <Container>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+      <SortProvider>
+        {/* ── Page header — renders instantly, never skeletons ── */}
+        <div className="bg-white border-b border-(--color-border) py-5">
+          <Container>
+            <div className="flex items-center justify-between gap-4">
+              <nav className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 shrink-0" aria-label="Breadcrumb">
+                <Link href="/" className="flex items-center gap-1 hover:text-(--color-primary) transition-colors">
+                  <Home className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Home</span>
+                </Link>
+                <ChevronRight className="h-3.5 w-3.5 text-gray-300" aria-hidden="true" />
+                <Link href="/shop" className="hover:text-(--color-primary) transition-colors">Shop</Link>
+                <ChevronRight className="h-3.5 w-3.5 text-gray-300" aria-hidden="true" />
+                <span className="text-(--color-secondary) font-medium">{category.name}</span>
+              </nav>
+              <div className="ml-auto sm:ml-0">
+                <SortDropdown />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 mt-4">
               <span
                 className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0"
                 style={{ background: "linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)" }}
@@ -161,33 +179,23 @@ export default async function CategoryPage({
                 </p>
               </div>
             </div>
-            <nav className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 shrink-0" aria-label="Breadcrumb">
-              <Link href="/" className="flex items-center gap-1 hover:text-(--color-primary) transition-colors">
-                <Home className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>Home</span>
-              </Link>
-              <ChevronRight className="h-3.5 w-3.5 text-gray-300" aria-hidden="true" />
-              <Link href="/shop" className="hover:text-(--color-primary) transition-colors">Shop</Link>
-              <ChevronRight className="h-3.5 w-3.5 text-gray-300" aria-hidden="true" />
-              <span className="text-(--color-secondary) font-medium">{category.name}</span>
-            </nav>
-          </div>
-        </Container>
-      </div>
+          </Container>
+        </div>
 
-      {/* ── Other categories strip — renders instantly ── */}
-      <OtherCategories
-        currentCategory={category}
-        categories={categories}
-      />
+        {/* ── Other categories strip — renders instantly ── */}
+        <OtherCategories
+          currentCategory={category}
+          categories={categories}
+        />
 
-      {/* ── On-page SEO content — renders instantly, collapsed by default ── */}
-      <CategorySeoContent html={category.page_content} />
+        {/* ── On-page SEO content — renders instantly, collapsed by default ── */}
+        <CategorySeoContent html={category.page_content} />
 
-      {/* ── Product grid — streams in; only this area skeletons ── */}
-      <Suspense fallback={<ProductGridSkeleton />}>
-        <CategoryProductsFetcher slug={slug} />
-      </Suspense>
+        {/* ── Product grid — streams in; only this area skeletons ── */}
+        <Suspense fallback={<ProductGridSkeleton />}>
+          <CategoryProductsFetcher slug={slug} />
+        </Suspense>
+      </SortProvider>
 
       {/* Mobile bottom padding */}
       <div className="h-16 lg:hidden" aria-hidden="true" />
