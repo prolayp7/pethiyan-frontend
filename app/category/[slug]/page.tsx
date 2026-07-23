@@ -163,7 +163,7 @@ export default async function CategoryPage({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 mt-4">
+            <div className="flex items-start gap-3 mt-4">
               <span
                 className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0"
                 style={{ background: "linear-gradient(135deg,#17396f 0%,#2f6f9f 52%,#49ad57 100%)" }}
