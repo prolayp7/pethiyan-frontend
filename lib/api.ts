@@ -45,6 +45,7 @@ export interface ApiCategory {
   slug: string;
   description?: string;
   page_content?: string;
+  header_title?: string | null;
   image?: string;
   banner?: string;
   icon?: string;

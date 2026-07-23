@@ -10,7 +10,6 @@ import {
 } from "@/lib/api";
 import Container from "@/components/layout/Container";
 import OtherCategories from "./OtherCategories";
-import CategorySeoContent from "./CategorySeoContent";
 import CategoryProductsFetcher from "./CategoryProductsFetcher";
 import { SortProvider } from "./SortContext";
 import SortDropdown from "./SortDropdown";
@@ -172,11 +171,19 @@ export default async function CategoryPage({
                 <Tag className="h-5 w-5 text-white" />
               </span>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">{category.name}</h1>
-                <p className="mt-0.5 text-gray-500 text-sm">
-                  {category.description?.trim() ||
-                    `Premium ${category.name.toLowerCase()} packaging solutions with GST invoice`}
-                </p>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">
+                  {category.header_title?.trim() || category.name}
+                </h1>
+                {category.page_content?.trim() ? (
+                  <div
+                    className="mt-0.5 text-gray-500 text-sm line-clamp-2"
+                    dangerouslySetInnerHTML={{ __html: category.page_content }}
+                  />
+                ) : (
+                  <p className="mt-0.5 text-gray-500 text-sm">
+                    {`Premium ${category.name.toLowerCase()} packaging solutions with GST invoice`}
+                  </p>
+                )}
               </div>
             </div>
           </Container>
@@ -187,9 +194,6 @@ export default async function CategoryPage({
           currentCategory={category}
           categories={categories}
         />
-
-        {/* ── On-page SEO content — renders instantly, collapsed by default ── */}
-        <CategorySeoContent html={category.page_content} />
 
         {/* ── Product grid — streams in; only this area skeletons ── */}
         <Suspense fallback={<ProductGridSkeleton />}>
