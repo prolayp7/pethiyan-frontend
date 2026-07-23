@@ -14,9 +14,11 @@ import CategoryHeaderContent from "./CategoryHeaderContent";
 import CategoryProductsFetcher from "./CategoryProductsFetcher";
 import { SortProvider } from "./SortContext";
 import SortDropdown from "./SortDropdown";
+import CategoryFaqs from "./CategoryFaqs";
 import {
   breadcrumbSchema,
   collectionPageSchema,
+  faqPageSchema,
   jsonLd,
 } from "@/lib/structured-data";
 import { getCustomJsonLdSchemas, resolveCategorySeo } from "@/lib/seo";
@@ -142,6 +144,9 @@ export default async function CategoryPage({
       {customSchemas.map((schema, index) => (
         <script {...jsonLd(schema as Record<string, unknown>)} key={`category-custom-schema-${index}`} />
       ))}
+      {(category.faqs?.length ?? 0) > 0 && (
+        <script {...jsonLd(faqPageSchema(category.faqs!))} key="category-faq-schema" />
+      )}
 
       <SortProvider>
         {/* ── Page header — renders instantly, never skeletons ── */}
@@ -196,6 +201,8 @@ export default async function CategoryPage({
         <Suspense fallback={<ProductGridSkeleton />}>
           <CategoryProductsFetcher slug={slug} />
         </Suspense>
+
+        <CategoryFaqs faqs={category.faqs ?? []} />
       </SortProvider>
 
       {/* Mobile bottom padding */}
