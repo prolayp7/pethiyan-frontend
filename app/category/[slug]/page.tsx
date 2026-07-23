@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import Container from "@/components/layout/Container";
 import OtherCategories from "./OtherCategories";
+import CategoryHeaderContent from "./CategoryHeaderContent";
 import CategoryProductsFetcher from "./CategoryProductsFetcher";
 import { SortProvider } from "./SortContext";
 import SortDropdown from "./SortDropdown";
@@ -175,10 +176,7 @@ export default async function CategoryPage({
                   {category.header_title?.trim() || category.name}
                 </h1>
                 {category.page_content?.trim() ? (
-                  <div
-                    className="mt-0.5 text-gray-500 text-sm"
-                    dangerouslySetInnerHTML={{ __html: category.page_content }}
-                  />
+                  <CategoryHeaderContent html={category.page_content} />
                 ) : (
                   <p className="mt-0.5 text-gray-500 text-sm">
                     {`Premium ${category.name.toLowerCase()} packaging solutions with GST invoice`}
