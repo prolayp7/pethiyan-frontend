@@ -26,6 +26,7 @@ export interface ResolvedSeo {
   openGraphTitle: string;
   openGraphDescription: string;
   openGraphImage?: string;
+  openGraphImageAlt?: string;
   twitterTitle: string;
   twitterDescription: string;
   twitterImage?: string;
@@ -82,6 +83,7 @@ export function resolveCategorySeo(category: ApiCategory): ResolvedSeo {
     cleanText(category.seo_description) ??
     `Shop ${rawTitle} packaging products at ${SITE_NAME} - premium quality, GST invoice, fast delivery across India.`;
   const image = cleanText(category.og_image) ?? cleanText(category.image);
+  const openGraphImageAlt = cleanText(category.og_image_alt) ?? rawTitle;
   const openGraphTitle = cleanText(category.og_title) ?? title;
   const openGraphDescription = cleanText(category.og_description) ?? description;
   const twitterImage = cleanText(category.twitter_image) ?? image;
@@ -97,6 +99,7 @@ export function resolveCategorySeo(category: ApiCategory): ResolvedSeo {
     openGraphTitle,
     openGraphDescription,
     openGraphImage: image,
+    openGraphImageAlt,
     twitterTitle,
     twitterDescription,
     twitterImage,

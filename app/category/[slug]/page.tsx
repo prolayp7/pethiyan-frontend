@@ -44,7 +44,6 @@ export async function generateMetadata({
   if (!category) {
     return { title: "Category Not Found" };
   }
-  const rawTitle = category.name;
   const seo = resolveCategorySeo(category);
 
   return {
@@ -62,7 +61,7 @@ export async function generateMetadata({
       title: seo.openGraphTitle,
       description: seo.openGraphDescription,
       url: `/category/${slug}`,
-      ...(seo.openGraphImage ? { images: [{ url: seo.openGraphImage, alt: rawTitle }] } : {}),
+      ...(seo.openGraphImage ? { images: [{ url: seo.openGraphImage, alt: seo.openGraphImageAlt }] } : {}),
     },
     twitter: {
       card: seo.twitterCard,
