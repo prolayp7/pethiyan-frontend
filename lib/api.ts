@@ -67,6 +67,7 @@ export interface ApiCategory {
   og_description?: string | null;
   og_image?: string | null;
   og_image_alt?: string | null;
+  faqs?: { question: string; answer: string }[];
   twitter_title?: string | null;
   twitter_description?: string | null;
   twitter_card?: string | null;

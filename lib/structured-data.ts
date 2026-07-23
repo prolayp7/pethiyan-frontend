@@ -2,7 +2,6 @@ import type {
   ApiCategory,
   ApiProduct,
   ApiReview,
-  ApiFaq,
   RealApiProduct,
   RealApiVariant,
 } from "./api";
@@ -340,7 +339,7 @@ export function productSchema(
 
 // ─── FAQ Page ─────────────────────────────────────────────────────────────────
 
-export function faqPageSchema(faqs: ApiFaq[]) {
+export function faqPageSchema(faqs: { question: string; answer: string }[]) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
