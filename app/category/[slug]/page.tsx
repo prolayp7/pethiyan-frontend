@@ -176,7 +176,7 @@ export default async function CategoryPage({
                 </h1>
                 {category.page_content?.trim() ? (
                   <div
-                    className="mt-0.5 text-gray-500 text-sm line-clamp-2"
+                    className="mt-0.5 text-gray-500 text-sm"
                     dangerouslySetInnerHTML={{ __html: category.page_content }}
                   />
                 ) : (
