@@ -8,6 +8,7 @@ import { fetchFaqSections, type FaqSection } from "@/lib/faqs";
 export const metadata: Metadata = {
   title: "FAQ — Frequently Asked Questions",
   description: "Find answers to common questions about Pethiyan's packaging products, ordering, shipping, returns, and payments.",
+  alternates: { canonical: "/faq" },
 };
 
 // ── Static fallback data (shown when the API is unavailable or returns empty) ──

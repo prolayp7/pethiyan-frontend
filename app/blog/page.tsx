@@ -106,6 +106,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: data?.settings.heading ?? "Blog",
     description: data?.settings.subheading ?? undefined,
+    alternates: { canonical: "/blog" },
   };
 }
 

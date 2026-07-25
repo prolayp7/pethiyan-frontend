@@ -3,7 +3,7 @@ import { getProducts, getCategories, getSeoAdvancedSettings } from "@/lib/api";
 import { fetchActivePages, fetchBlogPostSlugs } from "@/lib/pages";
 
 const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.pethiyan.com"
 ).replace(/\/+$/, "");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

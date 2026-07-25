@@ -93,6 +93,10 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/return-policy",  destination: "/returns-policy", permanent: true },
+      // CMS pages are served at /:slug (app/[slug]/page.tsx). /pages/:slug was
+      // a duplicate route with no internal links and never in the sitemap —
+      // redirect any external/indexed hits to the canonical form.
+      { source: "/pages/:slug",    destination: "/:slug",          permanent: true },
       { source: "/:path+/",        destination: "/:path+",          permanent: true },
     ];
   },

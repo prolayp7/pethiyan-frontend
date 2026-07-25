@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Track Your Order",
   description: "Track the status and live delivery updates of your Pethiyan order using your order number and mobile number.",
   robots: { index: false, follow: false },
+  alternates: { canonical: "/track-order" },
 };
 
 export default function TrackOrderPage() {

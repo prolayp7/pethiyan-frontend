@@ -160,6 +160,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: about.metaTitle,
     description: about.metaDescription,
+    alternates: { canonical: "/about" },
   };
 }
 

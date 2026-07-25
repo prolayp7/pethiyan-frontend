@@ -6,6 +6,7 @@ import Container from "@/components/layout/Container";
 export const metadata: Metadata = {
   title: "Shipping Policy",
   description: "Learn about Pethiyan's shipping timelines, delivery charges, free shipping threshold, and our pan-India delivery network.",
+  alternates: { canonical: "/shipping-policy" },
 };
 
 export default function ShippingPolicyPage() {

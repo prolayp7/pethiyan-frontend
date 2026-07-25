@@ -5,6 +5,7 @@ import NewArrivalsClient from "./NewArrivalsClient";
 export const metadata: Metadata = {
   title: "New Arrivals | Pethiyan",
   description: "Discover the latest additions to our packaging collection — fresh pouches, bags, tapes, and more.",
+  alternates: { canonical: "/new-arrivals" },
 };
 
 // Fallback revalidation every 5 minutes; primary invalidation via POST /api/revalidate

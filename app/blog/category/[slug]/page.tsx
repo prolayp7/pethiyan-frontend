@@ -6,6 +6,7 @@ import BlogCard from "@/components/blog/BlogCard";
 import Container from "@/components/layout/Container";
 import { API_BASE } from "@/lib/api";
 import type { BlogPost } from "@/lib/blog-data";
+import { buildCanonicalPath } from "@/lib/canonical";
 
 // Revalidate every hour; primary invalidation via on-demand revalidate webhook.
 export const revalidate = 3600;
@@ -97,11 +98,14 @@ async function fetchCategoryData(slug: string, page: number): Promise<CategoryAp
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const data = await fetchCategoryData(slug, 1);
+  const [{ slug }, resolvedSearch] = await Promise.all([params, searchParams]);
+  const page = Math.max(1, parseInt(resolvedSearch.page ?? "1", 10) || 1);
+  const data = await fetchCategoryData(slug, page);
 
   if (!data) {
     return { title: "Category Not Found" };
@@ -111,6 +115,13 @@ export async function generateMetadata({
   return {
     title: category.seo.title ?? `${category.title} Articles`,
     description: category.seo.description ?? category.description ?? undefined,
+    // Each page exposes different posts, so it gets its own canonical — but
+    // page=1 (the default) canonicalizes to the clean, query-free URL.
+    alternates: {
+      canonical: buildCanonicalPath(`/blog/category/${slug}`, {
+        page: page > 1 ? String(page) : undefined,
+      }),
+    },
   };
 }
 

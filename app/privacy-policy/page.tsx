@@ -6,6 +6,7 @@ import Container from "@/components/layout/Container";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "Pethiyan's Privacy Policy — how we collect, use, and protect your personal data in compliance with Indian data protection laws.",
+  alternates: { canonical: "/privacy-policy" },
 };
 
 export default function PrivacyPolicyPage() {

@@ -15,6 +15,7 @@ export async function generateMetadata({
   return {
     title: `${getTagBySlug(slug)} Posts`,
     description: `Browse blog posts tagged with ${getTagBySlug(slug)}.`,
+    alternates: { canonical: `/blog/tag/${slug}` },
   };
 }
 

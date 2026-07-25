@@ -102,9 +102,11 @@ export async function generateMetadata({
   return {
     title,
     description,
+    alternates: { canonical: `/blog/${slug}` },
     openGraph: {
       title,
       description,
+      url: `/blog/${slug}`,
       images: [{ url: post.featuredImage, alt: post.title }],
     },
     twitter: {

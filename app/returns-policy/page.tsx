@@ -6,6 +6,7 @@ import Container from "@/components/layout/Container";
 export const metadata: Metadata = {
   title: "Returns & Refunds Policy",
   description: "Pethiyan's 7-day return policy — learn how to initiate a return, what items qualify, and how refunds are processed.",
+  alternates: { canonical: "/returns-policy" },
 };
 
 export default function ReturnsPolicyPage() {

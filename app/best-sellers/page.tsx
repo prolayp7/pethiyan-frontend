@@ -6,6 +6,7 @@ import { breadcrumbSchema, jsonLd } from "@/lib/structured-data";
 export const metadata: Metadata = {
   title: "Best Sellers | Pethiyan",
   description: "Shop our most popular packaging products — top-selling pouches, bags, tapes, and more chosen by thousands of customers.",
+  alternates: { canonical: "/best-sellers" },
 };
 
 // Always SSR — best sellers change with orders, never cache stale empty data.

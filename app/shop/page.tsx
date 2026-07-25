@@ -6,6 +6,7 @@ import ShopClient from "./ShopClient";
 export const metadata: Metadata = {
   title: "Shop All Products | Pethiyan",
   description: "Browse our full range of premium packaging products — pouches, kraft bags, tapes, and more.",
+  alternates: { canonical: "/shop" },
 };
 
 // Safety fallback: revalidate every hour even if webhook never fires.

@@ -82,6 +82,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title:       page?.meta_title       ?? "Contact Us",
     description: page?.meta_description ?? "Reach out to us for product enquiries, bulk orders, custom packaging, or any support queries. We respond within 24 hours.",
+    alternates: { canonical: "/contact" },
   };
 }
 

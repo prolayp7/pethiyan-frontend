@@ -6,6 +6,7 @@ import Container from "@/components/layout/Container";
 export const metadata: Metadata = {
   title: "Terms & Conditions",
   description: "Read Pethiyan's Terms & Conditions governing the use of our website and the purchase of packaging products.",
+  alternates: { canonical: "/terms-and-conditions" },
 };
 
 export default function TermsPage() {
