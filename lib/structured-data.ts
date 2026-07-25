@@ -6,6 +6,7 @@ import type {
   RealApiVariant,
 } from "./api";
 import { resolveStorePricingDisplay, selectPrimaryStorePricing } from "./api";
+import { parseJsonLdObject } from "./seo";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com";
@@ -352,6 +353,14 @@ export function faqPageSchema(faqs: { question: string; answer: string }[]) {
       },
     })),
   };
+}
+
+export function categoryFaqPageSchema(category: ApiCategory): Record<string, unknown> | null {
+  const override = parseJsonLdObject(category.faq_schema_json_ld);
+  if (override) return override;
+
+  const faqs = category.faqs ?? [];
+  return faqs.length > 0 ? faqPageSchema(faqs) : null;
 }
 
 // ─── Static FAQ schema (for hardcoded FAQ page) ───────────────────────────────

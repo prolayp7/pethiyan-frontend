@@ -49,6 +49,22 @@ function resolveTwitterCard(value?: string | null, image?: string) {
   return image ? "summary_large_image" : "summary";
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function parseJsonLdObject(value?: string | null): Record<string, unknown> | null {
+  const raw = cleanText(value);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return isPlainObject(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function parseJsonLd(value?: string | null): unknown[] {
   const raw = cleanText(value);
   if (!raw) return [];
@@ -56,19 +72,13 @@ function parseJsonLd(value?: string | null): unknown[] {
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (Array.isArray(parsed)) {
-      return parsed.filter(
-        (item) => item && typeof item === "object" && !Array.isArray(item),
-      );
+      return parsed.filter(isPlainObject);
     }
 
-    if (parsed && typeof parsed === "object") {
-      return [parsed];
-    }
+    return isPlainObject(parsed) ? [parsed] : [];
   } catch {
     return [];
   }
-
-  return [];
 }
 
 export function getCustomJsonLdSchemas(schemaMode?: SchemaMode, schemaJsonLd?: string | null) {
