@@ -12,6 +12,7 @@ import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { GTMScript, GTMNoScript } from "@/components/analytics/GoogleTagManager";
 import FacebookPixel from "@/components/analytics/FacebookPixel";
 import GoogleAds from "@/components/analytics/GoogleAds";
+import Plerdy from "@/components/analytics/Plerdy";
 import CartPushLayout from "@/components/layout/CartPushLayout";
 import TopAnnouncementBar from "@/components/headers/TopAnnouncementBar";
 import OfferTickerClient from "@/components/headers/OfferTickerClient";
@@ -284,6 +285,7 @@ export default async function RootLayout({
             error:   { iconTheme: { primary: "#ef4444", secondary: "#fff" } },
           }}
         />
+        <Plerdy />
       </body>
     </html>
   );
