@@ -9,7 +9,7 @@ import { resolveStorePricingDisplay, selectPrimaryStorePricing } from "./api";
 import { parseJsonLdObject } from "./seo";
 
 const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.pethiyan.com"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com"
 ).replace(/\/+$/, "");
 const SITE_NAME = "Pethiyan";
 const SITE_DESCRIPTION =

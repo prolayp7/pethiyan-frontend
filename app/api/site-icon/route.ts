@@ -4,7 +4,7 @@ import { API_BASE } from "@/lib/api";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.pethiyan.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com";
 
 function normalizeIconUrl(src?: string | null): string | null {
   if (!src) return null;

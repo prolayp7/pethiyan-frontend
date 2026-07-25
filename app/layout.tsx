@@ -24,7 +24,7 @@ import { organizationSchema, websiteSchema, jsonLd } from "@/lib/structured-data
 import { API_BASE } from "@/lib/api";
 import { Toaster } from "react-hot-toast";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.pethiyan.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com";
 const API_ORIGIN = (() => {
   try {
     return new URL(API_BASE).origin;
