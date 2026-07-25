@@ -18,7 +18,7 @@ import CategoryFaqs from "./CategoryFaqs";
 import {
   breadcrumbSchema,
   collectionPageSchema,
-  faqPageSchema,
+  categoryFaqPageSchema,
   jsonLd,
 } from "@/lib/structured-data";
 import { getCustomJsonLdSchemas, resolveCategorySeo } from "@/lib/seo";
@@ -135,6 +135,7 @@ export default async function CategoryPage({
     customSchemas.length > 0
       ? []
       : [collectionPageSchema(category, productsForSchema), bcSchema];
+  const faqSchema = categoryFaqPageSchema(category);
 
   return (
     <div className="min-h-screen bg-(--background)">
@@ -144,8 +145,8 @@ export default async function CategoryPage({
       {customSchemas.map((schema, index) => (
         <script {...jsonLd(schema as Record<string, unknown>)} key={`category-custom-schema-${index}`} />
       ))}
-      {(category.faqs?.length ?? 0) > 0 && (
-        <script {...jsonLd(faqPageSchema(category.faqs!))} key="category-faq-schema" />
+      {faqSchema && (
+        <script {...jsonLd(faqSchema)} key="category-faq-schema" />
       )}
 
       <SortProvider>
