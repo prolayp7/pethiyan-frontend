@@ -7,10 +7,7 @@ import type {
 } from "./api";
 import { resolveStorePricingDisplay, selectPrimaryStorePricing } from "./api";
 import { parseJsonLdObject } from "./seo";
-
-const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com"
-).replace(/\/+$/, "");
+import { SITE_URL } from "./site";
 const SITE_NAME = "Pethiyan";
 const SITE_DESCRIPTION =
   "High-quality packaging products — pouches, jars, delivery boxes and custom packaging for modern brands.";

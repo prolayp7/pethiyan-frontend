@@ -32,6 +32,9 @@ export function middleware(request: NextRequest) {
   });
 }
 
+// robots.txt and sitemap.xml are intentionally included so a crawler hitting
+// them on the www/http host still gets redirected to the canonical origin,
+// instead of receiving a 200 served from the wrong host.
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

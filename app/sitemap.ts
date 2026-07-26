@@ -1,10 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getProducts, getCategories, getSeoAdvancedSettings } from "@/lib/api";
 import { fetchActivePages, fetchBlogPostSlugs } from "@/lib/pages";
-
-const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com"
-).replace(/\/+$/, "");
+import { SITE_URL, toCanonicalAbsoluteUrl } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const seoAdvanced    = await getSeoAdvancedSettings();
@@ -91,8 +88,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   // ─── Admin-defined custom URLs ────────────────────────────────────────────
+  // Always forced onto the canonical SITE_URL origin — an operator may have
+  // pasted an absolute URL with a stale host (e.g. www), which must not
+  // leak into the sitemap unchanged.
   const adminCustomPages: MetadataRoute.Sitemap = customEntries.map((e) => ({
-    url: e.url.startsWith("http") ? e.url : `${SITE_URL}${e.url}`,
+    url: toCanonicalAbsoluteUrl(e.url),
     lastModified: new Date(),
     changeFrequency: (e.changeFreq || "weekly") as MetadataRoute.Sitemap[0]["changeFrequency"],
     priority: parseFloat(e.priority) || 0.5,

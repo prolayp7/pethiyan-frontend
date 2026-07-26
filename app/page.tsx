@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getCategories, getFeaturedProductsSection, getHeroSection, getNewsletterSection, getPromoBannerSection, getSocialProofSection, getVideoStorySection, getWebSettings, getWhyChooseUsSection, type HomeSectionPlacement } from "@/lib/api";
+import { normalizeCanonicalInput } from "@/lib/site";
 import HeroSection10 from "@/components/hero/HeroSection10";
 import CategoryGrid from "@/components/sections/CategoryGrid";
 import VideoCarouselGrid from "@/components/sections/VideoCarouselGrid";
@@ -48,7 +49,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const title       = web?.metaTitle       || DEFAULT_TITLE;
   const description = web?.metaDescription || DEFAULT_DESCRIPTION;
   const keywords    = web?.metaKeywords    || undefined;
-  const canonical   = web?.metaCanonicalUrl || "/";
+  // Always relative — strips any host an operator may have pasted into the
+  // admin "canonical URL" field (including a stale www/http one).
+  const canonical   = normalizeCanonicalInput(web?.metaCanonicalUrl);
   const ogTitle     = web?.ogTitle         || title;
   const ogDesc      = web?.ogDescription   || description;
   const ogImage     = web?.ogImage         || "/images/banners/1.jpg";

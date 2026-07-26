@@ -52,6 +52,7 @@ import {
   getAddresses,
 } from "@/lib/api";
 import { trackViewItem, trackAddToCart } from "@/lib/analytics";
+import { SITE_URL } from "@/lib/site";
 import { recordBrowsingHistory } from "@/lib/api";
 import { pushRecentlyViewedId } from "@/lib/recently-viewed";
 import { pushBrowsingHistory } from "@/lib/browsingHistory";
@@ -527,7 +528,10 @@ export default function ProductDetailClient({ product, reviews: initialReviews, 
     if (typeof window === "undefined") return;
     if (!selectedVariant) return;
 
-    const nextUrl = new URL(selectedPath, window.location.origin);
+    // Built against the canonical SITE_URL origin (not window.location.origin)
+    // so the canonical/og:url tags never reflect an alternate host the page
+    // happened to be served from.
+    const nextUrl = new URL(selectedPath, SITE_URL);
     const currentPathWithQuery = `${window.location.pathname}${window.location.search}`;
     const nextPathWithQuery = `${nextUrl.pathname}${window.location.search}`;
 

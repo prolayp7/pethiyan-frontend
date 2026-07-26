@@ -22,9 +22,8 @@ import Footer from "@/components/layout/Footercopy7";
 import GlobalClientMounts from "@/components/layout/GlobalClientMounts";
 import { organizationSchema, websiteSchema, jsonLd } from "@/lib/structured-data";
 import { API_BASE } from "@/lib/api";
+import { SITE_URL } from "@/lib/site";
 import { Toaster } from "react-hot-toast";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com";
 const API_ORIGIN = (() => {
   try {
     return new URL(API_BASE).origin;

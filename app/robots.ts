@@ -1,9 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getSeoAdvancedSettings } from "@/lib/api";
-
-const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://pethiyan.com"
-).replace(/\/+$/, "");
+import { SITE_URL } from "@/lib/site";
 
 // Paths that must always be disallowed regardless of admin settings.
 const CORE_DISALLOW = [
