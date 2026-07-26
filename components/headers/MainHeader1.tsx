@@ -56,7 +56,7 @@ export default function MainHeader({ mobileNavItems }: MainHeaderProps) {
             {/* ── LEFT: Logo + mobile hamburger ── */}
             {/* bg-white + pr-4 create a solid zone that visually blocks the
                 absolutely-centred search bar from bleeding into the logo area. */}
-            <div className="flex items-center gap-2 shrink-0 z-10 bg-white pr-4">
+            <div className="relative flex items-center gap-2 shrink-0 z-10 bg-white pr-4">
               <button
                 className="lg:hidden p-2 -ml-1 rounded-full hover:bg-gray-100 transition-colors"
                 onClick={() => setMobileMenuOpen(true)}
@@ -100,7 +100,7 @@ export default function MainHeader({ mobileNavItems }: MainHeaderProps) {
             </div>
 
             {/* ── RIGHT: Action icons ── */}
-            <div className="flex items-center gap-1 shrink-0 z-10 bg-white pl-4">
+            <div className="relative flex items-center gap-1 shrink-0 z-10 bg-white pl-4">
               {/* Search / Close icon — mobile only */}
               <button
                 className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
