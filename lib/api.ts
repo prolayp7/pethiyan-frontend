@@ -77,6 +77,26 @@ export interface ApiCategory {
   schema_json_ld?: string | null;
 }
 
+export interface ApiShopPage {
+  header_title?: string | null;
+  page_content?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  seo_keywords?: string | null;
+  og_title?: string | null;
+  og_description?: string | null;
+  og_image?: string | null;
+  og_image_alt?: string | null;
+  twitter_title?: string | null;
+  twitter_description?: string | null;
+  twitter_card?: string | null;
+  twitter_image?: string | null;
+  schema_mode?: "auto" | "custom" | null;
+  schema_json_ld?: string | null;
+  faqs?: { question: string; answer: string }[];
+  faq_schema_json_ld?: string | null;
+}
+
 export interface ApiProduct {
   id: number;
   name: string;

@@ -2,6 +2,7 @@ import type {
   ApiCategory,
   ApiProduct,
   ApiReview,
+  ApiShopPage,
   RealApiProduct,
   RealApiVariant,
 } from "./api";
@@ -136,6 +137,38 @@ export function collectionPageSchema(
       })),
     },
   };
+}
+
+// ─── Shop (all products hub) ─────────────────────────────────────────────────
+
+export function shopCollectionPageSchema(
+  description: string,
+  products: { title?: string; name?: string; slug?: string }[] = [],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "All Products",
+    url: `${SITE_URL}/shop`,
+    description,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: products.slice(0, 24).map((product, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: product.title || product.name || `Product ${index + 1}`,
+        url: `${SITE_URL}/products/${product.slug ?? ""}`,
+      })),
+    },
+  };
+}
+
+export function shopFaqPageSchema(page?: ApiShopPage | null): Record<string, unknown> | null {
+  const override = parseJsonLdObject(page?.faq_schema_json_ld);
+  if (override) return override;
+
+  const faqs = page?.faqs ?? [];
+  return faqs.length > 0 ? faqPageSchema(faqs) : null;
 }
 
 // ─── Product ──────────────────────────────────────────────────────────────────

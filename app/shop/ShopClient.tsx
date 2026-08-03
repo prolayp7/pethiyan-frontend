@@ -13,6 +13,8 @@ import {
   type RealApiProduct, type ApiCategory, getProductsPage,
 } from "@/lib/api";
 import { readCatalogSortPreference, writeCatalogSortPreference } from "@/lib/catalog-preferences";
+import ShopHeaderContent from "./ShopHeaderContent";
+import ShopFaqs from "./ShopFaqs";
 
 const PER_PAGE = 24;
 
@@ -141,6 +143,9 @@ interface Props {
   initialSubCategories: ApiCategory[];
   initialPage: number;
   initialHasMore: boolean;
+  headerTitle?: string | null;
+  pageContent?: string | null;
+  faqs?: { question: string; answer: string }[];
 }
 
 export default function ShopClient({
@@ -149,6 +154,9 @@ export default function ShopClient({
   initialSubCategories,
   initialPage,
   initialHasMore,
+  headerTitle,
+  pageContent,
+  faqs = [],
 }: Props) {
   // ── Pagination state ────────────────────────────────────────────────────────
   const [allProducts, setAllProducts] = useState<RealApiProduct[]>(initialProducts);
@@ -384,10 +392,16 @@ export default function ShopClient({
               <Layers className="h-5 w-5 text-white" />
             </span>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">All Products</h1>
-              <p className="mt-0.5 text-gray-500 text-sm">
-                {filtered.length} product{filtered.length !== 1 ? "s" : ""} found
-              </p>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">
+                {headerTitle?.trim() || "All Products"}
+              </h1>
+              {pageContent?.trim() ? (
+                <ShopHeaderContent html={pageContent} />
+              ) : (
+                <p className="mt-0.5 text-gray-500 text-sm">
+                  {filtered.length} product{filtered.length !== 1 ? "s" : ""} found
+                </p>
+              )}
             </div>
           </div>
         </Container>
@@ -726,6 +740,8 @@ export default function ShopClient({
         description="Reopen the packaging products you explored recently without losing your place in the catalog."
         viewAllLabel="Browse full catalog"
       />
+
+      <ShopFaqs faqs={faqs} />
 
       <div className="h-16 lg:hidden" aria-hidden="true" />
     </div>

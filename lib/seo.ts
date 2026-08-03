@@ -1,4 +1,4 @@
-import type { ApiCategory, RealApiProduct, RealApiVariant } from "./api";
+import type { ApiCategory, ApiShopPage, RealApiProduct, RealApiVariant } from "./api";
 
 const SITE_NAME = "Pethiyan";
 
@@ -116,6 +116,39 @@ export function resolveCategorySeo(category: ApiCategory): ResolvedSeo {
     twitterCard: resolveTwitterCard(category.twitter_card, twitterImage),
     schemaMode: category.schema_mode,
     schemaJsonLd: category.schema_json_ld,
+  };
+}
+
+const SHOP_DEFAULT_TITLE = "Shop All Products | Pethiyan";
+const SHOP_DEFAULT_DESCRIPTION =
+  "Browse our full range of premium packaging products — pouches, jars, corrugated boxes, courier bags, and adhesive tapes.";
+
+export function resolveShopSeo(page?: ApiShopPage | null): ResolvedSeo {
+  const title = cleanText(page?.seo_title) ?? SHOP_DEFAULT_TITLE;
+  const description = cleanText(page?.seo_description) ?? SHOP_DEFAULT_DESCRIPTION;
+  const image = cleanText(page?.og_image);
+  const openGraphImageAlt = cleanText(page?.og_image_alt) ?? "Pethiyan packaging products";
+  const openGraphTitle = cleanText(page?.og_title) ?? title;
+  const openGraphDescription = cleanText(page?.og_description) ?? description;
+  const twitterImage = cleanText(page?.twitter_image) ?? image;
+  const twitterTitle = cleanText(page?.twitter_title) ?? openGraphTitle;
+  const twitterDescription = cleanText(page?.twitter_description) ?? openGraphDescription;
+
+  return {
+    title,
+    description,
+    keywords: cleanText(page?.seo_keywords),
+    indexable: true,
+    openGraphTitle,
+    openGraphDescription,
+    openGraphImage: image,
+    openGraphImageAlt,
+    twitterTitle,
+    twitterDescription,
+    twitterImage,
+    twitterCard: resolveTwitterCard(page?.twitter_card, twitterImage),
+    schemaMode: page?.schema_mode,
+    schemaJsonLd: page?.schema_json_ld,
   };
 }
 
