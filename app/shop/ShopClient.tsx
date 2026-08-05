@@ -385,13 +385,13 @@ export default function ShopClient({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 mt-4">
+          <div className="flex items-start gap-3 mt-4">
             <span
               className="flex items-center justify-center h-10 w-10 rounded-xl shrink-0 bg-brand"
             >
               <Layers className="h-5 w-5 text-white" />
             </span>
-            <div>
+            <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-(--color-secondary)">
                 {headerTitle?.trim() || "All Products"}
               </h1>
