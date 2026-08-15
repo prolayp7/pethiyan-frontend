@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE } from "@/lib/api";
+import { SITE_URL } from "@/lib/site";
 
 // ─── Easepay/Easebuzz payment response callback (surl/furl) ──────────────────
 //
@@ -46,5 +47,9 @@ export async function POST(req: NextRequest) {
   const status = (payload.status ?? "").toLowerCase();
   const redirectStatus = status === "success" ? "success" : "failed";
 
-  return NextResponse.redirect(new URL(`${NEXT_PUBLIC_SITE_URL}/checkout?payment_status=${redirectStatus}`, req.url), { status: 303 });
+  // Use the canonical SITE_URL rather than req.url — behind the production
+  // reverse proxy, req.url reflects whatever host the Next.js process itself
+  // sees (e.g. localhost:3000), not the public pethiyan.com host, unless the
+  // proxy forwards the original Host header perfectly.
+  return NextResponse.redirect(`${SITE_URL}/checkout?payment_status=${redirectStatus}`, { status: 303 });
 }
