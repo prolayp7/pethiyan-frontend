@@ -271,6 +271,10 @@ export interface ApiCouponResult {
   discount_type: "percentage" | "fixed" | "free_shipping";
   discount_value: number;
   discount_amount: number;
+  // Whether this promo's discount was computed against subtotal+shipping
+  // combined (true) or subtotal only (false). Informational — discount_amount
+  // above is already the fully-computed server-side result either way.
+  applies_to_shipping: boolean;
   message?: string;
 }
 
@@ -1742,19 +1746,20 @@ export async function downloadOrderInvoice(slug: string): Promise<Blob | null> {
 
 export async function applyCoupon(
   code: string,
-  cartTotal: number
+  cartTotal: number,
+  deliveryCharge = 0
 ): Promise<ApiCouponResult> {
-  const INVALID: ApiCouponResult = { valid: false, code, discount_type: "fixed", discount_value: 0, discount_amount: 0, message: "Invalid coupon" };
+  const INVALID: ApiCouponResult = { valid: false, code, discount_type: "fixed", discount_value: 0, discount_amount: 0, applies_to_shipping: false, message: "Invalid coupon" };
   type ValidateRaw = {
     success: boolean;
     message: string;
     data: {
       promo_code: string;
       discount: number;
-      promo_details: { discount_type: string; discount_amount: string | number } | null;
+      promo_details: { discount_type: string; discount_amount: string | number; applies_to_shipping?: boolean } | null;
     };
   };
-  const params = new URLSearchParams({ promo_code: code, cart_amount: String(cartTotal) });
+  const params = new URLSearchParams({ promo_code: code, cart_amount: String(cartTotal), delivery_charge: String(deliveryCharge) });
   const raw = await apiAuth<ValidateRaw>(`/api/user/promos/validate?${params}`);
   if (!raw) return { ...INVALID, message: "Could not reach server" };
   if (!raw.success) return { ...INVALID, message: raw.message };
@@ -1774,6 +1779,7 @@ export async function applyCoupon(
     discount_type: discountType,
     discount_value: discountValue,
     discount_amount: raw.data?.discount ?? 0,
+    applies_to_shipping: Boolean(raw.data?.promo_details?.applies_to_shipping),
     message: raw.message,
   };
 }

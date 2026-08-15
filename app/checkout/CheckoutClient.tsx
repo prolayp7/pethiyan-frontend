@@ -638,6 +638,24 @@ export default function CheckoutClient() {
   const grandTotal = Math.max(total - discount, 0) + totalGst + shippingCharge;
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
+  // Re-validate an applied coupon whenever the shipping charge changes. Needed
+  // for an applies_to_shipping promo: it may have been applied on the cart page
+  // (shipping unknown, so discount_amount came back computed against ₹0
+  // shipping) or the user may switch shipping rates after applying it here —
+  // either way the previewed discount would otherwise be stale until re-applied
+  // by hand. The final order total is always recomputed server-side regardless,
+  // this only keeps the on-screen preview accurate.
+  useEffect(() => {
+    if (!couponResult?.valid || !couponResult.applies_to_shipping) return;
+    applyCoupon(couponResult.code, total, shippingCharge).then((result) => {
+      if (result.valid) {
+        setCouponResult(result);
+        sessionStorage.setItem("applied_coupon", JSON.stringify(result));
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shippingCharge]);
+
   // ── Handlers ──
 
   const handleEditAddress = useCallback((addr: ApiAddress) => {
@@ -763,7 +781,10 @@ export default function CheckoutClient() {
     if (!couponCode.trim()) return;
     setCouponError("");
     setCouponLoading(true);
-    const result = await applyCoupon(couponCode.trim().toUpperCase(), total);
+    // Coupon is applied in Step 3, after a shipping rate is already selected in
+    // Step 2, so shippingCharge reflects the real delivery cost — needed so a
+    // promo with applies_to_shipping computes its discount correctly.
+    const result = await applyCoupon(couponCode.trim().toUpperCase(), total, shippingCharge);
     setCouponLoading(false);
     if (result.valid) {
       setCouponResult(result);
@@ -772,7 +793,7 @@ export default function CheckoutClient() {
     } else {
       setCouponError(result.message ?? "Invalid coupon code.");
     }
-  }, [couponCode, total]);
+  }, [couponCode, total, shippingCharge]);
 
   const handlePlaceOrder = useCallback(async () => {
     if (!selectedAddressId || selectedRateId === null) return;
