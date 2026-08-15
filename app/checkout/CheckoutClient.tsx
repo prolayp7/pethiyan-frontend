@@ -477,6 +477,11 @@ export default function CheckoutClient() {
   const [availablePaymentMethods, setAvailablePaymentMethods] = useState<PaymentMethod[]>([]);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  // Drives a dedicated full-page state while handling the return from Easebuzz's
+  // hosted payment page — separate from `step`, which resets to 1 (Address) on
+  // this fresh page load and would otherwise hide any error/spinner rendered
+  // inside the (step === 3) payment section.
+  const [easepayReturnStatus, setEasepayReturnStatus] = useState<"idle" | "verifying" | "failed">("idle");
   const [lastPincode, setLastPincode] = useState("");
 
   // Set to true synchronously before clearCart() on payment success so the guard below never fires
@@ -597,16 +602,19 @@ export default function CheckoutClient() {
     if (!pending?.txnid) {
       if (paymentStatus === "success") {
         setPaymentError("We couldn't confirm your payment automatically. If money was deducted, check My Orders or contact support.");
+        setEasepayReturnStatus("failed");
       }
       return;
     }
 
     if (paymentStatus !== "success") {
       setPaymentError("Payment was not completed. Please try again.");
+      setEasepayReturnStatus("failed");
       return;
     }
 
     setProcessingPayment(true);
+    setEasepayReturnStatus("verifying");
     verifyEasepayPayment(pending.txnid).then((verified) => {
       if (verified.success) {
         orderSuccessRef.current = true;
@@ -617,6 +625,7 @@ export default function CheckoutClient() {
       } else {
         setProcessingPayment(false);
         setPaymentError(verified.message || "Payment verification failed. If money was deducted, check My Orders or contact support.");
+        setEasepayReturnStatus("failed");
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -999,6 +1008,46 @@ export default function CheckoutClient() {
 
   if (items.length === 0) return null;
   if (authLoading) return null;
+
+  if (easepayReturnStatus === "verifying") {
+    return (
+      <div style={{ background: "var(--background)", minHeight: "100vh" }}>
+        <div className="max-w-2xl mx-auto px-4 py-16">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+            <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-(--color-primary)" />
+            <h1 className="text-2xl font-extrabold text-(--color-secondary) mb-3">Verifying your payment…</h1>
+            <p className="text-gray-500">Please don&apos;t close or refresh this page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (easepayReturnStatus === "failed") {
+    return (
+      <div style={{ background: "var(--background)", minHeight: "100vh" }}>
+        <div className="max-w-2xl mx-auto px-4 py-16">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+            <h1 className="text-2xl font-extrabold text-(--color-secondary) mb-3">Payment Issue</h1>
+            <p className="text-gray-500 mb-6">
+              {paymentError || "We couldn't confirm your payment. If money was deducted, check My Orders or contact support."}
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => { setEasepayReturnStatus("idle"); setPaymentError(""); }}
+                className="btn-brand px-6 py-3 rounded-xl text-sm font-bold"
+              >
+                Back to Checkout
+              </button>
+              <Link href="/account/orders" className="px-6 py-3 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50">
+                View My Orders
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     const loginOpen = !loginModalDismissed;
