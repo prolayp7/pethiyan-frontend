@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -15,7 +15,8 @@ const LoginModal = dynamic(() => import("@/components/auth/LoginModal"), { ssr: 
 import {
   getAddresses, getShippingRates, applyCoupon,
   createAddressDetailed, updateAddressDetailed,
-  createRazorpayOrder, verifyRazorpayPayment, createEasepayOrder, getPaymentSettings, syncCartToServer, createCheckout,
+  createRazorpayOrder, verifyRazorpayPayment, createEasepayOrder, verifyEasepayPayment,
+  getPaymentSettings, syncCartToServer, createCheckout,
   type ApiAddress, type ApiShippingRate, type ApiCouponResult,
 } from "@/lib/api";
 import { trackBeginCheckout, storePurchaseEvent } from "@/lib/analytics";
@@ -96,6 +97,18 @@ const INDIAN_STATES = [
 
 type Step = 1 | 2 | 3;
 type PaymentMethod = "razorpay" | "easepay" | "cod";
+
+// Easebuzz redirects the browser away entirely to its hosted payment page and
+// back, so React state (order_id/order_number/txnid) doesn't survive the round
+// trip. Persist what's needed to verify + navigate to order-confirmed on return.
+const PENDING_EASEPAY_KEY = "pending_easepay_payment";
+
+interface PendingEasepayPayment {
+  txnid: string;
+  order_id?: number;
+  order_number?: string;
+  order_slug?: string;
+}
 
 const BLANK_ADDRESS = {
   name: "", phone: "", company_name: "", address_line1: "", address_line2: "",
@@ -428,6 +441,7 @@ function OrderSummary({ subtotal, totalGst, discount, shippingCharge, shippingLa
 
 export default function CheckoutClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, updateUser, isLoading: authLoading, isLoggedIn } = useAuth();
   const { items, total, totalGst, clearCart, removeItem } = useCart();
   const currencySymbol = items[0]?.currencySymbol ?? "₹";
@@ -557,6 +571,56 @@ export default function CheckoutClient() {
         setAvailablePaymentMethods(["razorpay", "cod"]);
       });
   }, []);
+
+  // Handle return from Easebuzz's hosted payment page. Easebuzz does a full-page
+  // redirect back to surl/furl (?payment_status=success|failed) with no txnid in
+  // the query string — the transaction data goes to Easebuzz's own redirect, not
+  // this page. Use the txnid/order info persisted before we navigated away to
+  // verify the payment server-side and finish the order.
+  const easepayReturnHandledRef = useRef(false);
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment_status");
+    if (!paymentStatus || easepayReturnHandledRef.current) return;
+    easepayReturnHandledRef.current = true;
+
+    const raw = sessionStorage.getItem(PENDING_EASEPAY_KEY);
+    sessionStorage.removeItem(PENDING_EASEPAY_KEY);
+    router.replace("/checkout");
+
+    let pending: PendingEasepayPayment | null = null;
+    try {
+      pending = raw ? (JSON.parse(raw) as PendingEasepayPayment) : null;
+    } catch {
+      pending = null;
+    }
+
+    if (!pending?.txnid) {
+      if (paymentStatus === "success") {
+        setPaymentError("We couldn't confirm your payment automatically. If money was deducted, check My Orders or contact support.");
+      }
+      return;
+    }
+
+    if (paymentStatus !== "success") {
+      setPaymentError("Payment was not completed. Please try again.");
+      return;
+    }
+
+    setProcessingPayment(true);
+    verifyEasepayPayment(pending.txnid).then((verified) => {
+      if (verified.success) {
+        orderSuccessRef.current = true;
+        clearCart();
+        sessionStorage.removeItem("applied_coupon");
+        const href = `/order-confirmed?order_number=${pending!.order_number ?? ""}&order_id=${pending!.order_id ?? ""}&order_slug=${encodeURIComponent(pending!.order_slug ?? "")}`;
+        router.replace(href);
+      } else {
+        setProcessingPayment(false);
+        setPaymentError(verified.message || "Payment verification failed. If money was deducted, check My Orders or contact support.");
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Derived values
   const discount = couponResult?.discount_amount ?? 0;
@@ -813,6 +877,14 @@ export default function CheckoutClient() {
         })),
       });
       {
+        const pending: PendingEasepayPayment = {
+          txnid: easepayOrder.txnid,
+          order_id: result.order_id,
+          order_number: result.order_number,
+          order_slug: result.order_slug,
+        };
+        sessionStorage.setItem(PENDING_EASEPAY_KEY, JSON.stringify(pending));
+
         const url = easepayOrder.payment_url;
         try { (window.top as any)?.location && ((window.top as any).location.href = url); } catch (e) { window.location.href = url; }
       }

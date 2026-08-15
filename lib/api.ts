@@ -1882,6 +1882,29 @@ export async function verifyRazorpayPayment(data: {
   }
 }
 
+export async function verifyEasepayPayment(txnid: string): Promise<{ success: boolean; message?: string }> {
+  const token = getToken();
+  try {
+    const res = await fetch(`${API_BASE}/api/easepay/verify-payment`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...getAuthHeaders(token),
+      },
+      cache: "no-store",
+      credentials: "include",
+      body: JSON.stringify({ txnid }),
+    });
+    const body = await res.json();
+    if (!res.ok) return { success: false, message: (body as { message?: string })?.message ?? `HTTP ${res.status}` };
+    return body as { success: boolean; message?: string };
+  } catch (err) {
+    console.error("[verifyEasepayPayment] fetch error:", err);
+    return { success: false, message: "Network error during verification." };
+  }
+}
+
 export async function createEasepayOrder(
   orderId: number,
   amount: number
