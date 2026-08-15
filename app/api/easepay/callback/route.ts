@@ -46,5 +46,5 @@ export async function POST(req: NextRequest) {
   const status = (payload.status ?? "").toLowerCase();
   const redirectStatus = status === "success" ? "success" : "failed";
 
-  return NextResponse.redirect(new URL(`/checkout?payment_status=${redirectStatus}`, req.url), { status: 303 });
+  return NextResponse.redirect(new URL(`${NEXT_PUBLIC_SITE_URL}/checkout?payment_status=${redirectStatus}`, req.url), { status: 303 });
 }
