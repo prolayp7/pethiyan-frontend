@@ -343,7 +343,14 @@ interface OrderSummaryProps {
 
 function OrderSummary({ subtotal, totalGst, discount, shippingCharge, shippingLabel, shippingEta, couponResult, currencySymbol, items }: OrderSummaryProps) {
   const fmt = makeFmt(currencySymbol);
-  const grand = Math.max(subtotal - discount, 0) + totalGst + shippingCharge;
+  // When the coupon applies to shipping, `discount` was computed against
+  // (subtotal + shipping) combined — subtracting it from subtotal alone and
+  // then adding shipping back in full double-counts shipping once the
+  // discount exceeds the subtotal (clamped to 0 on one side, uncapped on the
+  // other). Fold shipping into the discountable base in that case instead.
+  const appliesToShipping = Boolean(couponResult?.valid && couponResult.applies_to_shipping);
+  const discountableBase = subtotal + (appliesToShipping ? shippingCharge : 0);
+  const grand = Math.max(discountableBase - discount, 0) + totalGst + (appliesToShipping ? 0 : shippingCharge);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-28">
@@ -635,7 +642,13 @@ export default function CheckoutClient() {
   const discount = couponResult?.discount_amount ?? 0;
   const selectedRate = shippingRates.find((r) => r.id === selectedRateId);
   const shippingCharge = selectedRate?.charge ?? 0;
-  const grandTotal = Math.max(total - discount, 0) + totalGst + shippingCharge;
+  // Same reasoning as OrderSummary's `grand` below — an applies_to_shipping
+  // coupon's discount is computed against (subtotal + shipping) combined, so
+  // it must be subtracted from that same combined base here too, or shipping
+  // gets added back in full on top of a discount that already accounted for it.
+  const discountAppliesToShipping = Boolean(couponResult?.valid && couponResult.applies_to_shipping);
+  const discountableBase = total + (discountAppliesToShipping ? shippingCharge : 0);
+  const grandTotal = Math.max(discountableBase - discount, 0) + totalGst + (discountAppliesToShipping ? 0 : shippingCharge);
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
   // Re-validate an applied coupon whenever the shipping charge changes. Needed
