@@ -43,3 +43,6 @@ next-env.d.ts
 # explicitly include public assets
 !/public/images/*
 !/public/product_video/*.mp4
+
+# Worktree scratch space (superpowers subagent-driven-development)
+.worktrees/
