@@ -17,7 +17,7 @@ import {
   createAddressDetailed, updateAddressDetailed,
   createRazorpayOrder, verifyRazorpayPayment, createEasepayOrder, verifyEasepayPayment,
   getPaymentSettings, syncCartToServer, createCheckout,
-  type ApiAddress, type ApiShippingRate, type ApiCouponResult,
+  type ApiAddress, type ApiShippingRate, type ApiCouponResult, type ApiEasepayCheckoutPayload,
 } from "@/lib/api";
 import { trackBeginCheckout, storePurchaseEvent } from "@/lib/analytics";
 import { shouldBypassOptimizer } from "@/lib/image";
@@ -105,9 +105,6 @@ const PENDING_EASEPAY_KEY = "pending_easepay_payment";
 
 interface PendingEasepayPayment {
   txnid: string;
-  order_id?: number;
-  order_number?: string;
-  order_slug?: string;
 }
 
 const BLANK_ADDRESS = {
@@ -623,15 +620,30 @@ export default function CheckoutClient() {
     setProcessingPayment(true);
     setEasepayReturnStatus("verifying");
     verifyEasepayPayment(pending.txnid).then((verified) => {
-      if (verified.success) {
+      if (verified.success && verified.order_id) {
+        storePurchaseEvent({
+          transaction_id: verified.order_number ?? String(verified.order_id),
+          value:          grandTotal,
+          currency:       "INR",
+          items: items.map((i) => ({
+            item_id:   String(i.productId ?? i.id.split("-")[0]),
+            item_name: i.name,
+            price:     i.price,
+            quantity:  i.quantity,
+          })),
+        });
         orderSuccessRef.current = true;
         clearCart();
         sessionStorage.removeItem("applied_coupon");
-        const href = `/order-confirmed?order_number=${pending!.order_number ?? ""}&order_id=${pending!.order_id ?? ""}&order_slug=${encodeURIComponent(pending!.order_slug ?? "")}`;
+        const href = `/order-confirmed?order_number=${verified.order_number ?? ""}&order_id=${verified.order_id ?? ""}&order_slug=${encodeURIComponent(verified.order_slug ?? "")}`;
         router.replace(href);
       } else {
         setProcessingPayment(false);
-        setPaymentError(verified.message || "Payment verification failed. If money was deducted, check My Orders or contact support.");
+        setPaymentError(
+          verified.success
+            ? "Payment was confirmed but we couldn't finish creating your order. Please contact support with this reference: " + pending!.txnid
+            : (verified.message || "Payment verification failed. If money was deducted, check My Orders or contact support.")
+        );
         setEasepayReturnStatus("failed");
       }
     });
@@ -886,46 +898,22 @@ export default function CheckoutClient() {
     }
 
     if (paymentMethod === "easepay") {
-      const result = await createCheckout({
+      const checkoutPayload: ApiEasepayCheckoutPayload = {
         address_id: selectedAddressId,
         shipping_rate_id: selectedRateId,
         delivery_charge: shippingCharge,
         coupon_code: couponResult?.code,
-        payment_method: "easepay",
-        items: checkoutItems,
-      });
+      };
 
-      if (!result.success || !result.order_id) {
-        setPaymentError(result.message ?? "Order failed. Please try again.");
-        setProcessingPayment(false);
-        return;
-      }
-
-      const easepayOrder = await createEasepayOrder(result.order_id, grandTotal);
+      const easepayOrder = await createEasepayOrder(checkoutPayload);
       if (!easepayOrder?.payment_url) {
         setPaymentError("Could not initiate Easepay payment. Please try again.");
         setProcessingPayment(false);
         return;
       }
 
-      storePurchaseEvent({
-        transaction_id: result.order_id ? String(result.order_id) : "",
-        value:          grandTotal,
-        currency:       "INR",
-        items: items.map((i) => ({
-          item_id:   String(i.productId ?? i.id.split("-")[0]),
-          item_name: i.name,
-          price:     i.price,
-          quantity:  i.quantity,
-        })),
-      });
       {
-        const pending: PendingEasepayPayment = {
-          txnid: easepayOrder.txnid,
-          order_id: result.order_id,
-          order_number: result.order_number,
-          order_slug: result.order_slug,
-        };
+        const pending: PendingEasepayPayment = { txnid: easepayOrder.txnid };
         sessionStorage.setItem(PENDING_EASEPAY_KEY, JSON.stringify(pending));
 
         const url = easepayOrder.payment_url;
