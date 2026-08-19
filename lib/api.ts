@@ -1933,8 +1933,8 @@ export async function verifyEasepayPayment(txnid: string): Promise<{
 
 export async function createEasepayOrder(
   payload: ApiEasepayCheckoutPayload
-): Promise<ApiEasepayOrder | null> {
-  const res = await apiAuth<ApiResponse<ApiEasepayOrder>>(
+): Promise<{ success: boolean; message?: string; data?: ApiEasepayOrder }> {
+  const res = await apiAuth<{ success?: boolean; message?: string; data?: ApiEasepayOrder }>(
     "/api/easepay/create-order",
     "POST",
     {
@@ -1944,8 +1944,12 @@ export async function createEasepayOrder(
       ...(payload.coupon_code ? { promo_code: payload.coupon_code } : {}),
     }
   );
-  if (res && "data" in res) return res.data;
-  return null;
+  if (!res) return { success: false, message: "Network error. Please try again." };
+  return {
+    success: !!res.success,
+    message: res.message,
+    data: res.data,
+  };
 }
 
 export async function getPaymentSettings(): Promise<ApiPaymentSettings> {

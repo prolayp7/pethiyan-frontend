@@ -105,6 +105,12 @@ const PENDING_EASEPAY_KEY = "pending_easepay_payment";
 
 interface PendingEasepayPayment {
   txnid: string;
+  // Captured at the pre-redirect point (right before navigating to Easebuzz),
+  // where grandTotal/items are still correct — CartContext/coupon/shipping
+  // state haven't rehydrated yet by the time the post-verification effect
+  // runs on return, so those live values can't be trusted there.
+  purchaseValue: number;
+  purchaseItems: { item_id: string; item_name: string; price: number; quantity: number }[];
 }
 
 const BLANK_ADDRESS = {
@@ -502,6 +508,23 @@ export default function CheckoutClient() {
     if (items.length === 0 && !orderSuccessRef.current && !suppressEmptyCartRedirectRef.current) router.replace("/cart");
   }, [items.length, router, authLoading, isLoggedIn]);
 
+  // If the customer presses back on Easebuzz's hosted payment page, the browser
+  // very likely restores this page from bfcache rather than reloading it — React
+  // state (including processingPayment left true from the pre-redirect click)
+  // survives, but there's no payment_status query param to trigger the
+  // post-verification effect that would otherwise reset it. Detect a bfcache
+  // restore explicitly and reset so the "Pay with Easepay" button isn't stuck
+  // disabled/spinning forever.
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setProcessingPayment(false);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   useEffect(() => {
     setLastPincode(readLastPincodeFromCookie());
   }, [user?.company_name, user?.gstin]);
@@ -623,14 +646,9 @@ export default function CheckoutClient() {
       if (verified.success && verified.order_id) {
         storePurchaseEvent({
           transaction_id: verified.order_number ?? String(verified.order_id),
-          value:          grandTotal,
+          value:          pending!.purchaseValue,
           currency:       "INR",
-          items: items.map((i) => ({
-            item_id:   String(i.productId ?? i.id.split("-")[0]),
-            item_name: i.name,
-            price:     i.price,
-            quantity:  i.quantity,
-          })),
+          items:          pending!.purchaseItems,
         });
         orderSuccessRef.current = true;
         clearCart();
@@ -905,7 +923,13 @@ export default function CheckoutClient() {
         coupon_code: couponResult?.code,
       };
 
-      const easepayOrder = await createEasepayOrder(checkoutPayload);
+      const result = await createEasepayOrder(checkoutPayload);
+      if (!result.success) {
+        setPaymentError(result.message ?? "Could not initiate Easepay payment. Please try again.");
+        setProcessingPayment(false);
+        return;
+      }
+      const easepayOrder = result.data;
       if (!easepayOrder?.payment_url) {
         setPaymentError("Could not initiate Easepay payment. Please try again.");
         setProcessingPayment(false);
@@ -913,7 +937,20 @@ export default function CheckoutClient() {
       }
 
       {
-        const pending: PendingEasepayPayment = { txnid: easepayOrder.txnid };
+        // Captured now — while grandTotal/items still reflect what the customer
+        // is actually paying — so the post-verification effect (which runs after
+        // the round trip to Easebuzz, before CartContext/coupon/shipping state
+        // has rehydrated) records the real amount instead of 0/[].
+        const pending: PendingEasepayPayment = {
+          txnid: easepayOrder.txnid,
+          purchaseValue: grandTotal,
+          purchaseItems: items.map((i) => ({
+            item_id:   String(i.productId ?? i.id.split("-")[0]),
+            item_name: i.name,
+            price:     i.price,
+            quantity:  i.quantity,
+          })),
+        };
         sessionStorage.setItem(PENDING_EASEPAY_KEY, JSON.stringify(pending));
 
         const url = easepayOrder.payment_url;
