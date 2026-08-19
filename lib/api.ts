@@ -339,6 +339,13 @@ export interface ApiRazorpayOrder {
   key: string;              // Razorpay public key
 }
 
+export interface ApiEasepayCheckoutPayload {
+  address_id: number;
+  shipping_rate_id: number;
+  delivery_charge?: number;
+  coupon_code?: string;
+}
+
 export interface ApiEasepayOrder {
   txnid: string;
   access_key: string;
@@ -1888,7 +1895,13 @@ export async function verifyRazorpayPayment(data: {
   }
 }
 
-export async function verifyEasepayPayment(txnid: string): Promise<{ success: boolean; message?: string }> {
+export async function verifyEasepayPayment(txnid: string): Promise<{
+  success: boolean;
+  message?: string;
+  order_id?: number;
+  order_number?: string;
+  order_slug?: string;
+}> {
   const token = getToken();
   try {
     const res = await fetch(`${API_BASE}/api/easepay/verify-payment`, {
@@ -1904,7 +1917,14 @@ export async function verifyEasepayPayment(txnid: string): Promise<{ success: bo
     });
     const body = await res.json();
     if (!res.ok) return { success: false, message: (body as { message?: string })?.message ?? `HTTP ${res.status}` };
-    return body as { success: boolean; message?: string };
+    const data = (body as { success?: boolean; message?: string; data?: { order_id?: number; order_number?: string; order_slug?: string } });
+    return {
+      success: !!data.success,
+      message: data.message,
+      order_id: data.data?.order_id ?? undefined,
+      order_number: data.data?.order_number ?? undefined,
+      order_slug: data.data?.order_slug ?? undefined,
+    };
   } catch (err) {
     console.error("[verifyEasepayPayment] fetch error:", err);
     return { success: false, message: "Network error during verification." };
@@ -1912,13 +1932,17 @@ export async function verifyEasepayPayment(txnid: string): Promise<{ success: bo
 }
 
 export async function createEasepayOrder(
-  orderId: number,
-  amount: number
+  payload: ApiEasepayCheckoutPayload
 ): Promise<ApiEasepayOrder | null> {
   const res = await apiAuth<ApiResponse<ApiEasepayOrder>>(
     "/api/easepay/create-order",
     "POST",
-    { order_id: orderId, amount }
+    {
+      address_id: payload.address_id,
+      shipping_rate_id: payload.shipping_rate_id,
+      ...(payload.delivery_charge !== undefined ? { delivery_charge: payload.delivery_charge } : {}),
+      ...(payload.coupon_code ? { promo_code: payload.coupon_code } : {}),
+    }
   );
   if (res && "data" in res) return res.data;
   return null;
