@@ -47,10 +47,13 @@ export async function generateMetadata({
   const { slug, variantSlug } = await params;
   const product = await getProduct(slug);
 
-  if (!product) return { title: "Product Not Found" };
+  // Called here (not just in the page body) so the 404 status is set before
+  // this segment's loading.tsx starts streaming a 200 shell — see
+  // https://github.com/vercel/next.js/issues/76474
+  if (!product) notFound();
 
   const variant = product.variants?.find((v) => v.slug === variantSlug);
-  if (!variant) return { title: "Variant Not Found" };
+  if (!variant) notFound();
 
   const firstStorePricing = selectPrimaryStorePricing(variant.store_pricing);
   const price = resolveStorePricingDisplay(firstStorePricing).mainPrice;
