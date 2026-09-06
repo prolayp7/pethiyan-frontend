@@ -347,6 +347,16 @@ export function CartProvider({
     serverCartClear();
   }, []);
 
+  // A coupon applied to a cart shouldn't silently carry over once that cart
+  // is emptied (last item removed, qty dropped below min, or clearCart) —
+  // otherwise it reappears "pre-applied" on an entirely new, unrelated cart.
+  useEffect(() => {
+    if (!hydrated || items.length !== 0) return;
+    try {
+      sessionStorage.removeItem("applied_coupon");
+    } catch {}
+  }, [hydrated, items.length]);
+
   return (
     <CartContext.Provider
       value={{
