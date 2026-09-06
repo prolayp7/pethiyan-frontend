@@ -107,6 +107,22 @@ export default function CartPage() {
     sessionStorage.removeItem("applied_coupon");
   };
 
+  // Re-validate an applied coupon whenever the cart subtotal changes (e.g. a
+  // new item was added after the coupon was applied). The backend always
+  // recomputes the discount against the *current* cart total, so the
+  // on-screen amount would otherwise stay stuck at the value from whenever
+  // the coupon was first applied.
+  useEffect(() => {
+    if (!couponResult?.valid) return;
+    applyCoupon(couponResult.code, total).then((result) => {
+      if (result.valid) {
+        setCouponResult(result);
+        sessionStorage.setItem("applied_coupon", JSON.stringify(result));
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
+
   const discount = couponResult?.discount_amount ?? 0;
   const subtotalAfterDiscount = Math.max(total - discount, 0);
   const grandTotal = subtotalAfterDiscount + totalGst;

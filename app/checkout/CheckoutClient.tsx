@@ -681,15 +681,16 @@ export default function CheckoutClient() {
   const grandTotal = Math.max(discountableBase - discount, 0) + totalGst + (discountAppliesToShipping ? 0 : shippingCharge);
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
-  // Re-validate an applied coupon whenever the shipping charge changes. Needed
-  // for an applies_to_shipping promo: it may have been applied on the cart page
-  // (shipping unknown, so discount_amount came back computed against ₹0
-  // shipping) or the user may switch shipping rates after applying it here —
-  // either way the previewed discount would otherwise be stale until re-applied
-  // by hand. The final order total is always recomputed server-side regardless,
-  // this only keeps the on-screen preview accurate.
+  // Re-validate an applied coupon whenever the subtotal or shipping charge
+  // changes. The backend always recomputes the discount against the
+  // *current* cart total (and, for an applies_to_shipping promo, current
+  // shipping too), so a coupon applied on the cart page — or before more
+  // items were added, or before a shipping rate was picked — would otherwise
+  // keep showing a stale discount until re-applied by hand. The final order
+  // total is always recomputed server-side regardless, this only keeps the
+  // on-screen preview accurate.
   useEffect(() => {
-    if (!couponResult?.valid || !couponResult.applies_to_shipping) return;
+    if (!couponResult?.valid) return;
     applyCoupon(couponResult.code, total, shippingCharge).then((result) => {
       if (result.valid) {
         setCouponResult(result);
@@ -697,7 +698,7 @@ export default function CheckoutClient() {
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shippingCharge]);
+  }, [total, shippingCharge]);
 
   // ── Handlers ──
 
