@@ -124,6 +124,13 @@ export default function CartPage() {
   }, [total]);
 
   const discount = couponResult?.discount_amount ?? 0;
+  // Shipping isn't known on the cart page at all (only computed at checkout
+  // once an address is picked), so a free-shipping coupon's discount is
+  // always 0 here. Showing "₹0.00 off" reads as broken; say it's pending
+  // instead for a coupon whose value depends on shipping.
+  const discountPending = Boolean(
+    couponResult?.valid && (couponResult.discount_type === "free_shipping" || couponResult.applies_to_shipping)
+  );
   const subtotalAfterDiscount = Math.max(total - discount, 0);
   const grandTotal = subtotalAfterDiscount + totalGst;
   const isFreeShipping = grandTotal >= FREE_SHIPPING_THRESHOLD;
@@ -305,7 +312,9 @@ export default function CartPage() {
                   <div className="flex items-center gap-2">
                     <Tag className="h-3.5 w-3.5 text-green-600" />
                     <span className="text-xs font-semibold text-green-700">{couponResult.code}</span>
-                    <span className="text-xs text-green-600">— {fmt(discount)} off</span>
+                    <span className="text-xs text-green-600">
+                      {discountPending ? "Applied — shown at checkout" : `— ${fmt(discount)} off`}
+                    </span>
                   </div>
                   <button
                     type="button"

@@ -342,9 +342,10 @@ interface OrderSummaryProps {
   couponResult: ApiCouponResult | null;
   currencySymbol: string;
   items: { name: string; quantity: number; price: number; image?: string | null; weight?: number; weightUnit?: string }[];
+  shippingKnown: boolean;
 }
 
-function OrderSummary({ subtotal, totalGst, discount, shippingCharge, shippingLabel, shippingEta, couponResult, currencySymbol, items }: OrderSummaryProps) {
+function OrderSummary({ subtotal, totalGst, discount, shippingCharge, shippingLabel, shippingEta, couponResult, currencySymbol, items, shippingKnown }: OrderSummaryProps) {
   const fmt = makeFmt(currencySymbol);
   // When the coupon applies to shipping, `discount` was computed against
   // (subtotal + shipping) combined — subtracting it from subtotal alone and
@@ -352,6 +353,15 @@ function OrderSummary({ subtotal, totalGst, discount, shippingCharge, shippingLa
   // discount exceeds the subtotal (clamped to 0 on one side, uncapped on the
   // other). Fold shipping into the discountable base in that case instead.
   const appliesToShipping = Boolean(couponResult?.valid && couponResult.applies_to_shipping);
+  // A free-shipping (or shipping-inclusive) coupon's discount is derived
+  // from the shipping charge, which is 0 before a shipping rate has been
+  // looked up (address step). Showing "−₹0.00" there reads as "this coupon
+  // gives you nothing" rather than "not calculated yet" — so show a pending
+  // label instead of a real amount until shipping is actually known.
+  const shippingDependent = Boolean(
+    couponResult?.valid && (couponResult.discount_type === "free_shipping" || couponResult.applies_to_shipping)
+  );
+  const discountPending = shippingDependent && !shippingKnown;
   const discountableBase = subtotal + (appliesToShipping ? shippingCharge : 0);
   const grand = Math.max(discountableBase - discount, 0) + totalGst + (appliesToShipping ? 0 : shippingCharge);
 
@@ -404,7 +414,9 @@ function OrderSummary({ subtotal, totalGst, discount, shippingCharge, shippingLa
         <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl bg-green-50 border border-green-100">
           <Tag className="h-3.5 w-3.5 text-green-600 shrink-0" />
           <span className="text-xs font-semibold text-green-700">{couponResult.code}</span>
-          <span className="text-xs text-green-600 ml-auto">−{fmt(discount)}</span>
+          <span className="text-xs text-green-600 ml-auto">
+            {discountPending ? "Applied at shipping step" : `−${fmt(discount)}`}
+          </span>
         </div>
       )}
 
@@ -1552,6 +1564,7 @@ export default function CheckoutClient() {
               couponResult={couponResult}
               currencySymbol={currencySymbol}
               items={items}
+              shippingKnown={shippingRates.length > 0}
             />
           </div>
         </div>
