@@ -353,15 +353,14 @@ function OrderSummary({ subtotal, totalGst, discount, shippingCharge, shippingLa
   // discount exceeds the subtotal (clamped to 0 on one side, uncapped on the
   // other). Fold shipping into the discountable base in that case instead.
   const appliesToShipping = Boolean(couponResult?.valid && couponResult.applies_to_shipping);
-  // A free-shipping (or shipping-inclusive) coupon's discount is derived
-  // from the shipping charge, which is 0 before a shipping rate has been
-  // looked up (address step). Showing "−₹0.00" there reads as "this coupon
-  // gives you nothing" rather than "not calculated yet" — so show a pending
-  // label instead of a real amount until shipping is actually known.
-  const shippingDependent = Boolean(
-    couponResult?.valid && (couponResult.discount_type === "free_shipping" || couponResult.applies_to_shipping)
-  );
-  const discountPending = shippingDependent && !shippingKnown;
+  // Only a pure free_shipping coupon has a genuinely-zero discount before a
+  // shipping rate is known — its value *is* the delivery charge, so there's
+  // nothing to show yet. A percentage/fixed coupon with applies_to_shipping
+  // already has a real, non-zero discount computed off the subtotal alone
+  // at this point (it may just grow once shipping is added to its base), so
+  // it should keep showing its current amount, not a placeholder.
+  const shippingDependent = couponResult?.valid && couponResult.discount_type === "free_shipping";
+  const discountPending = Boolean(shippingDependent) && !shippingKnown;
   const discountableBase = subtotal + (appliesToShipping ? shippingCharge : 0);
   const grand = Math.max(discountableBase - discount, 0) + totalGst + (appliesToShipping ? 0 : shippingCharge);
 

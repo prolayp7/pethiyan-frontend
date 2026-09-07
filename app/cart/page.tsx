@@ -125,12 +125,11 @@ export default function CartPage() {
 
   const discount = couponResult?.discount_amount ?? 0;
   // Shipping isn't known on the cart page at all (only computed at checkout
-  // once an address is picked), so a free-shipping coupon's discount is
-  // always 0 here. Showing "₹0.00 off" reads as broken; say it's pending
-  // instead for a coupon whose value depends on shipping.
-  const discountPending = Boolean(
-    couponResult?.valid && (couponResult.discount_type === "free_shipping" || couponResult.applies_to_shipping)
-  );
+  // once an address is picked). Only a pure free_shipping coupon has a
+  // genuinely-zero discount without it — a percentage/fixed coupon with
+  // applies_to_shipping already has a real, non-zero discount computed off
+  // the subtotal alone, so it should keep showing that amount.
+  const discountPending = Boolean(couponResult?.valid && couponResult.discount_type === "free_shipping");
   const subtotalAfterDiscount = Math.max(total - discount, 0);
   const grandTotal = subtotalAfterDiscount + totalGst;
   const isFreeShipping = grandTotal >= FREE_SHIPPING_THRESHOLD;
