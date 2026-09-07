@@ -311,9 +311,9 @@ export default function CartPage() {
                   <div className="flex items-center gap-2">
                     <Tag className="h-3.5 w-3.5 text-green-600" />
                     <span className="text-xs font-semibold text-green-700">{couponResult.code}</span>
-                    <span className="text-xs text-green-600">
-                      {discountPending ? "Applied — shown at checkout" : `— ${fmt(discount)} off`}
-                    </span>
+                    {!discountPending && (
+                      <span className="text-xs text-green-600">— {fmt(discount)} off</span>
+                    )}
                   </div>
                   <button
                     type="button"
