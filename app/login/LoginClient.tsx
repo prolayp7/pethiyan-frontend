@@ -246,7 +246,7 @@ export default function LoginClient() {
                     Sign in to Pethiyan
                   </h1>
                   <p className="mt-1 text-sm text-gray-500">
-                    Enter your mobile number to receive a one-time password
+                    Enter your mobile number. We&apos;ll send a one-time password to the email linked to your account.
                   </p>
                 </div>
 
@@ -306,7 +306,7 @@ export default function LoginClient() {
                   </h2>
                   <p className="mt-1 text-sm text-gray-500">
                     We sent a 6-digit code to{" "}
-                    <strong className="text-(--color-secondary)">{emailSentTo || phone}</strong>
+                    <strong className="text-(--color-secondary)">{emailSentTo || "the email linked to your account"}</strong>
                   </p>
                 </div>
 

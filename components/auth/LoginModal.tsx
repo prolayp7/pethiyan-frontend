@@ -8,7 +8,7 @@ import { useSiteSettings } from "@/context/SiteSettingsContext";
 import Link from "next/link";
 import MobileInput, { isValidIndianMobile } from "@/components/auth/MobileInput";
 import OtpInput from "@/components/auth/OtpInput";
-import { sendOtp, verifyOtp, resendOtp, registerUser, verifyMobile, loginWithPassword, googleCallback, forgotPasswordSendOtp, forgotPasswordReset, forgotPasswordResendOtp } from "@/lib/api";
+import { sendOtp, verifyOtp, resendOtp, registerUser, loginWithPassword, googleCallback, forgotPasswordSendOtp, forgotPasswordReset, forgotPasswordResendOtp } from "@/lib/api";
 import { signInWithGoogle } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import type { AuthUser } from "@/context/AuthContext";
@@ -98,7 +98,6 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginOtpInput, setLoginOtpInput] = useState("");
-  const [loginOtpSentTo, setLoginOtpSentTo] = useState<{ sms: boolean; email: boolean }>({ sms: false, email: false });
   const [loginOtpEmailSentTo, setLoginOtpEmailSentTo] = useState("");
 
   // Forgot-password fields
@@ -124,12 +123,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
 
   // OTP
   const [otp, setOtp] = useState("");
-
-  const pendingAuth = useRef<{
-    user: AuthUser;
-    smsOtpSent: boolean;
-    emailOtpSent: boolean;
-  } | null>(null);
+  const pendingAuth = useRef<{ user: AuthUser } | null>(null);
 
   // Google new-user completion state
   const [googleIdToken, setGoogleIdToken] = useState<string | null>(null);
@@ -164,7 +158,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
       setStep("form");
       setLoginMode("password");
       setLoginIdentifier(""); setLoginPassword(""); setShowLoginPassword(false);
-      setLoginOtpInput(""); setLoginOtpSentTo({ sms: false, email: false }); setLoginOtpEmailSentTo("");
+      setLoginOtpInput(""); setLoginOtpEmailSentTo("");
       setForgotStep("identifier"); setForgotEmail(""); setForgotMobile("");
       setForgotOtp(""); setForgotNewPassword(""); setForgotConfirmPassword("");
       setShowForgotPassword(false); setShowForgotConfirm(false);
@@ -188,7 +182,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     setStep("form");
     setLoginMode("password");
     setLoginIdentifier(""); setLoginPassword(""); setShowLoginPassword(false);
-    setLoginOtpInput(""); setLoginOtpSentTo({ sms: false, email: false }); setLoginOtpEmailSentTo("");
+    setLoginOtpInput(""); setLoginOtpEmailSentTo("");
     setForgotStep("identifier"); setForgotEmail(""); setForgotMobile("");
     setForgotOtp(""); setForgotNewPassword(""); setForgotConfirmPassword("");
     setShowForgotPassword(false); setShowForgotConfirm(false);
@@ -361,7 +355,6 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
       const res = await sendOtp(mobile, email);
       if (res.success) {
         setDemoOtp(res.demoOtp);
-        setLoginOtpSentTo({ sms: Boolean(res.smsOtpSent), email: Boolean(res.emailOtpSent) });
         setLoginOtpEmailSentTo(res.emailSentTo ?? "");
         setStep("otp");
         startCountdown();
@@ -406,11 +399,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
         password_confirmation: regConfirmPassword,
       });
       if (res.success && res.user) {
-        pendingAuth.current = {
-          user: res.user,
-          smsOtpSent: Boolean(res.smsOtpSent),
-          emailOtpSent: Boolean(res.emailOtpSent),
-        };
+        pendingAuth.current = { user: res.user };
         setStep("otp");
         startCountdown();
       } else setApiError(res.message ?? "Registration failed. Please try again.");
@@ -425,8 +414,8 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     setErrors({});
     startLoading("form");
     try {
-      const res = await verifyMobile(regMobile, otp);
-      if (res.success && pendingAuth.current) { completeLogin(pendingAuth.current.user); }
+      const res = await verifyOtp(null, otp, { email: regEmail.trim() });
+      if (res.success && pendingAuth.current) { completeLogin(res.user ?? pendingAuth.current.user); }
       else setApiError(res.message ?? "Invalid OTP. Please try again.");
     } catch { setApiError("Something went wrong. Please try again."); }
     finally { stopLoading(); }
@@ -521,7 +510,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
         const isPhone = /^\d+$/.test(val);
         res = await resendOtp(isPhone ? val : null, !isPhone ? val : null);
       } else {
-        res = await resendOtp(regMobile, null);
+        res = await resendOtp(null, regEmail.trim());
       }
       if (res.success) { setOtp(""); setDemoOtp(res.demoOtp); if (res.emailSentTo) setLoginOtpEmailSentTo(res.emailSentTo); startCountdown(); }
       else setApiError(res.message ?? "Could not resend OTP.");
@@ -629,18 +618,9 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
   const handleVerifyOtp = tab === "login" ? handleLoginVerifyOtp : handleRegisterVerifyOtp;
   const isPhoneOtpInput = loginOtpInput.length > 0 && /^\d+$/.test(loginOtpInput);
 
-  // Registration OTP destination
-  const registerSmsOtpSent   = Boolean(pendingAuth.current?.smsOtpSent);
-  const registerEmailOtpSent = Boolean(pendingAuth.current?.emailOtpSent);
-  const registerOtpHeading   = registerSmsOtpSent && registerEmailOtpSent
-    ? "Verify your account"
-    : registerSmsOtpSent ? "Verify your mobile" : registerEmailOtpSent ? "Verify your email" : "Verify your mobile";
-  const registerOtpDestination = (() => {
-    const parts: string[] = [];
-    if (registerSmsOtpSent) parts.push(`+91 ${regMobile}`);
-    if (registerEmailOtpSent) parts.push(regEmail);
-    return parts.join(" & ") || `+91 ${regMobile}`;
-  })();
+  // Registration OTP is delivered to the account email only.
+  const registerOtpHeading = "Verify your email";
+  const registerOtpDestination = regEmail;
 
   // Login OTP destination — OTP always goes to email
   const loginOtpHeading = "Verify your email";
