@@ -524,25 +524,23 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     e.preventDefault();
     setApiError("");
     const errs: Record<string, string> = {};
-    if (smsOtpEnabled && forgotMobile && !isValidIndianMobile(forgotMobile)) {
+    if (forgotMobile && !isValidIndianMobile(forgotMobile)) {
       errs.forgotMobile = "Enter a valid 10-digit mobile number";
     }
-    if (emailOtpEnabled && forgotEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim())) {
+    if (forgotEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim())) {
       errs.forgotEmail = "Enter a valid email address";
     }
-    const hasMobile = smsOtpEnabled && isValidIndianMobile(forgotMobile);
-    const hasEmail = emailOtpEnabled && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim());
+    const hasMobile = isValidIndianMobile(forgotMobile);
+    const hasEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim());
     if (!hasMobile && !hasEmail) {
-      if (smsOtpEnabled && emailOtpEnabled) errs.forgotOtpIdentifier = "Enter your mobile number or email address";
-      else if (smsOtpEnabled) errs.forgotMobile = "Enter a valid 10-digit mobile number";
-      else if (emailOtpEnabled) errs.forgotEmail = "Enter a valid email address";
+      errs.forgotOtpIdentifier = "Enter your mobile number or email address";
     }
     if (Object.keys(errs).length) { setErrors(errs); triggerShake(Object.keys(errs)); return; }
 
     startLoading("form");
     try {
-      const mobile = smsOtpEnabled && isValidIndianMobile(forgotMobile) ? forgotMobile : null;
-      const email = emailOtpEnabled && forgotEmail.trim() ? forgotEmail.trim() : null;
+      const mobile = isValidIndianMobile(forgotMobile) ? forgotMobile : null;
+      const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim()) ? forgotEmail.trim() : null;
       const res = await forgotPasswordSendOtp(email, mobile);
       if (res.success) {
         setForgotDemoOtp(res.demoOtp);
@@ -568,8 +566,8 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
 
     startLoading("form");
     try {
-      const mobile = smsOtpEnabled && isValidIndianMobile(forgotMobile) ? forgotMobile : null;
-      const email = emailOtpEnabled && forgotEmail.trim() ? forgotEmail.trim() : null;
+      const mobile = isValidIndianMobile(forgotMobile) ? forgotMobile : null;
+      const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim()) ? forgotEmail.trim() : null;
       const res = await forgotPasswordReset(email, mobile, forgotOtp, forgotNewPassword, forgotConfirmPassword);
       if (res.success) {
         setForgotStep("success");
@@ -585,8 +583,8 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
     setApiError("");
     startLoading("resend");
     try {
-      const mobile = smsOtpEnabled && isValidIndianMobile(forgotMobile) ? forgotMobile : null;
-      const email = emailOtpEnabled && forgotEmail.trim() ? forgotEmail.trim() : null;
+      const mobile = isValidIndianMobile(forgotMobile) ? forgotMobile : null;
+      const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim()) ? forgotEmail.trim() : null;
       const res = await forgotPasswordResendOtp(email, mobile);
       if (res.success) {
         setForgotOtp("");
@@ -982,11 +980,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                     <div className="mb-1">
                       <h2 className="text-lg font-bold text-gray-900">Forgot Password</h2>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        {smsOtpEnabled && emailOtpEnabled
-                          ? "Enter your mobile or email to reset password"
-                          : smsOtpEnabled
-                          ? "Enter your mobile number to reset password"
-                          : "Enter your email address to reset password"}
+                        Enter your mobile number or email. We&apos;ll send the OTP to your registered email.
                       </p>
                     </div>
 
@@ -996,52 +990,45 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                       </p>
                     )}
 
-                    {smsOtpEnabled && (
-                      <div className={shaking.has("forgotMobile") || shaking.has("forgotOtpIdentifier") ? "shake" : ""}>
-                        <MobileInput
-                          value={forgotMobile}
-                          onChange={(v) => {
-                            setForgotMobile(v);
-                            setFieldError("forgotMobile", v && !isValidIndianMobile(v) ? "Enter a valid 10-digit mobile number" : "");
+                    <div className={shaking.has("forgotMobile") || shaking.has("forgotOtpIdentifier") ? "shake" : ""}>
+                      <MobileInput
+                        value={forgotMobile}
+                        onChange={(v) => {
+                          setForgotMobile(v);
+                          setFieldError("forgotMobile", v && !isValidIndianMobile(v) ? "Enter a valid 10-digit mobile number" : "");
+                          setFieldError("forgotOtpIdentifier", "");
+                        }}
+                        error={errors.forgotMobile}
+                        disabled={loading}
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3 my-1">
+                      <div className="flex-1 h-px bg-gray-200" />
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">OR</span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+
+                    <FormField error={errors.forgotEmail}>
+                      <div className={`relative ${shaking.has("forgotEmail") || shaking.has("forgotOtpIdentifier") ? "shake" : ""}`}>
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <Mail className="h-4 w-4" />
+                        </span>
+                        <input
+                          type="email"
+                          placeholder="Email address"
+                          value={forgotEmail}
+                          onChange={(e) => {
+                            setForgotEmail(e.target.value);
+                            setFieldError("forgotEmail", e.target.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value.trim()) ? "Enter a valid email address" : "");
                             setFieldError("forgotOtpIdentifier", "");
                           }}
-                          error={errors.forgotMobile}
                           disabled={loading}
-                          autoFocus={smsOtpEnabled}
+                          className={fieldCls("forgotEmail", "pl-10 pr-4 py-3")}
                         />
                       </div>
-                    )}
-
-                    {smsOtpEnabled && emailOtpEnabled && (
-                      <div className="flex items-center gap-3 my-1">
-                        <div className="flex-1 h-px bg-gray-200" />
-                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">OR</span>
-                        <div className="flex-1 h-px bg-gray-200" />
-                      </div>
-                    )}
-
-                    {emailOtpEnabled && (
-                      <FormField error={errors.forgotEmail}>
-                        <div className={`relative ${shaking.has("forgotEmail") || shaking.has("forgotOtpIdentifier") ? "shake" : ""}`}>
-                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                            <Mail className="h-4 w-4" />
-                          </span>
-                          <input
-                            type="email"
-                            placeholder={smsOtpEnabled ? "Email address (optional)" : "Email address *"}
-                            value={forgotEmail}
-                            onChange={(e) => {
-                              setForgotEmail(e.target.value);
-                              setFieldError("forgotEmail", e.target.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value.trim()) ? "Enter a valid email address" : "");
-                              setFieldError("forgotOtpIdentifier", "");
-                            }}
-                            disabled={loading}
-                            autoFocus={!smsOtpEnabled && emailOtpEnabled}
-                            className={fieldCls("forgotEmail", "pl-10 pr-4 py-3")}
-                          />
-                        </div>
-                      </FormField>
-                    )}
+                    </FormField>
 
                     {apiError && <ApiError msg={apiError} />}
                     <PrimaryButton loading={loadingAction === "form"} disabled={loading} label="Send OTP" loadingLabel="Sending…" />
@@ -1057,7 +1044,7 @@ export default function LoginModal({ open, onClose, onSuccess, redirectTo }: Log
                     </button>
                     <div className="mb-2">
                       <h2 className="text-lg font-bold text-gray-900">Reset Password</h2>
-                      <p className="text-xs text-gray-500 mt-0.5">Enter the OTP sent to you and your new password</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Enter the OTP sent to your registered email and your new password</p>
                       {forgotDemoOtp && (
                         <p className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 inline-block mt-2">
                           Demo mode — use OTP: <span className="font-bold tracking-widest">{forgotDemoOtp}</span>
