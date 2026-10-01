@@ -15,7 +15,7 @@ import {
   faqPageSchema,
   jsonLd,
 } from "@/lib/structured-data";
-import { getCustomJsonLdSchemas, resolveProductSeo, resolveVariantSeo } from "@/lib/seo";
+import { getCustomJsonLdSchemas, resolveProductSeo, resolveVariantSeo, brandTitle } from "@/lib/seo";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import RecentlyViewedProducts from "@/components/sections/RecentlyViewedProducts";
@@ -54,7 +54,7 @@ export async function generateMetadata({
   const inStock = defaultVariant?.availability !== false;
 
   return {
-    title: seo.title,
+    title: brandTitle(seo.title),
     description: seo.description,
     ...(seo.keywords ? { keywords: seo.keywords } : {}),
     robots: seo.indexable

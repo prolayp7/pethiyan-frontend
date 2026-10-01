@@ -8,7 +8,7 @@ import {
   shopFaqPageSchema,
   jsonLd,
 } from "@/lib/structured-data";
-import { getCustomJsonLdSchemas, resolveShopSeo } from "@/lib/seo";
+import { getCustomJsonLdSchemas, resolveShopSeo, brandTitle } from "@/lib/seo";
 import ShopClient from "./ShopClient";
 
 // Safety fallback: revalidate every hour even if webhook never fires.
@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const seo = resolveShopSeo(shopPage);
 
   return {
-    title: seo.title,
+    title: brandTitle(seo.title),
     description: seo.description,
     ...(seo.keywords ? { keywords: seo.keywords } : {}),
     alternates: { canonical: "/shop" },

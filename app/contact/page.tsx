@@ -1,3 +1,4 @@
+import { brandTitle } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -80,7 +81,7 @@ async function getContactData(): Promise<{ contact: ContactData; page: Omit<Page
 export async function generateMetadata(): Promise<Metadata> {
   const { page } = await getContactData();
   return {
-    title:       page?.meta_title       ?? "Contact Us",
+    title:       brandTitle(page?.meta_title ?? "Contact Us"),
     description: page?.meta_description ?? "Reach out to us for product enquiries, bulk orders, custom packaging, or any support queries. We respond within 24 hours.",
     alternates: { canonical: "/contact" },
   };

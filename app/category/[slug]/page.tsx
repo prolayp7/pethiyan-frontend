@@ -21,7 +21,7 @@ import {
   categoryFaqPageSchema,
   jsonLd,
 } from "@/lib/structured-data";
-import { getCustomJsonLdSchemas, resolveCategorySeo } from "@/lib/seo";
+import { getCustomJsonLdSchemas, resolveCategorySeo, brandTitle } from "@/lib/seo";
 
 // ─── Static params (pre-render known categories at build time) ────────────────
 
@@ -49,7 +49,7 @@ export async function generateMetadata({
   const seo = resolveCategorySeo(category);
 
   return {
-    title: seo.title,
+    title: brandTitle(seo.title),
     description: seo.description,
     ...(seo.keywords ? { keywords: seo.keywords } : {}),
     robots: seo.indexable

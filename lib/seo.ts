@@ -35,6 +35,11 @@ export interface ResolvedSeo {
   schemaJsonLd?: string | null;
 }
 
+/** Skip the layout's "%s | Pethiyan" template when the title already names the brand. */
+export function brandTitle(title: string): string | { absolute: string } {
+  return title.toLowerCase().includes(SITE_NAME.toLowerCase()) ? { absolute: title } : title;
+}
+
 function cleanText(value?: string | null): string | undefined {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();

@@ -15,7 +15,7 @@ import {
   faqPageSchema,
   jsonLd,
 } from "@/lib/structured-data";
-import { getCustomJsonLdSchemas, resolveVariantSeo } from "@/lib/seo";
+import { getCustomJsonLdSchemas, resolveVariantSeo, brandTitle } from "@/lib/seo";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import BrowsingHistory from "@/components/product/BrowsingHistory";
@@ -62,7 +62,7 @@ export async function generateMetadata({
   const seo = resolveVariantSeo(product, variant);
 
   return {
-    title: seo.title,
+    title: brandTitle(seo.title),
     description: seo.description,
     ...(seo.keywords ? { keywords: seo.keywords } : {}),
     robots: seo.indexable

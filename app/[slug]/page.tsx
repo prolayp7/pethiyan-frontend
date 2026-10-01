@@ -1,3 +1,4 @@
+import { brandTitle } from "@/lib/seo";
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import PageRenderer from '@/components/PageRenderer';
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await fetchPageBySlug(slug);
   if (!page) return { title: 'Page Not Found' };
   return {
-    title: page.meta_title ?? page.title ?? 'Page',
+    title: brandTitle(page.meta_title ?? page.title ?? 'Page'),
     description: page.meta_description ?? undefined,
     alternates: { canonical: `/${slug}` },
   };
