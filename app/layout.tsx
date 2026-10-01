@@ -58,8 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
     getWebSettings(),
     getSystemSettings(),
   ]);
-  const faviconVersion = siteSettings?.favicon ? encodeURIComponent(siteSettings.favicon) : "default";
-  const faviconUrl = `/api/site-icon?v=${faviconVersion}`;
+
 
   const defaultTitle = webSettings?.metaTitle       || FALLBACK_TITLE;
   const description  = webSettings?.metaDescription || FALLBACK_DESCRIPTION;
@@ -113,9 +112,19 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     icons: {
-      icon: faviconUrl,
-      shortcut: faviconUrl,
-      apple: faviconUrl,
+      icon: [
+        {
+          url: "/favicon.ico",
+          type: "image/x-icon",
+        },
+        {
+          url: "/icon.png",
+          type: "image/png",
+          sizes: "48x48",
+        },
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/apple-icon.png",
     },
     verification: {
       google: [
