@@ -291,7 +291,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-xl font-extrabold text-(--color-secondary)">
-              Order #{order.order_number}
+              Order #{order.invoice_number}
             </h1>
             <p className="text-xs text-gray-400 mt-0.5">Placed on {fmtDate(order.created_at)}</p>
           </div>

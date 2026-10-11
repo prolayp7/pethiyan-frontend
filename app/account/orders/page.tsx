@@ -114,7 +114,7 @@ function OrderCard({ order }: { order: ApiOrder }) {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-xs font-bold text-gray-500 font-mono">#{order.order_number}</span>
+          <span className="text-xs font-bold text-gray-500 font-mono">#{order.invoice_number}</span>
           <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${status.cls}`}>
             {status.label}
           </span>
