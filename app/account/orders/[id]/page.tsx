@@ -243,7 +243,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     const url = URL.createObjectURL(blob);
     const a   = document.createElement("a");
     a.href     = url;
-    a.download = `invoice-${order.order_number}.pdf`;
+    a.download = `invoice-${order.invoice_number}.pdf`;
     document.body.appendChild(a);
     a.click();
     a.remove();
