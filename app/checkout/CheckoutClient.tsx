@@ -664,7 +664,7 @@ export default function CheckoutClient() {
         clearCart();
         sessionStorage.removeItem("applied_coupon");
         const href = `/order-confirmed?order_number=${verified.order_number ?? ""}&order_id=${verified.order_id ?? ""}&order_slug=${encodeURIComponent(verified.order_slug ?? "")}`;
-        router.replace(href);
+        window.location.assign(href);
       } else {
         setProcessingPayment(false);
         setPaymentError(
