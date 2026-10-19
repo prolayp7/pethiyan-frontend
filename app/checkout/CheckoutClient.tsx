@@ -656,7 +656,7 @@ export default function CheckoutClient() {
     setProcessingPayment(true);
     setEasepayReturnStatus("verifying");
     verifyEasepayPayment(pending.txnid).then((verified) => {
-      if (verified.success && (verified.order_id || pending.orderId)) {
+      if (verified.paymentConfirmed && (verified.order_id || pending.orderId)) {
         const orderId = verified.order_id ?? pending.orderId!;
         const orderNumber = verified.order_number ?? pending.orderNumber ?? "";
         const orderSlug = verified.order_slug ?? pending.orderSlug ?? "";
@@ -674,7 +674,7 @@ export default function CheckoutClient() {
       } else {
         setProcessingPayment(false);
         setPaymentError(
-          verified.success
+          verified.paymentConfirmed
             ? "Payment was confirmed but we couldn't finish creating your order. Please contact support with this reference: " + pending!.txnid
             : (verified.message || "Payment verification failed. If money was deducted, check My Orders or contact support.")
         );

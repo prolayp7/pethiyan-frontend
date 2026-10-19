@@ -1927,15 +1927,16 @@ export async function verifyEasepayPayment(txnid: string): Promise<{
       success?: boolean;
       message?: string;
       data?: {
+        payment_confirmed?: boolean;
         status?: string;
         order_id?: number;
         order_number?: string;
         order_slug?: string;
       };
     });
-    const paymentConfirmed = data.data?.status?.toLowerCase() === "success";
+    const paymentConfirmed = data.data?.payment_confirmed === true;
     return {
-      success: !!data.success || paymentConfirmed,
+      success: !!data.success,
       paymentConfirmed,
       message: data.message,
       order_id: data.data?.order_id ?? undefined,
