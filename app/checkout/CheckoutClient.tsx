@@ -105,6 +105,9 @@ const PENDING_EASEPAY_KEY = "pending_easepay_payment";
 
 interface PendingEasepayPayment {
   txnid: string;
+  orderId?: number;
+  orderNumber?: string;
+  orderSlug?: string;
   // Captured at the pre-redirect point (right before navigating to Easebuzz),
   // where grandTotal/items are still correct — CartContext/coupon/shipping
   // state haven't rehydrated yet by the time the post-verification effect
@@ -653,9 +656,12 @@ export default function CheckoutClient() {
     setProcessingPayment(true);
     setEasepayReturnStatus("verifying");
     verifyEasepayPayment(pending.txnid).then((verified) => {
-      if (verified.success && verified.order_id) {
+      if (verified.success && (verified.order_id || pending.orderId)) {
+        const orderId = verified.order_id ?? pending.orderId!;
+        const orderNumber = verified.order_number ?? pending.orderNumber ?? "";
+        const orderSlug = verified.order_slug ?? pending.orderSlug ?? "";
         storePurchaseEvent({
-          transaction_id: verified.order_number ?? String(verified.order_id),
+          transaction_id: orderNumber || String(orderId),
           value:          pending!.purchaseValue,
           currency:       "INR",
           items:          pending!.purchaseItems,
@@ -663,7 +669,7 @@ export default function CheckoutClient() {
         orderSuccessRef.current = true;
         clearCart();
         sessionStorage.removeItem("applied_coupon");
-        const href = `/order-confirmed?order_number=${verified.order_number ?? ""}&order_id=${verified.order_id ?? ""}&order_slug=${encodeURIComponent(verified.order_slug ?? "")}`;
+        const href = `/order-confirmed?order_number=${encodeURIComponent(orderNumber)}&order_id=${orderId}&order_slug=${encodeURIComponent(orderSlug)}`;
         window.location.assign(href);
       } else {
         setProcessingPayment(false);
@@ -954,6 +960,9 @@ export default function CheckoutClient() {
         // has rehydrated) records the real amount instead of 0/[].
         const pending: PendingEasepayPayment = {
           txnid: easepayOrder.txnid,
+          orderId: easepayOrder.order_id,
+          orderNumber: easepayOrder.order_number,
+          orderSlug: easepayOrder.order_slug,
           purchaseValue: grandTotal,
           purchaseItems: items.map((i) => ({
             item_id:   String(i.productId ?? i.id.split("-")[0]),

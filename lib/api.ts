@@ -351,6 +351,9 @@ export interface ApiEasepayOrder {
   txnid: string;
   access_key: string;
   payment_url: string;
+  order_id?: number;
+  order_number?: string;
+  order_slug?: string;
 }
 
 export interface ApiPaymentSettings {
@@ -1899,6 +1902,7 @@ export async function verifyRazorpayPayment(data: {
 
 export async function verifyEasepayPayment(txnid: string): Promise<{
   success: boolean;
+  paymentConfirmed: boolean;
   message?: string;
   order_id?: number;
   order_number?: string;
@@ -1918,10 +1922,21 @@ export async function verifyEasepayPayment(txnid: string): Promise<{
       body: JSON.stringify({ txnid }),
     });
     const body = await res.json();
-    if (!res.ok) return { success: false, message: (body as { message?: string })?.message ?? `HTTP ${res.status}` };
-    const data = (body as { success?: boolean; message?: string; data?: { order_id?: number; order_number?: string; order_slug?: string } });
+    if (!res.ok) return { success: false, paymentConfirmed: false, message: (body as { message?: string })?.message ?? `HTTP ${res.status}` };
+    const data = (body as {
+      success?: boolean;
+      message?: string;
+      data?: {
+        status?: string;
+        order_id?: number;
+        order_number?: string;
+        order_slug?: string;
+      };
+    });
+    const paymentConfirmed = data.data?.status?.toLowerCase() === "success";
     return {
-      success: !!data.success,
+      success: !!data.success || paymentConfirmed,
+      paymentConfirmed,
       message: data.message,
       order_id: data.data?.order_id ?? undefined,
       order_number: data.data?.order_number ?? undefined,
@@ -1929,7 +1944,7 @@ export async function verifyEasepayPayment(txnid: string): Promise<{
     };
   } catch (err) {
     console.error("[verifyEasepayPayment] fetch error:", err);
-    return { success: false, message: "Network error during verification." };
+    return { success: false, paymentConfirmed: false, message: "Network error during verification." };
   }
 }
 
